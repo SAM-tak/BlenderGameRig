@@ -69,8 +69,9 @@ class Rig:
 
         if len(siblings) == 0:
             raise MetarigError(
-                    "GAMERIG ERROR: Bone '%s': must have a parent and at least one sibling" %
-                    (strip_org(bone)))
+                "GAMERIG ERROR: Bone '%s': must have a parent and at least one sibling" %
+                (strip_org(bone))
+            )
 
         # Sort list by name and distance
         siblings.sort()
@@ -128,6 +129,10 @@ class Rig:
         # Constraints
         bpy.ops.object.mode_set(mode='OBJECT')
         pb = self.obj.pose.bones
+
+        ctrlbone = pb[ctrl]
+        ctrlbone.lock_rotation = (False, False, True)
+        ctrlbone.rotation_mode = 'XYZ'
 
         i = 0
         div = len(self.org_bones) - 1
@@ -189,7 +194,7 @@ class Rig:
                 (0.1578, 0.25, 0.275),
                 (-0.1578, 0.25, 0.275),
                 (-0.1578, 0.75, 0.225),
-                ]
+            ]
 
             if 'Z' in self.palm_rotation_axis:
                 # Flip x/z coordinates
@@ -200,7 +205,7 @@ class Rig:
                 (8, 0), (9, 3), (10, 1), (11, 2),
                 (12, 6), (13, 7), (4, 14), (15, 5),
                 (10, 8), (11, 9), (15, 14), (12, 13),
-                ]
+            ]
             mesh.from_pydata(verts, edges, [])
             mesh.update()
 
@@ -215,10 +220,10 @@ def add_parameters(params):
     """
     items = [('X', 'X', ''), ('Z', 'Z', '')]
     params.palm_rotation_axis = bpy.props.EnumProperty(
-            items=items,
-            name="Palm Rotation Axis",
-            default='X',
-            )
+        items=items,
+        name="Palm Rotation Axis",
+        default='X',
+    )
 
 
 def parameters_ui(layout, params):
@@ -286,28 +291,28 @@ def create_sample(obj):
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
-    pbone.rotation_mode = 'YXZ'
+    pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['palm.03']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
-    pbone.rotation_mode = 'YXZ'
+    pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['palm.02']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
-    pbone.rotation_mode = 'YXZ'
+    pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['palm.01']]
     pbone.gamerig_type = 'palm'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
-    pbone.rotation_mode = 'YXZ'
+    pbone.rotation_mode = 'QUATERNION'
 
     bpy.ops.object.mode_set(mode='EDIT')
     for bone in arm.edit_bones:

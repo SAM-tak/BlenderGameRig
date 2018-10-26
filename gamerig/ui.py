@@ -38,14 +38,15 @@ from . import generate
 
 
 class DATA_PT_gamerig_buttons(bpy.types.Panel):
-    bl_label       = "GameRig Buttons"
-    bl_space_type  = 'PROPERTIES'
+    bl_label = "GameRig Buttons"
+    bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
-    bl_context     = "data"
+    bl_context = "data"
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE' and context.active_object.data.get("rig_id") is None
+        return context.object and context.object.type == 'ARMATURE'\
+            and context.active_object.data.get("gamerig_rig_id") is None
 
     def draw(self, context):
         C = context
@@ -111,7 +112,7 @@ class DATA_PT_gamerig_buttons(bpy.types.Panel):
                     id_store.gamerig_target_rigs.remove(0)
 
                 for ob in context.scene.objects:
-                    if type(ob.data) == bpy.types.Armature and "rig_id" in ob.data:
+                    if type(ob.data) == bpy.types.Armature and "gamerig_rig_id" in ob.data:
                         id_store.gamerig_target_rigs.add()
                         id_store.gamerig_target_rigs[-1].name = ob.name
 
@@ -171,7 +172,8 @@ class DATA_PT_gamerig_layer_names(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE' and context.active_object.data.get("rig_id") is None
+        return context.object and context.object.type == 'ARMATURE'\
+            and context.active_object.data.get("gamerig_rig_id") is None
 
     def draw(self, context):
         layout = self.layout
@@ -376,7 +378,7 @@ class DATA_OT_gamerig_bone_group_add_theme(bpy.types.Operator):
     bl_label   = "GameRig Add Bone Group color set from Theme"
     bl_options = {"REGISTER", "UNDO"}
 
-    theme = bpy.props.EnumProperty(
+    theme = EnumProperty(
         items=(
             ('THEME01', 'THEME01', ''),
             ('THEME02', 'THEME02', ''),
@@ -509,7 +511,8 @@ class DATA_PT_gamerig_bone_groups(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE' and context.active_object.data.get("rig_id") is None
+        return context.object and context.object.type == 'ARMATURE'\
+            and context.active_object.data.get("gamerig_rig_id") is None
 
     def draw(self, context):
         obj = context.object
@@ -552,7 +555,7 @@ class BONE_PT_gamerig_buttons(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
-               and context.active_object.data.get("rig_id") is None
+               and context.active_object.data.get("gamerig_rig_id") is None
 
     def draw(self, context):
         C = context
@@ -682,6 +685,10 @@ class Generate(bpy.types.Operator):
     bl_options     = {'UNDO'}
     bl_description = 'Generates a rig from the active metarig armature'
 
+    @classmethod
+    def poll(cls, context):
+        return not context.object.hide and not context.object.hide_select
+
     def execute(self, context):
         import importlib
         importlib.reload(generate)
@@ -709,9 +716,9 @@ class ToggleArmatureReference(bpy.types.Operator):
 
     def execute(self, context):
         metarig = context.object
-        if 'rig_id' in metarig.data:
-            rig_id = metarig.data['rig_id']
-            genrig = next((i for i in context.scene.objects if i and i != metarig and i.data and 'rig_id' in i.data and i.data['rig_id'] == rig_id), None)
+        if 'gamerig_rig_id' in metarig.data:
+            rig_id = metarig.data['gamerig_rig_id']
+            genrig = next((i for i in context.scene.objects if i and i != metarig and i.data and 'gamerig_rig_id' in i.data and i.data['gamerig_rig_id'] == rig_id), None)
             if genrig is not None:
                 for i in context.scene.objects:
                     for j in i.modifiers:
@@ -728,7 +735,7 @@ class Sample(bpy.types.Operator):
     """Create a sample metarig to be modified before generating """ \
     """the final rig"""
 
-    bl_idname  = "armature.metarig_sample_add"
+    bl_idname  = "armature.gamerig_metarig_sample_add"
     bl_label   = "Add a sample metarig for a rig type"
     bl_options = {'UNDO'}
 

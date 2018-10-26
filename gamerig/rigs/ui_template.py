@@ -632,7 +632,7 @@ class RigUI(bpy.types.Panel):
         if context.mode != 'POSE':
             return False
         try:
-            return (context.active_object.data.get("rig_id") == rig_id)
+            return (context.active_object.data.get("gamerig_rig_id") == rig_id)
         except (AttributeError, KeyError, TypeError):
             return False
 
@@ -673,7 +673,7 @@ class RigLayers(bpy.types.Panel):
     @classmethod
     def poll(self, context):
         try:
-            return (context.active_object.data.get("rig_id") == rig_id)
+            return (context.active_object.data.get("gamerig_rig_id") == rig_id)
         except (AttributeError, KeyError, TypeError):
             return False
 

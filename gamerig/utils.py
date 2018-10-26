@@ -390,7 +390,7 @@ def create_widget(rig, bone_name, bone_transform_name=None):
     if bone_transform_name is None:
         bone_transform_name = bone_name
 
-    obj_name = WGT_PREFIX + rig.data['rig_id'] + '-' + bone_name
+    obj_name = WGT_PREFIX + rig.data['gamerig_rig_id'] + '-' + bone_name
     scene = bpy.context.scene
     id_store = bpy.context.window_manager
 

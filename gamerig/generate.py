@@ -300,8 +300,8 @@ def generate_rig(context, metarig):
     obj.data.bones[root_bone].layers = ROOT_LAYER
 
     # Put the rig_name in the armature custom properties
-    rna_idprop_ui_prop_get(obj.data, "rig_id", create=True)
-    obj.data["rig_id"] = rig_id
+    rna_idprop_ui_prop_get(obj.data, "gamerig_rig_id", create=True)
+    obj.data["gamerig_rig_id"] = rig_id
 
     t.tick("Create root bone: ")
 
