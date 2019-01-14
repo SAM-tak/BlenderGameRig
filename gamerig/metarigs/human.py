@@ -8,6 +8,8 @@ def create(obj):
     bpy.ops.object.mode_set(mode='EDIT')
     arm = obj.data
 
+    arm.gamerig_rig_ui_template = 'ui_template'
+
     for i in range(6):
         arm.gamerig_colors.add()
 
@@ -161,8 +163,6 @@ def create(obj):
     arm.gamerig_layers[28].row = 14
     arm.gamerig_layers[28].set = False
     arm.gamerig_layers[28].group = 1
-
-    arm.gamerig_rig_ui_template = 'ui_template'
 
 
     bones = {}

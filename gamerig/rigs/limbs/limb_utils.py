@@ -1,8 +1,6 @@
 import bpy, re
 from mathutils import Vector
-from ...utils import make_mechanism_name
-from ...utils import MetarigError
-from ...utils import org, strip_org
+from ...utils import MetarigError, mch, org, basename
 
 bilateral_suffixes = ['.L','.R']
 
@@ -41,18 +39,17 @@ def make_constraint( cls, bone, constraint ):
                     p, constraint['constraint']
             ))
 
+
 def get_bone_name( name, btype, suffix = '' ):
     # RE pattern match right or left parts
     # match the letter "L" (or "R"), followed by an optional dot (".")
     # and 0 or more digits at the end of the the string
     pattern = r'^(\S+)(\.\S+)$'
 
-    name = strip_org( name )
-
     types = {
-        'mch'  : make_mechanism_name( name ),
-        'org'  : org( name ),
-        'ctrl' : name
+        'mch'  : mch( basename( name ) ),
+        'org'  : name,
+        'ctrl' : basename( name )
     }
 
     name = types[btype]

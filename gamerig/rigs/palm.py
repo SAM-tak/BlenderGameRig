@@ -23,8 +23,7 @@ from math import cos, pi
 
 import bpy
 
-from ..utils import MetarigError, copy_bone, create_widget
-from ..utils import strip_org
+from ..utils import MetarigError, copy_bone, create_widget, basename
 
 
 def bone_siblings(obj, bone):
@@ -70,7 +69,7 @@ class Rig:
         if len(siblings) == 0:
             raise MetarigError(
                 "GAMERIG ERROR: Bone '%s': must have a parent and at least one sibling" %
-                (strip_org(bone))
+                (basename(bone))
             )
 
         # Sort list by name and distance
@@ -92,16 +91,10 @@ class Rig:
 
         # Figure out the name for the control bone (remove the last .##)
         last_bone = self.org_bones[-1:][0]
-        ctrl_name = re.sub("([0-9]+\.)", "", strip_org(last_bone)[::-1], count=1)[::-1]
+        ctrl_name = re.sub("([0-9]+\.)", "", basename(last_bone)[::-1], count=1)[::-1]
 
         # Make control bone
         ctrl = copy_bone(self.obj, last_bone, ctrl_name)
-
-        # Make deformation bones
-        #def_bones = []
-        #for bone in self.org_bones:
-        #    b = copy_bone(self.obj, bone, deformer(strip_org(bone)))
-        #    def_bones += [b]
 
         # Parenting
         eb = self.obj.data.edit_bones
@@ -117,9 +110,6 @@ class Rig:
 
         # Get ORG parent bone
         org_parent = eb[self.org_bones[0]].parent.name
-
-        # Get DEF parent from ORG parent
-        #def_parent = deformer(strip_org(org_parent))
 
         # Switch parent
         for o in self.org_bones:

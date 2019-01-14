@@ -18,16 +18,14 @@
 
 # <pep8 compliant>
 
-UI_SLIDERS = '''
+UI_TEMPLATE = '''
 #
 # for gamerig
 #
 import bpy
 from mathutils import Matrix, Vector
 from math import acos, pi, radians
-
-rig_id = "%s"
-
+from bpy.utils import register_class
 
 ############################
 ## Math utility functions ##
@@ -313,6 +311,7 @@ def fk2ik_arm(obj, fk, ik):
     handi = obj.pose.bones[ik[2]]
 
     if 'auto_stretch' in handi.keys():
+        # This is kept for compatibility with legacy rigify Human
         # Stretch
         if handi['auto_stretch'] == 0.0:
             uarm['stretch_length'] = handi['stretch_length']
@@ -360,7 +359,10 @@ def ik2fk_arm(obj, fk, ik):
     uarmi = obj.pose.bones[ik[0]]
     farmi = obj.pose.bones[ik[1]]
     handi = obj.pose.bones[ik[2]]
-    if ik[3] != "":
+
+    main_parent = obj.pose.bones[ik[4]]
+
+    if ik[3] != "" and main_parent['pole_vector']:
         pole  = obj.pose.bones[ik[3]]
     else:
         pole = None
@@ -408,28 +410,42 @@ def fk2ik_leg(obj, fk, ik):
     toei   = obj.pose.bones[ik[3]]
 
     if 'auto_stretch' in footi.keys():
+        # This is kept for compatibility with legacy rigify Human
         # Stretch
         if footi['auto_stretch'] == 0.0:
             thigh['stretch_length'] = footi['stretch_length']
         else:
             thigh['stretch_length'] *= (thighi.vector.length + shini.vector.length) / (thigh.vector.length + shin.vector.length)
     
-    # Thigh position
-    match_pose_translation(thigh, thighi)
-    match_pose_rotation(thigh, thighi)
-    #match_pose_scale(thigh, thighi)
+        # Thigh position
+        match_pose_rotation(thigh, thighi)
+        match_pose_scale(thigh, thighi)
 
-    # Shin position
-    match_pose_rotation(shin, shini)
-    #match_pose_scale(shin, shini)
+        # Shin position
+        match_pose_rotation(shin, shini)
+        match_pose_scale(shin, shini)
 
-    # Foot position
-    match_pose_rotation(foot, footi)
-    #match_pose_scale(foot, footi)
+        # Foot position
+        mat = mfoot.bone.matrix_local.inverted() * foot.bone.matrix_local
+        footmat = get_pose_matrix_in_other_space(mfooti.matrix, foot) * mat
+        set_pose_rotation(foot, footmat)
+        set_pose_scale(foot, footmat)
 
-    # Toe position
-    match_pose_rotation(toe, toei)
-    #match_pose_scale(toe, toei)
+    else:
+        # Thigh position
+        match_pose_translation(thigh, thighi)
+        match_pose_rotation(thigh, thighi)
+        match_pose_scale(thigh, thighi)
+
+        # Shin position
+        match_pose_rotation(shin, shini)
+        match_pose_scale(shin, shini)
+
+        # Foot position
+        mat = mfoot.bone.matrix_local.inverted() * foot.bone.matrix_local
+        footmat = get_pose_matrix_in_other_space(mfooti.matrix, foot) * mat
+        set_pose_rotation(foot, footmat)
+        set_pose_scale(foot, footmat)
 
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.mode_set(mode='POSE')
@@ -492,12 +508,12 @@ def ik2fk_leg(obj, fk, ik):
 ## IK/FK snapping operators ##
 ##############################
 
-class GameRig_Arm_FK2IK(bpy.types.Operator):
+class Arm_FK2IK(bpy.types.Operator):
     """ Snaps an FK arm to an IK arm.
     """
-    bl_idname = "pose.gamerig_arm_fk2ik_" + rig_id
-    bl_label = "GameRig Snap FK arm to IK"
-    bl_options = {'UNDO'}
+    bl_idname = "pose.gamerig_arm_fk2ik_{rig_id}"
+    bl_label = "Snap FK arm to IK"
+    bl_options = {{'UNDO'}}
 
     uarm_fk = bpy.props.StringProperty(name="Upper Arm FK Name")
     farm_fk = bpy.props.StringProperty(name="Forerm FK Name")
@@ -509,7 +525,7 @@ class GameRig_Arm_FK2IK(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object is not None and context.mode == 'POSE')
+        return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
         use_global_undo = context.user_preferences.edit.use_global_undo
@@ -518,15 +534,15 @@ class GameRig_Arm_FK2IK(bpy.types.Operator):
             fk2ik_arm(context.active_object, fk=[self.uarm_fk, self.farm_fk, self.hand_fk], ik=[self.uarm_ik, self.farm_ik, self.hand_ik])
         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
-        return {'FINISHED'}
+        return {{'FINISHED'}}
 
 
-class GameRig_Arm_IK2FK(bpy.types.Operator):
+class Arm_IK2FK(bpy.types.Operator):
     """ Snaps an IK arm to an FK arm.
     """
-    bl_idname = "pose.gamerig_arm_ik2fk_" + rig_id
-    bl_label = "GameRig Snap IK arm to FK"
-    bl_options = {'UNDO'}
+    bl_idname = "pose.gamerig_arm_ik2fk_{rig_id}"
+    bl_label = "Snap IK arm to FK"
+    bl_options = {{'UNDO'}}
 
     uarm_fk = bpy.props.StringProperty(name="Upper Arm FK Name")
     farm_fk = bpy.props.StringProperty(name="Forerm FK Name")
@@ -539,7 +555,7 @@ class GameRig_Arm_IK2FK(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object is not None and context.mode == 'POSE')
+        return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
         use_global_undo = context.user_preferences.edit.use_global_undo
@@ -548,15 +564,15 @@ class GameRig_Arm_IK2FK(bpy.types.Operator):
             ik2fk_arm(context.active_object, fk=[self.uarm_fk, self.farm_fk, self.hand_fk], ik=[self.uarm_ik, self.farm_ik, self.hand_ik, self.pole])
         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
-        return {'FINISHED'}
+        return {{'FINISHED'}}
 
 
-class GameRig_Leg_FK2IK(bpy.types.Operator):
+class Leg_FK2IK(bpy.types.Operator):
     """ Snaps an FK leg to an IK leg.
     """
-    bl_idname = "pose.gamerig_leg_fk2ik_" + rig_id
-    bl_label = "GameRig Snap FK leg to IK"
-    bl_options = {'UNDO'}
+    bl_idname = "pose.gamerig_leg_fk2ik_{rig_id}"
+    bl_label = "Snap FK leg to IK"
+    bl_options = {{'UNDO'}}
 
     thigh_fk = bpy.props.StringProperty(name="Thigh FK Name")
     shin_fk  = bpy.props.StringProperty(name="Shin FK Name")
@@ -570,7 +586,7 @@ class GameRig_Leg_FK2IK(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object is not None and context.mode == 'POSE')
+        return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
         use_global_undo = context.user_preferences.edit.use_global_undo
@@ -579,15 +595,15 @@ class GameRig_Leg_FK2IK(bpy.types.Operator):
             fk2ik_leg(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.toe_ik])
         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
-        return {'FINISHED'}
+        return {{'FINISHED'}}
 
 
-class GameRig_Leg_IK2FK(bpy.types.Operator):
+class Leg_IK2FK(bpy.types.Operator):
     """ Snaps an IK leg to an FK leg.
     """
-    bl_idname = "pose.gamerig_leg_ik2fk_" + rig_id
-    bl_label = "GameRig Snap IK leg to FK"
-    bl_options = {'UNDO'}
+    bl_idname = "pose.gamerig_leg_ik2fk_{rig_id}"
+    bl_label = "Snap IK leg to FK"
+    bl_options = {{'UNDO'}}
 
     thigh_fk = bpy.props.StringProperty(name="Thigh FK Name")
     shin_fk  = bpy.props.StringProperty(name="Shin FK Name")
@@ -605,7 +621,7 @@ class GameRig_Leg_IK2FK(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object is not None and context.mode == 'POSE')
+        return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
         use_global_undo = context.user_preferences.edit.use_global_undo
@@ -614,31 +630,32 @@ class GameRig_Leg_IK2FK(bpy.types.Operator):
             ik2fk_leg(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.footroll, self.mfoot_ik, self.toe_ik, self.pole])
         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
-        return {'FINISHED'}
+        return {{'FINISHED'}}
 
 
 ###################
 ## Rig UI Panels ##
 ###################
 
-class RigUI(bpy.types.Panel):
+class PropertiesPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = "Rig Main Properties"
-    bl_idname = rig_id + "_PT_gamerig_ui"
+    bl_label = "GameRig Properties"
+    bl_idname = "PT_gamerig_properties_{rig_id}"
 
     @classmethod
     def poll(self, context):
         if context.mode != 'POSE':
             return False
         try:
-            return (context.active_object.data.get("gamerig_rig_id") == rig_id)
+            return 'gamerig_layers' not in context.active_object.data and context.active_object.data.get("gamerig_id") == "{rig_id}"
         except (AttributeError, KeyError, TypeError):
             return False
 
     def draw(self, context):
         layout = self.layout
         pose_bones = context.active_object.pose.bones
+        rig_id = "{rig_id}"
         try:
             selected_bones = [bone.name for bone in context.selected_pose_bones]
             selected_bones += [context.active_pose_bone.name]
@@ -653,82 +670,30 @@ class RigUI(bpy.types.Panel):
                         return True
             elif names in selected_bones:
                 return True
-            return False
+            return False        
+
+{properties}
 
 
-'''
-
-
-def layers_ui(layers, layout):
-    """ Turn a list of booleans + a list of names into a layer UI.
-    """
-
-    code = '''
-class RigLayers(bpy.types.Panel):
+class LayersPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = "Rig Layers"
-    bl_idname = rig_id + "_PT_rig_layers"
+    bl_label = "GameRig Layers"
+    bl_idname = "PT_gamerig_layers_{rig_id}"
 
     @classmethod
     def poll(self, context):
         try:
-            return (context.active_object.data.get("gamerig_rig_id") == rig_id)
+            return 'gamerig_layers' not in context.active_object.data and context.active_object.data.get("gamerig_id") == "{rig_id}"
         except (AttributeError, KeyError, TypeError):
             return False
 
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-'''
-    rows = {}
-    for i in range(28):
-        if layers[i]:
-            if layout[i][1] not in rows:
-                rows[layout[i][1]] = []
-            rows[layout[i][1]] += [(layout[i][0], i)]
-
-    keys = list(rows.keys())
-    keys.sort()
-
-    for key in keys:
-        code += "\n        row = col.row()\n"
-        i = 0
-        for l in rows[key]:
-            if i > 3:
-                code += "\n        row = col.row()\n"
-                i = 0
-            code += "        row.prop(context.active_object.data, 'layers', index=%s, toggle=True, text='%s')\n" % (str(l[1]), l[0])
-            i += 1
-
-    # Root layer
-    code += "\n        row = col.row()"
-    code += "\n        row.separator()"
-    code += "\n        row = col.row()"
-    code += "\n        row.separator()\n"
-    code += "\n        row = col.row()\n"
-    code += "        row.prop(context.active_object.data, 'layers', index=28, toggle=True, text='Root')\n"
-
-    return code
+{layers}
 
 
-UI_REGISTER = '''
-classes = (
-    GameRig_Arm_FK2IK,
-    GameRig_Arm_IK2FK,
-    GameRig_Leg_FK2IK,
-    GameRig_Leg_IK2FK,
-    RigUI,
-    RigLayers,
-)
-
-def register():
-    for cl in classes:
-        bpy.utils.register_class(cl)
-
-def unregister():
-    for cl in classes:
-        bpy.utils.unregister_class(cl)
-
-register()
+for cl in (Arm_FK2IK, Arm_IK2FK, Leg_FK2IK, Leg_IK2FK, PropertiesPanel, LayersPanel):
+    register_class(cl)
 '''

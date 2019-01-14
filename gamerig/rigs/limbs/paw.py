@@ -19,10 +19,11 @@
 # <pep8 compliant>
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError, connected_children_names
-from ...utils import create_widget, create_circle_widget
-from ...utils import flip_bone, copy_bone
-from ...utils import strip_org
+from ...utils import (
+    MetarigError, connected_children_names,
+    create_widget, create_circle_widget,
+    flip_bone, copy_bone
+)
 from ..widgets import create_paw_widget, create_ballsocket_widget, create_toe_widget
 from .limb_utils import *
 
@@ -30,7 +31,6 @@ def create_paw( cls, bones ):
     org_bones = list(
         [cls.org_bones[0]] + connected_children_names(cls.obj, cls.org_bones[0])
     )
-
 
     bones['ik']['ctrl']['terminal'] = []
 

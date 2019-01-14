@@ -23,6 +23,7 @@ import imp
 import importlib
 import math
 import random
+import string
 import time
 import re
 import os
@@ -33,12 +34,10 @@ RIG_DIR = "rigs"  # Name of the directory where rig types are kept
 METARIG_DIR = "metarigs"  # Name of the directory where metarigs are kept
 
 ORG_PREFIX = "ORG-"  # Prefix of original bones.
+JIG_PREFIX = "JIG-"  # Prefix of jig bones. (delete automatically after generaten)
 MCH_PREFIX = "MCH-"  # Prefix of mechanism bones.
-DEF_PREFIX = "DEF-"  # Prefix of deformation bones.
 WGT_PREFIX = "WGT-"  # Prefix for widget objects
 ROOT_NAME = "root"   # Name of the root bone.
-
-WGT_LAYERS = [x == 19 for x in range(0, 20)]  # Widgets go on the last scene layer.
 
 MODULE_NAME = "gamerig"  # Windows/Mac blender is weird, so __package__ doesn't work --- realy even now?
 
@@ -75,32 +74,18 @@ def unique_name(collection, base_name):
     return name
 
 
-def org_name(name):
-    """ Returns the name with ORG_PREFIX stripped from it.
-    """
-    if name.startswith(ORG_PREFIX):
-        return name[len(ORG_PREFIX):]
-    else:
-        return name
-
-
-def strip_org(name):
-    """ Returns the name with ORG_PREFIX stripped from it.
-    """
-    if name.startswith(ORG_PREFIX):
-        return name[len(ORG_PREFIX):]
-    else:
-        return name
-org_name = strip_org
-
-
-def strip_mch(name):
+def basename(name):
     """ Returns the name with ORG_PREFIX stripped from it.
         """
-    if name.startswith(MCH_PREFIX):
+    if name.startswith(ORG_PREFIX):
+        return name[len(ORG_PREFIX):]
+    elif name.startswith(JIG_PREFIX):
+        return name[len(JIG_PREFIX):]
+    elif name.startswith(MCH_PREFIX):
         return name[len(MCH_PREFIX):]
     else:
         return name
+
 
 def org(name):
     """ Prepends the ORG_PREFIX to a name if it doesn't already have
@@ -108,9 +93,10 @@ def org(name):
     """
     if name.startswith(ORG_PREFIX):
         return name
+    elif name.startswith(JIG_PREFIX):
+        return name
     else:
         return ORG_PREFIX + name
-make_original_name = org
 
 
 def mch(name):
@@ -121,18 +107,8 @@ def mch(name):
         return name
     else:
         return MCH_PREFIX + name
+
 make_mechanism_name = mch
-
-
-def deformer(name):
-    """ Prepends the DEF_PREFIX to a name if it doesn't already have
-        it, and returns it.
-    """
-    if name.startswith(DEF_PREFIX):
-        return name
-    else:
-        return DEF_PREFIX + name
-make_deformer_name = deformer
 
 
 def insert_before_lr(name, text):
@@ -312,8 +288,8 @@ def make_nonscaling_child(obj, bone_name, location, child_name_postfix=""):
 
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
         # Create desired names for bones
-        name1 = make_mechanism_name(strip_org(insert_before_lr(bone_name, child_name_postfix + "_ns_ch")))
-        name2 = make_mechanism_name(strip_org(insert_before_lr(bone_name, child_name_postfix + "_ns_intr")))
+        name1 = mch(basename(insert_before_lr(bone_name, child_name_postfix + "_ns_ch")))
+        name2 = mch(basename(insert_before_lr(bone_name, child_name_postfix + "_ns_intr")))
 
         # Create bones
         child = copy_bone(obj, bone_name, name1)
@@ -390,7 +366,7 @@ def create_widget(rig, bone_name, bone_transform_name=None):
     if bone_transform_name is None:
         bone_transform_name = bone_name
 
-    obj_name = WGT_PREFIX + rig.data['gamerig_rig_id'] + '-' + bone_name
+    obj_name = get_wgt_name(rig.name, bone_name)
     scene = bpy.context.scene
     id_store = bpy.context.window_manager
 
@@ -419,10 +395,6 @@ def create_widget(rig, bone_name, bone_transform_name=None):
 
         # Move object to bone position and set layers
         obj_to_bone(obj, rig, bone_transform_name)
-        wgts_group_name = 'WGTS_' + rig.name
-        if wgts_group_name in bpy.data.objects.keys():
-            obj.parent = bpy.data.objects[wgts_group_name]
-        obj.layers = WGT_LAYERS
 
         return obj
 
@@ -1122,25 +1094,24 @@ def write_widget(obj):
     return script
 
 
-def random_id(length=8):
+def get_wgt_name(rig_name, bone_name):
+    """ Object's with name <rig_name>.WGT-<bone_name> get used as that bone's shape.
+    """
+    return '%s.%s%s' % (rig_name, WGT_PREFIX, bone_name)
+
+
+def random_id(length=10):
     """ Generates a random alphanumeric id string.
     """
-    tlength = int(length / 2)
-    rlength = int(length / 2) + int(length % 2)
-
-    chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-    text = ""
-    for i in range(0, rlength):
-        text += random.choice(chars)
-    text += str(hex(int(time.time())))[2:][-tlength:].rjust(tlength, '0')[::-1]
-    return text
+    return ''.join([random.choice(string.ascii_lowercase + string.digits) for i in range(length)])
+    #return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
 
 #=============================================
 # Color correction functions
 #=============================================
 
-def linsrgb_to_srgb (linsrgb):
+def linsrgb_to_srgb(linsrgb):
     """Convert physically linear RGB values into sRGB ones. The transform is
     uniform in the components, so *linsrgb* can be of any shape.
 
@@ -1157,7 +1128,6 @@ def linsrgb_to_srgb (linsrgb):
 
 
 def gamma_correct(color):
-
     corrected_color = Color()
     for i, component in enumerate(color):
         corrected_color[i] = linsrgb_to_srgb(color[i])

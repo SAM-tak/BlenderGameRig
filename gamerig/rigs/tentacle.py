@@ -1,10 +1,11 @@
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, put_bone
-from ..utils import connected_children_names, make_mechanism_name
-from ..utils import create_widget, create_sphere_widget, create_circle_widget
-from ..utils import MetarigError
-from ..utils import org, strip_org
+from ..utils import (
+    copy_bone, put_bone,
+    org, basename, connected_children_names,
+    create_widget, create_sphere_widget, create_circle_widget,
+    MetarigError
+)
 
 
 class Rig:
@@ -18,7 +19,7 @@ class Rig:
 
         if len(self.org_bones) <= 1:
             raise MetarigError(
-                "GAMERIG ERROR: invalid rig structure" % (strip_org(bone_name))
+                "GAMERIG ERROR: invalid rig structure" % basename(bone_name)
             )
 
 
@@ -34,7 +35,7 @@ class Rig:
             ctrl_bone  = copy_bone(
                 self.obj,
                 name,
-                strip_org(name)
+                basename(name)
             )
 
             ctrl_chain.append( ctrl_bone )

@@ -23,7 +23,7 @@ bl_info = {
     "version": (0, 9),
     "author": "Osamu Takasugi, (Rigify : Nathan Vegdahl, Lucio Rossi, Ivan Cappiello)",
     "blender": (2, 79, 0),
-    "description": "Automatic rigging from building-block components",
+    "description": "Character Rigging framework for Game / Realtime content",
     "location": "Armature properties, Bone properties, View3d tools panel, Armature Add menu",
     "support": "COMMUNITY",
     "wiki_url": "https://github.com/SAM-tak/BlenderGameRig",
@@ -60,6 +60,22 @@ from bpy.props import (
     PointerProperty,
     CollectionProperty,
 )
+
+
+class GameRigPreferences(AddonPreferences):
+    # this must match the addon name, use '__package__'
+    # when defining this in a submodule of a python package.
+    bl_idname = __name__
+
+    shows_dev_tools = BoolProperty(
+        name='Enable Dev Tools',
+        description='Dev Tools appears in Tools tab on edit mode.',
+        default=False
+    )
+
+    def draw(self, context):
+        self.layout.row().prop(self, 'shows_dev_tools')
+
 
 class GameRigName(bpy.types.PropertyGroup):
     name = StringProperty()
@@ -144,6 +160,7 @@ class GameRigRigUITemplateName(bpy.types.PropertyGroup):
 ##### REGISTER #####
 
 classes = (
+    GameRigPreferences,
     GameRigName,
     GameRigParameters,
     GameRigColorSet,
@@ -170,6 +187,11 @@ def register():
     bpy.types.Armature.gamerig_rig_ui_template = StringProperty(
         name="GameRig Rig UI Template",
         description="Rig UI Template for this armature"
+    )
+    bpy.types.Armature.gamerig_rig_name = StringProperty(
+        name="GameRig Rig Name",
+        description="Defines the name of the Rig.",
+        default="rig"
     )
 
     bpy.types.Armature.gamerig_selection_colors = PointerProperty(type=GameRigSelectionColors)
@@ -213,70 +235,6 @@ def register():
     IDStore.gamerig_active_type = IntProperty(name="GameRig Active Type", description="The selected rig type")
     IDStore.gamerig_rig_ui_template_list = CollectionProperty(type=GameRigRigUITemplateName)
 
-    IDStore.gamerig_advanced_generation = BoolProperty(
-        name="Advanced Options",
-        description="Enables/disables advanced options for GameRig rig generation",
-        default=False
-    )
-
-    def update_mode(self, context):
-        if self.gamerig_generate_mode == 'new':
-            self.gamerig_force_widget_update = False
-
-    IDStore.gamerig_generate_mode = EnumProperty(
-        name="GameRig Generate Rig Mode",
-        description="'Generate Rig' mode. In 'overwrite' mode the features of the target rig will be updated as defined by the metarig. In 'new' mode a new rig will be created as defined by the metarig. Current mode",
-        update=update_mode,
-        items=(
-            ('overwrite', 'overwrite', ''),
-            ('new', 'new', '')
-        )
-    )
-
-    IDStore.gamerig_force_widget_update = BoolProperty(
-        name="Force Widget Update",
-        description="Forces GameRig to delete and rebuild all the rig widgets. if unset, only missing widgets will be created",
-        default=False
-    )
-
-    IDStore.gamerig_target_rigs = CollectionProperty(type=GameRigName)
-    IDStore.gamerig_target_rig = StringProperty(
-        name="GameRig Target Rig",
-        description="Defines which rig to overwrite. If unset, a new one called 'rig' will be created",
-        default=""
-    )
-
-    IDStore.gamerig_rig_uis = CollectionProperty(type=GameRigName)
-    IDStore.gamerig_rig_ui = StringProperty(
-        name="GameRig Target Rig UI",
-        description="Defines the UI to overwrite. It should always be the same as the target rig. If unset, 'rig_ui.py' will be used",
-        default=""
-    )
-
-    IDStore.gamerig_rig_basename = StringProperty(
-        name="GameRig Rig Name",
-        description="Defines the name of the Rig. If unset, in 'new' mode 'rig' will be used, in 'overwrite' mode the target rig name will be used",
-        default=""
-    )
-
-    IDStore.gamerig_transfer_only_selected = BoolProperty(
-        name="Transfer Only Selected",
-        description="Transfer selected bones only",
-        default=True
-    )
-    IDStore.gamerig_transfer_start_frame = IntProperty(
-        name="Start Frame",
-        description="First Frame to Transfer",
-        default=0,
-        min= 0
-    )
-    IDStore.gamerig_transfer_end_frame = IntProperty(
-        name="End Frame",
-        description="Last Frame to Transfer",
-        default=0,
-        min= 0
-    )
-
     # Add rig parameters
     for rig in rig_lists.rig_list:
         r = utils.get_rig_type(rig)
@@ -295,18 +253,8 @@ def unregister():
     del IDStore.gamerig_collection
     del IDStore.gamerig_types
     del IDStore.gamerig_active_type
-    del IDStore.gamerig_advanced_generation
-    del IDStore.gamerig_generate_mode
-    del IDStore.gamerig_force_widget_update
-    del IDStore.gamerig_target_rig
-    del IDStore.gamerig_target_rigs
-    del IDStore.gamerig_rig_ui
-    del IDStore.gamerig_rig_uis
-    del IDStore.gamerig_rig_basename
-    del IDStore.gamerig_transfer_only_selected
-    del IDStore.gamerig_transfer_start_frame
-    del IDStore.gamerig_transfer_end_frame
     del IDStore.gamerig_rig_ui_template_list
+    del IDStore.gamerig_rig_name
 
     # Classes.
     for cl in classes:

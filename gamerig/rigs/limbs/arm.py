@@ -19,9 +19,7 @@
 # <pep8 compliant>
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError
-from ...utils import create_widget, copy_bone
-from ...utils import strip_org
+from ...utils import MetarigError, create_widget, copy_bone
 from .limb_utils import *
 from ..widgets import create_hand_widget
 

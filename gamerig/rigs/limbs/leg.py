@@ -19,10 +19,7 @@
 # <pep8 compliant>
 import bpy, math
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError, connected_children_names
-from ...utils import create_widget, create_circle_widget
-from ...utils import copy_bone, put_bone, flip_bone
-from ...utils import strip_org
+from ...utils import MetarigError, connected_children_names, create_widget, create_circle_widget, copy_bone, put_bone, flip_bone
 from ..widgets import create_foot_widget, create_ballsocket_widget, create_toe_widget
 from .limb_utils import *
 

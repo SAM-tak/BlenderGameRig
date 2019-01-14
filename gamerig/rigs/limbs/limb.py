@@ -7,11 +7,12 @@ from .leg import create_leg
 from .paw import create_paw
 from .ui import create_script
 from .limb_utils import *
-from ...utils import copy_bone, flip_bone, put_bone, create_cube_widget
-from ...utils import create_widget, create_circle_widget, create_sphere_widget
-from ...utils import MetarigError, make_mechanism_name, org
-from ...utils import create_limb_widget, connected_children_names
-from ...utils import strip_org
+from ...utils import (
+    copy_bone, flip_bone, put_bone, create_cube_widget,
+    create_widget, create_circle_widget, create_sphere_widget,
+    MetarigError, org, basename,
+    create_limb_widget, connected_children_names
+)
 from ..widgets import create_ikarrow_widget
 
 class Rig:
@@ -47,7 +48,7 @@ class Rig:
         bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
-        name = get_bone_name( strip_org( org_bones[0] ), 'mch', 'parent' )
+        name = get_bone_name( basename( org_bones[0] ), 'mch', 'parent' )
 
         mch = copy_bone( self.obj, org_bones[0], name )
         orient_bone( self, eb[mch], 'y' )

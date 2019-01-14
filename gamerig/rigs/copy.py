@@ -20,9 +20,7 @@
 
 import bpy
 
-from ..utils import copy_bone
-from ..utils import create_bone_widget, create_circle_widget
-from ..utils import strip_org
+from ..utils import copy_bone, create_bone_widget, create_circle_widget, basename
 
 
 class Rig:
@@ -36,7 +34,7 @@ class Rig:
         """
         self.obj          = obj
         self.org_bone     = bone
-        self.org_name     = strip_org(bone)
+        self.basename     = basename(bone)
         self.params       = params
         self.control_widget_type = params.control_widget_type
 
@@ -50,7 +48,7 @@ class Rig:
 
         # Make a control bone (copy of original).
         if self.control_widget_type != 'None':
-            bone = copy_bone(self.obj, self.org_bone, self.org_name)
+            bone = copy_bone(self.obj, self.org_bone, self.basename)
         
         # Get edit bones
         eb = self.obj.data.edit_bones

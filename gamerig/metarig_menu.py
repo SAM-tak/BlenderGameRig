@@ -37,7 +37,8 @@ class ArmatureMainMenu(bpy.types.Menu):
             layout.menu(cl.bl_idname)
         for op, name in self.operators:
             text = capwords(name.replace("_", " ")) + " (Meta-Rig)"
-            layout.operator(op, icon='OUTLINER_OB_ARMATURE', text=text)
+            icon='BONE_DATA' if name == 'single_bone' else 'OUTLINER_OB_ARMATURE'
+            layout.operator(op, icon=icon, text=text)
 
 
 def mainmenu_func(self, context):
@@ -49,7 +50,8 @@ class ArmatureSubMenu(bpy.types.Menu):
         layout = self.layout
         for op, name in self.operators:
             text = capwords(name.replace("_", " ")) + " (Meta-Rig)"
-            layout.operator(op, icon='OUTLINER_OB_ARMATURE', text=text)
+            icon='BONE_DATA' if name == 'single_bone' else 'OUTLINER_OB_ARMATURE'
+            layout.operator(op, icon=icon, text=text)
 
 
 def get_metarig_list(path, depth=0):
@@ -93,6 +95,12 @@ def get_metarig_list(path, depth=0):
     return metarigs_dict
 
 
+class AddMetarigOperatorBase(bpy.types.Operator):
+    @classmethod
+    def poll(cls, context):
+        return not context.object or context.object.mode == 'OBJECT'
+
+
 def make_metarig_add_execute(m):
     """ Create an execute method for a metarig creation operator.
     """
@@ -127,7 +135,7 @@ for metarig_class in metarigs_dict:
         name = m.__name__.rsplit('.', 1)[1]
 
         # Dynamically construct an Operator
-        T = type("GameRig_Add_" + name + "_Metarig", (bpy.types.Operator,), {})
+        T = type("GameRig_Add_" + name + "_Metarig", (AddMetarigOperatorBase,), {})
         T.bl_idname = "object.gamerig_" + name + "_metarig_add"
         T.bl_label = "Add " + name.replace("_", " ").capitalize() + " (Meta Rig)"
         T.bl_options = {'REGISTER', 'UNDO'}

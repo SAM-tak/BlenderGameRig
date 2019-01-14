@@ -1,11 +1,12 @@
 import bpy
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, flip_bone
-from ..utils import connected_children_names
-from ..utils import create_circle_widget, create_sphere_widget, create_widget
-from ..utils import MetarigError
-from ..utils import strip_org, mch, deformer
+from ..utils import (
+    copy_bone, flip_bone, connected_children_names,
+    create_circle_widget, create_sphere_widget, create_widget,
+    MetarigError,
+    basename, mch
+)
 
 class Rig:
 
@@ -15,7 +16,7 @@ class Rig:
         self.params = params
 
         if len(self.org_bones) <= 1:
-            raise MetarigError("GAMERIG ERROR: Bone '%s': listen bro, that finger rig jusaint put tugetha rite. A little hint, use more than one bone!!" % (strip_org(bone_name)))
+            raise MetarigError("GAMERIG ERROR: Bone '%s': listen bro, that finger rig jusaint put tugetha rite. A little hint, use more than one bone!!" % (basename(bone_name)))
 
 
     def generate(self):
@@ -30,7 +31,7 @@ class Rig:
 
         # Create ctrl master bone
         org_name  = self.org_bones[0]
-        temp_name = strip_org(org_name)
+        temp_name = basename(org_name)
 
         suffix = temp_name[-2:]
         master_name      = temp_name[:-5] + "_master" + suffix
@@ -53,10 +54,10 @@ class Rig:
         # Creating the bone chains
         for name in org_bones:
             # Create control bones
-            ctrl_bone = copy_bone( self.obj, name, strip_org(name) )
+            ctrl_bone = copy_bone( self.obj, name, basename(name) )
 
             # Create mechanism bones
-            mch_bone  = copy_bone( self.obj, name, mch(strip_org(name)) )
+            mch_bone  = copy_bone( self.obj, name, mch(basename(name)) )
 
             # Adding to lists
             ctrl_chain    += [ctrl_bone]

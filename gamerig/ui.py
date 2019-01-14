@@ -19,22 +19,14 @@
 # <pep8 compliant>
 
 import bpy
-from bpy.props import (
-    BoolProperty,
-    IntProperty,
-    EnumProperty,
-    StringProperty
-)
+from bpy.props import BoolProperty, IntProperty, EnumProperty, StringProperty
 from mathutils import Color
 
-from .utils import get_rig_type, MetarigError
-from .utils import write_metarig, write_widget
-from .utils import unique_name
-from .utils import get_keyed_frames, bones_in_frame
-from .utils import overwrite_prop_animation
-from .utils import unlink_all_widgets
-from . import rig_lists
-from . import generate
+from .utils import (
+    get_rig_type, MetarigError, write_metarig, write_widget, unique_name, get_keyed_frames,
+    bones_in_frame, overwrite_prop_animation, unlink_all_widgets
+)
+from . import rig_lists, generate
 
 
 class DATA_PT_gamerig_buttons(bpy.types.Panel):
@@ -46,7 +38,7 @@ class DATA_PT_gamerig_buttons(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return context.object and context.object.type == 'ARMATURE'\
-            and context.active_object.data.get("gamerig_rig_id") is None
+            and context.active_object.data.get("gamerig_rig_ui_template") is not None
 
     def draw(self, context):
         C = context
@@ -55,86 +47,14 @@ class DATA_PT_gamerig_buttons(bpy.types.Panel):
         id_store = C.window_manager
 
         if obj.mode in {'POSE', 'OBJECT'}:
-
-            WARNING = "Warning: Some features may change after generation"
-            show_warning = False
-
-            check_props = ['IK_follow', 'root/parent', 'FK_limb_follow', 'IK_Stretch']
-
-            for obj in bpy.data.objects:
-                if type(obj.data) != bpy.types.Armature:
-                    continue
-                for bone in obj.pose.bones:
-                    if bone.bone.layers[30] and (list(set(bone.keys()) & set(check_props))):
-                        show_warning = True
-                        break
-
-            if show_warning:
-                layout.label(text=WARNING, icon='ERROR')
-
-            enable_generate_and_advanced = True
-
-            row = layout.row()
-            row.operator("pose.gamerig_generate", text="Generate Rig", icon='POSE_HLT')
-            row.enabled = enable_generate_and_advanced
-
-            if id_store.gamerig_advanced_generation:
-                icon = 'UNLOCKED'
+            rig_id = obj.data.get('gamerig_id')
+            target = next((i for i in C.scene.objects if i != obj and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
+            if target:
+                layout.row().operator("pose.gamerig_generate", text="Regenerate Rig", icon='POSE_HLT')
+                layout.row().box().label(text="Overwrite to '%s'" % target.name, icon='INFO')
             else:
-                icon = 'LOCKED'
-
-            col = layout.column()
-            col.enabled = enable_generate_and_advanced
-            row = col.row()
-            row.prop(id_store, "gamerig_advanced_generation", toggle=True, icon=icon)
-
-            if id_store.gamerig_advanced_generation:
-
-                row = col.row(align=True)
-                row.prop(id_store, "gamerig_generate_mode", expand=True)
-
-                main_row = col.row(align=True).split(percentage=0.3)
-                col1 = main_row.column()
-                col2 = main_row.column()
-                col1.label(text="Rig Name")
-                row = col1.row()
-                row.label(text="Target Rig")
-                row.enabled = (id_store.gamerig_generate_mode == "overwrite")
-                row = col1.row()
-                row.label(text="Target UI")
-                row.enabled = (id_store.gamerig_generate_mode == "overwrite")
-
-                row = col2.row(align=True)
-                row.prop(id_store, "gamerig_rig_basename", text="", icon="SORTALPHA")
-
-                row = col2.row(align=True)
-                for i in range(0, len(id_store.gamerig_target_rigs)):
-                    id_store.gamerig_target_rigs.remove(0)
-
-                for ob in context.scene.objects:
-                    if type(ob.data) == bpy.types.Armature and "gamerig_rig_id" in ob.data:
-                        id_store.gamerig_target_rigs.add()
-                        id_store.gamerig_target_rigs[-1].name = ob.name
-
-                row.prop_search(id_store, "gamerig_target_rig", id_store, "gamerig_target_rigs", text="",
-                                icon='OUTLINER_OB_ARMATURE')
-                row.enabled = (id_store.gamerig_generate_mode == "overwrite")
-
-                for i in range(0, len(id_store.gamerig_rig_uis)):
-                    id_store.gamerig_rig_uis.remove(0)
-
-                for t in bpy.data.texts:
-                    id_store.gamerig_rig_uis.add()
-                    id_store.gamerig_rig_uis[-1].name = t.name
-
-                row = col2.row()
-                row.prop_search(id_store, "gamerig_rig_ui", id_store, "gamerig_rig_uis", text="", icon='TEXT')
-                row.enabled = (id_store.gamerig_generate_mode == "overwrite")
-
-                row = col.row()
-                row.prop(id_store, "gamerig_force_widget_update")
-                if id_store.gamerig_generate_mode == 'new':
-                    row.enabled = False
+                layout.row().operator("pose.gamerig_generate", text="Generate Rig", icon='POSE_HLT')
+                layout.row().prop(obj.data, "gamerig_rig_name", text="Rig Name")
 
         elif obj.mode == 'EDIT':
             # Build types list
@@ -156,10 +76,9 @@ class DATA_PT_gamerig_buttons(bpy.types.Panel):
                     a.name = r
 
             # Rig type list
-            row = layout.row()
-            row.template_list("UI_UL_list", "gamerig_types", id_store, "gamerig_types", id_store, 'gamerig_active_type')
+            layout.row().template_list("UI_UL_list", "gamerig_types", id_store, "gamerig_types", id_store, 'gamerig_active_type')
 
-            props = layout.operator("armature.metarig_sample_add", text="Add sample")
+            props = layout.operator("armature.gamerig_metarig_sample_add", text="Add sample")
             props.metarig_type = id_store.gamerig_types[id_store.gamerig_active_type].name
 
 
@@ -173,7 +92,7 @@ class DATA_PT_gamerig_layer_names(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return context.object and context.object.type == 'ARMATURE'\
-            and context.active_object.data.get("gamerig_rig_id") is None
+            and context.active_object.data.get("gamerig_rig_ui_template") is not None
 
     def draw(self, context):
         layout = self.layout
@@ -512,7 +431,7 @@ class DATA_PT_gamerig_bone_groups(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return context.object and context.object.type == 'ARMATURE'\
-            and context.active_object.data.get("gamerig_rig_id") is None
+            and context.active_object.data.get("gamerig_rig_ui_template") is not None
 
     def draw(self, context):
         obj = context.object
@@ -555,7 +474,7 @@ class BONE_PT_gamerig_buttons(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
-               and context.active_object.data.get("gamerig_rig_id") is None
+            and context.active_object.data.get("gamerig_rig_ui_template") is not None
 
     def draw(self, context):
         C = context
@@ -622,7 +541,7 @@ class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in ['EDIT_ARMATURE', 'EDIT_MESH']
+        return context.mode in ['EDIT_ARMATURE', 'EDIT_MESH'] and context.user_preferences.addons['gamerig'].preferences.shows_dev_tools
 
     def draw(self, context):
         obj = context.active_object
@@ -707,6 +626,7 @@ class Generate(bpy.types.Operator):
 
 
 
+
 class ToggleArmatureReference(bpy.types.Operator):
     """Toggle armature reference between metarig and generated rig."""
 
@@ -716,9 +636,9 @@ class ToggleArmatureReference(bpy.types.Operator):
 
     def execute(self, context):
         metarig = context.object
-        if 'gamerig_rig_id' in metarig.data:
-            rig_id = metarig.data['gamerig_rig_id']
-            genrig = next((i for i in context.scene.objects if i and i != metarig and i.data and 'gamerig_rig_id' in i.data and i.data['gamerig_rig_id'] == rig_id), None)
+        if 'gamerig_id' in metarig.data:
+            rig_id = metarig.data['gamerig_id']
+            genrig = next((i for i in context.scene.objects if i and i != metarig and i.data and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None)
             if genrig is not None:
                 for i in context.scene.objects:
                     for j in i.modifiers:
@@ -844,6 +764,33 @@ class EncodeWidget(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+class RenameBones(bpy.types.Operator):
+    """ Creates Python code that will generate the selected metarig
+        as a sample.
+    """
+    bl_idname  = "armature.gamerig_rename_bones"
+    bl_label   = "Rename bones with regex"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return context.mode == 'EDIT_ARMATURE' or context.mode == 'POSE'
+
+    def execute(self, context):
+        name = "metarig_sample.py"
+
+        if name in bpy.data.texts:
+            text_block = bpy.data.texts[name]
+            text_block.clear()
+        else:
+            text_block = bpy.data.texts.new(name)
+
+        text = write_metarig(context.active_object, layers=False, func_name="create_sample")
+        text_block.write(text)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        return {'FINISHED'}
 
 ### Registering ###
 

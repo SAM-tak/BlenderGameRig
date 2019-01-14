@@ -64,14 +64,14 @@ def get_rig_list(path):
             rig = utils.get_rig_type(module_name)
             if hasattr(rig, "Rig"):
                 rigs += [t]
-            elif hasattr(rig, "UI_SLIDERS") and hasattr(rig, "layers_ui") and hasattr(rig, "UI_REGISTER"):
+            elif hasattr(rig, "UI_TEMPLATE"):
                 if hasattr(rig, "UI_LABEL_TEXT") and rig.UI_LABEL_TEXT:
                     if len(rig.UI_LABEL_TEXT) > 1:
-                        riguitemplates[module_name] = [rig.UI_SLIDERS, rig.layers_ui, rig.UI_REGISTER, rig.UI_LABEL_TEXT[0], rig.UI_LABEL_TEXT[1]]
+                        riguitemplates[module_name] = [rig.UI_TEMPLATE, rig.UI_LABEL_TEXT[0], rig.UI_LABEL_TEXT[1]]
                     else:
-                        riguitemplates[module_name] = [rig.UI_SLIDERS, rig.layers_ui, rig.UI_REGISTER, rig.UI_LABEL_TEXT[0], '']
+                        riguitemplates[module_name] = [rig.UI_TEMPLATE, rig.UI_LABEL_TEXT[0], '']
                 else:
-                    riguitemplates[module_name] = [rig.UI_SLIDERS, rig.layers_ui, rig.UI_REGISTER, module_name, '']
+                    riguitemplates[module_name] = [rig.UI_TEMPLATE, module_name, '']
             if hasattr(rig, 'IMPLEMENTATION') and rig.IMPLEMENTATION:
                 implementation_rigs += [t]
     rigs.sort()
@@ -91,6 +91,7 @@ def get_collection_list(rig_list):
             collection_list += [a[0]]
     return collection_list
 
+
 # Public variables
 rigs_dict = get_rig_list("")
 rig_list = rigs_dict['rig_list']
@@ -98,4 +99,6 @@ implementation_rigs = rigs_dict['implementation_rigs']
 collection_list = get_collection_list(rig_list)
 col_enum_list = [("All", "All", ""), ("None", "None", "")] + [(c, c, "") for c in collection_list]
 riguitemplate_dic = rigs_dict['uitemplates']
-rig_ui_template_enum_list = [("Built in", "Built in", "GameRig Built in Rig UI Template")] + [(k, v[3], v[4]) for k, v in riguitemplate_dic.items()]
+rig_ui_template_enum_list = [("Built in", "Built in", "GameRig Built in Rig UI Template")] + [(k, v[1], v[2]) for k, v in riguitemplate_dic.items()]
+#print('riguitemplate_dic = %s' % riguitemplate_dic.keys())
+#print('rig_ui_template_enum_list = %s' % rig_ui_template_enum_list)

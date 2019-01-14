@@ -1,11 +1,12 @@
 import bpy
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, flip_bone, put_bone
-from ..utils import connected_children_names
-from ..utils import create_circle_widget, create_sphere_widget, create_widget
-from ..utils import MetarigError, make_mechanism_name, create_cube_widget
-from ..utils import org, strip_org
+from ..utils import (
+    copy_bone, flip_bone, put_bone,
+    org, basename, make_mechanism_name, connected_children_names,
+    create_circle_widget, create_sphere_widget, create_widget,
+    MetarigError, create_cube_widget
+)
 
 
 class Rig:
@@ -51,7 +52,7 @@ class Rig:
         # Report error of user created less than the minimum of 4 bones for rig
         if len(self.org_bones) <= 4 or neck_index < 2 or pivot_index < 1:
             raise MetarigError(
-                "GAMERIG ERROR: %s : invalid rig structure" % (strip_org(bone_name))
+                "GAMERIG ERROR: %s : invalid rig structure" % basename(bone_name)
             )
 
 
@@ -427,8 +428,8 @@ class Rig:
             'target_space': 'LOCAL'
         })
 
-        # DEF bones
-        deform =  self.org_bones # bones['def']
+        # deform bones
+        deform =  self.org_bones
         tweaks =  bones['hips']['tweak'] + bones['chest']['tweak']
         tweaks += bones['neck']['tweak'] + [ bones['neck']['ctrl'] ]
 
@@ -588,9 +589,9 @@ class Rig:
         if bone_chains != 'ERROR':
 
             # Create lists of bones and strip "ORG" from their names
-            neck_bones        = [ strip_org(b) for b in bone_chains['neck' ] ]
-            upper_torso_bones = [ strip_org(b) for b in bone_chains['upper'] ]
-            lower_torso_bones = [ strip_org(b) for b in bone_chains['lower'] ]
+            neck_bones        = [ basename(b) for b in bone_chains['neck' ] ]
+            upper_torso_bones = [ basename(b) for b in bone_chains['upper'] ]
+            lower_torso_bones = [ basename(b) for b in bone_chains['lower'] ]
 
             bones = {}
 

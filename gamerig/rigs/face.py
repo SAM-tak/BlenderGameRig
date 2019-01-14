@@ -1,11 +1,10 @@
 import bpy, re
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, flip_bone
-from ..utils import connected_children_names
-from ..utils import create_circle_widget, create_sphere_widget, create_widget, create_cube_widget
-from ..utils import MetarigError
-from ..utils import org, strip_org, deformer, mch, ORG_PREFIX, MCH_PREFIX
+from ..utils import (
+    MetarigError, copy_bone, flip_bone, connected_children_names, create_circle_widget, create_sphere_widget, create_widget, create_cube_widget,
+    org, basename, mch, ORG_PREFIX, MCH_PREFIX
+)
 from .widgets import create_face_widget, create_eye_widget, create_eyes_widget, create_ear_widget, create_jaw_widget, create_teeth_widget
 
 def mch_target(name):
@@ -75,7 +74,7 @@ class Rig:
 
     @staticmethod
     def find_child_by_prefix(bone, prefix):
-        return next((b for b in bone.children if strip_org(b.name).startswith(prefix)), None)
+        return next((b for b in bone.children if basename(b.name).startswith(prefix)), None)
 
     def add_chained_to_bone_name_map(self, root, name, depth=0):
         child = self.find_child_by_prefix(root, name)
@@ -147,8 +146,8 @@ class Rig:
             distance = distance.cross( (0, 0, 1) )
             eye_length = eyeL_e.length
 
-            eyeL_ctrl_name = strip_org( bones['eyes'][0] )
-            eyeR_ctrl_name = strip_org( bones['eyes'][1] )
+            eyeL_ctrl_name = basename( bones['eyes'][0] )
+            eyeR_ctrl_name = basename( bones['eyes'][1] )
 
             eyeL_ctrl_name = self.copy_bone( self.obj, bones['eyes'][0],  eyeL_ctrl_name )
             eyeR_ctrl_name = self.copy_bone( self.obj, bones['eyes'][1],  eyeR_ctrl_name )
@@ -172,7 +171,7 @@ class Rig:
             ## Widget for transforming the both eyes
             for bone in bones['eyes']:
                 if bone in self.bone_name_map:
-                    eye_master = self.copy_bone(self.obj, bone, 'master_' + strip_org(bone))
+                    eye_master = self.copy_bone(self.obj, bone, 'master_' + basename(bone))
                     eye_master_names.append( eye_master )
             
             ret['eyes'] = [eyeL_ctrl_name, eyeR_ctrl_name, eyes_ctrl_name] + eye_master_names
@@ -187,10 +186,10 @@ class Rig:
 
         # ears ctrls
         if 'ears' in bones and bones['ears']:
-            earL_name = strip_org( bones['ears'][0] )
+            earL_name = basename( bones['ears'][0] )
             earL_ctrl_name = self.copy_bone( self.obj, bones['ears'][0], earL_name )
             if len(bones['ears']) > 1:
-                earR_name = strip_org( bones['ears'][1] )
+                earR_name = basename( bones['ears'][1] )
                 earR_ctrl_name = self.copy_bone( self.obj, bones['ears'][1], earR_name )
                 ret['ears'] = [ earL_ctrl_name, earR_ctrl_name ]
             else:
@@ -200,7 +199,7 @@ class Rig:
         # jaw ctrl
         if 'jaw' in bones:
             if len(bones['jaw']) > 2:
-                jaw_ctrl_name = strip_org( bones['jaw'][2] ) + '_master'
+                jaw_ctrl_name = basename( bones['jaw'][2] ) + '_master'
                 jaw_ctrl_name = self.copy_bone( self.obj, bones['jaw'][2], jaw_ctrl_name )
 
                 jawL_org_e = eb[ rbn(bones['jaw'][0]) ]
@@ -211,7 +210,7 @@ class Rig:
 
                 ret['jaw'] = [ jaw_ctrl_name ]
             elif len(bones['jaw']) == 1:
-                jaw_ctrl_name = strip_org( bones['jaw'][0] ) + '_master'
+                jaw_ctrl_name = basename( bones['jaw'][0] ) + '_master'
                 jaw_ctrl_name = self.copy_bone( self.obj, bones['jaw'][0], jaw_ctrl_name )
                 jaw_org_e  = eb[ rbn(bones['jaw'][0]) ]
                 
@@ -220,7 +219,7 @@ class Rig:
         # tongue ctrl
         if 'tongue' in bones and bones['tongue']:
             tongue_org  = bones['tongue'].pop()
-            tongue_name = strip_org( tongue_org ) + '_master'
+            tongue_name = basename( tongue_org ) + '_master'
 
             tongue_ctrl_name = self.copy_bone( self.obj, tongue_org, tongue_name )
 
@@ -275,7 +274,7 @@ class Rig:
 
         for bone in bones + list( uniques.keys() ):
             if bone in self.bone_name_map:
-                tweak_name = strip_org( bone )
+                tweak_name = basename( bone )
 
                 # pick name for unique bone from the uniques dictionary
                 if bone in list( uniques.keys() ):
@@ -391,20 +390,20 @@ class Rig:
         # Create eyes mch bones
         eyes = sorted([ bone for bone in org_bones if 'eye' in bone ])
 
-        mch_bones = { strip_org( eye ) : [] for eye in eyes }
+        mch_bones = { basename( eye ) : [] for eye in eyes }
 
         for eye in eyes:
-            mch_name = self.copy_bone( self.obj, eye, mch( strip_org( eye ) ) )
+            mch_name = self.copy_bone( self.obj, eye, mch( basename( eye ) ) )
             eb[ rbn(mch_name) ].use_connect = False
             eb[ rbn(mch_name) ].parent      = None
 
-            mch_bones[ strip_org( eye ) ].append( mch_name )
+            mch_bones[ basename( eye ) ].append( mch_name )
 
             mch_name = self.copy_bone( self.obj, eye, mch_name )
             eb[ rbn(mch_name) ].use_connect = False
             eb[ rbn(mch_name) ].parent      = None
 
-            mch_bones[ strip_org( eye ) ].append( mch_name )
+            mch_bones[ basename( eye ) ].append( mch_name )
 
             eb[ rbn(mch_name) ].head[:] = eb[ rbn(mch_name) ].tail
             eb[ rbn(mch_name) ].tail[:] = eb[ rbn(mch_name) ].head + Vector( ( 0, 0, 0.005 ) )
@@ -432,7 +431,7 @@ class Rig:
         for i in range( len(eyes) ):
             if eyes[i] in self.bone_name_map:
                 for bone in all_lids[i]:
-                    mch_name = self.copy_bone( self.obj, eyes[i], mch(strip_org( bone ))  )
+                    mch_name = self.copy_bone( self.obj, eyes[i], mch(basename( bone ))  )
 
                     eb[ rbn(mch_name) ].use_connect = False
                     eb[ rbn(mch_name) ].parent      = None
@@ -469,7 +468,7 @@ class Rig:
 
             # create mch bones for all tongue org_bones except the first one
             for bone in sorted([ org for org in org_bones if 'tongue' in org ])[1:]:
-                mch_name = self.copy_bone( self.obj, tongue_ctrl, mch( strip_org( bone ) ) )
+                mch_name = self.copy_bone( self.obj, tongue_ctrl, mch( basename( bone ) ) )
 
                 eb[ rbn(mch_name) ].use_connect = False
                 eb[ rbn(mch_name) ].parent      = None
@@ -487,7 +486,7 @@ class Rig:
 
         mchts = []
         for i in org_bones:
-            bone = strip_org( i )
+            bone = basename( i )
             if bone != 'face':
                 mcht = self.copy_bone( self.obj, i, mch_target( bone ) )
                 eb[ rbn(mcht) ].use_connect = False
@@ -543,8 +542,6 @@ class Rig:
         # parent ear deform bones to their controls
         ear_mts  = [ mch_target('ear.L'), mch_target('ear.L.001'), mch_target('ear.R'), mch_target('ear.R.001') ]
         ear_ctrls = [ 'ear.L', 'ear.R' ]
-
-        #eb[ 'DEF-jaw' ].parent = eb[ 'jaw' ] # Parent jaw def bone to jaw tweak
 
         for ear_ctrl in ear_ctrls:
             for ear_mt in ear_mts:
@@ -976,7 +973,7 @@ class Rig:
 
         # org bones constraints
         for bone in self.org_bones:
-            self.make_constraits( 'mch_target', bone, mch_target( strip_org( bone ) ) )
+            self.make_constraits( 'mch_target', bone, mch_target( basename( bone ) ) )
 
 
     def drivers_and_props( self, all_bones ):

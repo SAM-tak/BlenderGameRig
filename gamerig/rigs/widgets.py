@@ -2,7 +2,6 @@ import bpy
 import importlib
 from ..utils import create_widget
 
-WGT_LAYERS  = [x == 19 for x in range(0, 20)]  # Widgets go on the last scene layer.
 MODULE_NAME = "widgets"  # Windows/Mac blender is weird, so __package__ doesn't work
 
 

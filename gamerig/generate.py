@@ -25,21 +25,18 @@ import traceback
 import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
 
-from .utils import MetarigError, new_bone, get_rig_type, create_widget
-from .utils import ORG_PREFIX, MCH_PREFIX, DEF_PREFIX, WGT_PREFIX, ROOT_NAME, make_original_name
-from .utils import RIG_DIR
-from .utils import create_root_widget
-from .utils import random_id
-from .utils import copy_attributes
-from .utils import gamma_correct
+from .utils import (
+    MetarigError, new_bone, get_rig_type, create_widget,
+    ORG_PREFIX, MCH_PREFIX, WGT_PREFIX, ROOT_NAME, RIG_DIR,
+    org, create_root_widget, get_wgt_name, random_id,
+    copy_attributes, gamma_correct
+)
 from . import rig_lists
 
 RIG_MODULE = "rigs"
 ORG_LAYER = [n == 31 for n in range(0, 32)]  # Armature layer that original bones should be moved to.
 MCH_LAYER = [n == 30 for n in range(0, 32)]  # Armature layer that mechanism bones should be moved to.
-DEF_LAYER = [n == 29 for n in range(0, 32)]  # Armature layer that deformation bones should be moved to.
 ROOT_LAYER = [n == 28 for n in range(0, 32)]  # Armature layer that root bone should be moved to.
-WGT_LAYERS = [x == 19 for x in range(0, 20)]  # Widgets go on the last scene layer.
 
 
 class Timer:
@@ -55,7 +52,6 @@ class Timer:
 # TODO: generalize to take a group as input instead of an armature.
 def generate_rig(context, metarig):
     """ Generates a rig from a metarig.
-
     """
     t = Timer()
 
@@ -64,7 +60,8 @@ def generate_rig(context, metarig):
 
     # Random string with time appended so that
     # different rigs don't collide id's
-    rig_id = random_id(16)
+    rig_id = metarig.data.get("gamerig_id") or random_id()
+    metarig.data["gamerig_id"] = rig_id
 
     # Initial configuration
     # mode_orig = context.mode  # UNUSED
@@ -81,19 +78,19 @@ def generate_rig(context, metarig):
     # Check if the generated rig already exists, so we can
     # regenerate in the same object.  If not, create a new
     # object to generate the rig in.
-    print("Fetch rig.")
+    print("Fetch rig (id : %s)." % rig_id)
     toggledArmatureModifiers = []
-    rig_new_name = ""
-    rig_old_name = ""
-    if id_store.gamerig_rig_basename:
-        rig_new_name = id_store.gamerig_rig_basename + "_rig"
+    obj = next((i for i in scene.objects if i != metarig and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None)
 
-    if id_store.gamerig_generate_mode == 'overwrite':
-        name = id_store.gamerig_target_rig or "rig"
+    if obj is None:
+        print("Create new rig.")
+        name = metarig.data.get("gamerig_rig_name") or "rig"
+        obj = bpy.data.objects.new(name, bpy.data.armatures.new(name))  # in case name 'rig' exists it will be rig.001
+        obj.draw_type = 'WIRE'
+        scene.objects.link(obj)
+    else:
+        print("Overwrite existing rig.")
         try:
-            obj = scene.objects[name]
-            rig_old_name = name
-            obj.name = rig_new_name or name
             # toggle armature object to metarig if it using generated rig.
             # (referensing rig overwriting makes script runs very slowly)
             for i in scene.objects:
@@ -101,24 +98,16 @@ def generate_rig(context, metarig):
                     if j.type == 'ARMATURE' and j.object == obj:
                         toggledArmatureModifiers += [j]
                         j.object = metarig
+            # Get rid of anim data in case the rig already existed
+            print("Clear rig animation data.")
+            obj.animation_data_clear()
         except KeyError:
-            rig_old_name = name
-            name = rig_new_name or name
+            name = obj.name or metarig.data.get("gamerig_rig_name") or "rig"
             obj = bpy.data.objects.new(name, bpy.data.armatures.new(name))
             obj.draw_type = 'WIRE'
             scene.objects.link(obj)
-    else:
-        name = rig_new_name or "rig"
-        obj = bpy.data.objects.new(name, bpy.data.armatures.new(name))  # in case name 'rig' exists it will be rig.001
-        obj.draw_type = 'WIRE'
-        scene.objects.link(obj)
 
-    id_store.gamerig_target_rig = obj.name
     obj.data.pose_position = 'POSE'
-
-    # Get rid of anim data in case the rig already existed
-    print("Clear rig animation data.")
-    obj.animation_data_clear()
 
     # Select generated rig object
     metarig.select = False
@@ -273,8 +262,8 @@ def generate_rig(context, metarig):
     # Add the ORG_PREFIX to the original bones.
     bpy.ops.object.mode_set(mode='OBJECT')
     for i in range(0, len(original_bones)):
-        obj.data.bones[original_bones[i]].name = make_original_name(original_bones[i])
-        original_bones[i] = make_original_name(original_bones[i])
+        obj.data.bones[original_bones[i]].name = org(original_bones[i])
+        original_bones[i] = org(original_bones[i])
 
     # Create a sorted list of the original bones, sorted in the order we're
     # going to traverse them for rigging.
@@ -300,8 +289,8 @@ def generate_rig(context, metarig):
     obj.data.bones[root_bone].layers = ROOT_LAYER
 
     # Put the rig_name in the armature custom properties
-    rna_idprop_ui_prop_get(obj.data, "gamerig_rig_id", create=True)
-    obj.data["gamerig_rig_id"] = rig_id
+    rna_idprop_ui_prop_get(obj.data, "gamerig_id", create=True)
+    obj.data["gamerig_id"] = rig_id
 
     t.tick("Create root bone: ")
 
@@ -383,14 +372,11 @@ def generate_rig(context, metarig):
                 pb.lock_rotation_w = True
             pb.lock_scale = (True, True, True)
 
-    # Every bone that has a name starting with "DEF-" make deforming.  All the
-    # others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
-    for bone in bones:
-        b = obj.data.bones[bone]
-        if b.name.startswith(DEF_PREFIX):
-            b.use_deform = True
-        elif not b.name.startswith(ORG_PREFIX) or not b.name in metarig.data.bones:
-            b.use_deform = False
+    # All the others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
+    # for bone in bones:
+    #     b = obj.data.bones[bone]
+    #     if not b.name.startswith(ORG_PREFIX) or not b.name in metarig.data.bones:
+    #         b.use_deform = False
 
     # Alter marked driver targets
     if obj.animation_data:
@@ -403,7 +389,7 @@ def generate_rig(context, metarig):
                         and prop in obj.pose.bones[bone].keys():
                             tar.data_path = tar.data_path[7:]
                         else:
-                            tar.data_path = 'pose.bones["%s"]["%s"]' % (make_original_name(bone), prop)
+                            tar.data_path = 'pose.bones["%s"]["%s"]' % (org(bone), prop)
 
     # Move all the original bones to their layer.
     for bone in original_bones:
@@ -414,18 +400,12 @@ def generate_rig(context, metarig):
         if obj.data.bones[bone].name.startswith(MCH_PREFIX):
             obj.data.bones[bone].layers = MCH_LAYER
 
-    # Move all the bones with names starting with "DEF-" to their layer.
-    for bone in bones:
-        if obj.data.bones[bone].name.startswith(DEF_PREFIX):
-            obj.data.bones[bone].layers = DEF_LAYER
-
     # Create root bone widget
     create_root_widget(obj, ROOT_NAME)
 
     # Assign shapes to bones
-    # Object's with name WGT-<rig_id>-<bone_name> get used as that bone's shape.
     for bone in bones:
-        wgt_name = (WGT_PREFIX + rig_id + '-' + obj.data.bones[bone].name)
+        wgt_name = get_wgt_name(obj.name, obj.data.bones[bone].name)
         if wgt_name in context.scene.objects:
             # Weird temp thing because it won't let me index by object name
             for ob in context.scene.objects:
@@ -440,7 +420,7 @@ def generate_rig(context, metarig):
         for i in range(0, 32):
             vis_layers[i] = vis_layers[i] or obj.data.bones[bone].layers[i]
     for i in range(0, 32):
-        vis_layers[i] = vis_layers[i] and not (ORG_LAYER[i] or MCH_LAYER[i] or DEF_LAYER[i])
+        vis_layers[i] = vis_layers[i] and not (ORG_LAYER[i] or MCH_LAYER[i])
     obj.data.layers = vis_layers
 
     # Ensure the collection of layer names exists
@@ -454,31 +434,17 @@ def generate_rig(context, metarig):
         layer_layout += [(l.name, l.row)]
 
     # Generate the UI script
-    if id_store.gamerig_generate_mode == 'overwrite':
-        rig_ui_name = id_store.gamerig_rig_ui or 'gamerig_ui.py'
-    else:
-        rig_ui_name = 'gamerig_ui.py'
+    rig_ui_name = 'gamerig_ui_%s.py' % rig_id
 
-    if id_store.gamerig_generate_mode == 'overwrite' and rig_ui_name in bpy.data.texts.keys():
+    if rig_ui_name in bpy.data.texts.keys():
         script = bpy.data.texts[rig_ui_name]
         script.clear()
     else:
-        script = bpy.data.texts.new("gamerig_ui.py")
-
-    rig_ui_old_name = ""
-    if id_store.gamerig_rig_basename:
-        rig_ui_old_name = script.name
-        script.name = id_store.gamerig_rig_basename + "_rig_ui.py"
-
-    id_store.gamerig_rig_ui = script.name
+        script = bpy.data.texts.new(rig_ui_name)
 
     uitemplate = rig_lists.riguitemplate_dic[metarig.data.gamerig_rig_ui_template]
-    
-    script.write(uitemplate[0] % rig_id)
-    for s in ui_scripts:
-        script.write("\n        " + s.replace("\n", "\n        ") + "\n")
-    script.write(uitemplate[1](vis_layers, layer_layout))
-    script.write(uitemplate[2])
+
+    script.write(uitemplate[0].format(rig_id=rig_id, properties=properties_ui(ui_scripts), layers=layers_ui(vis_layers, layer_layout)))
     script.use_module = True
 
     # Run UI script
@@ -642,3 +608,49 @@ def param_name(param_name, rig_type):
     """ Get the actual parameter name, sans-rig-type.
     """
     return param_name[len(rig_type) + 1:]
+
+
+def properties_ui(scripts):
+    """ Turn a concatened string of Property UI scripts.
+    """
+    code = ""
+    for s in scripts:
+        code += "\n        " + s.replace("\n", "\n        ") + "\n"
+    return code
+
+
+def layers_ui(layers, layout):
+    """ Turn a list of booleans + a list of names into a layer UI.
+    """
+
+    rows = {}
+    for i in range(28):
+        if layers[i]:
+            if layout[i][1] not in rows:
+                rows[layout[i][1]] = []
+            rows[layout[i][1]] += [(layout[i][0], i)]
+
+    keys = list(rows.keys())
+    keys.sort()
+
+    code = ""
+
+    for key in keys:
+        code += "\n        row = col.row()\n"
+        i = 0
+        for l in rows[key]:
+            if i > 3:
+                code += "\n        row = col.row()\n"
+                i = 0
+            code += "        row.prop(context.active_object.data, 'layers', index=%s, toggle=True, text='%s')\n" % (str(l[1]), l[0])
+            i += 1
+
+    # Root layer
+    code += "\n        row = col.row()"
+    code += "\n        row.separator()"
+    code += "\n        row = col.row()"
+    code += "\n        row.separator()\n"
+    code += "\n        row = col.row()\n"
+    code += "        row.prop(context.active_object.data, 'layers', index=28, toggle=True, text='Root')\n"
+
+    return code
