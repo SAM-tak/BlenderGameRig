@@ -19,7 +19,7 @@
 # <pep8 compliant>
 import bpy, math
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError, connected_children_names, create_widget, create_circle_widget, copy_bone, put_bone, flip_bone
+from ...utils import MetarigError, connected_children_names, copy_bone, put_bone, flip_bone
 from ..widgets import create_foot_widget, create_ballsocket_widget, create_toe_widget
 from .limb_utils import *
 
@@ -92,6 +92,9 @@ def create_leg( cls, bones ):
 
     eb[ roll2_mch ].length /= 4
 
+    # align ctrl's height to roll2_mch
+    eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ roll2_mch ].center.z
+
     # Rock MCH bones
     rock1_mch = get_bone_name( tmp_heel, 'mch', 'rock' )
     rock1_mch = copy_bone( cls.obj, tmp_heel, rock1_mch )
@@ -135,14 +138,14 @@ def create_leg( cls, bones ):
         'subtarget'    : heel,
         'use_y'        : False,
         'use_z'        : False,
-        'invert_x'     : True,
+        'invert_x'     : False,
         'owner_space'  : 'LOCAL',
         'target_space' : 'LOCAL'
     })
     make_constraint( cls, roll2_mch, {
         'constraint'  : 'LIMIT_ROTATION',
         'use_limit_x' : True,
-        'max_x'       : math.radians(360),
+        'min_x'       : math.radians(-360),
         'owner_space' : 'LOCAL'
     })
 
@@ -215,8 +218,8 @@ def create_leg( cls, bones ):
     # Create ik/fk switch property
     pb_master = pb[ bones['fk']['ctrl'][0] ]
     
-    pb_master['IK_Stretch'] = 1.0
-    prop = rna_idprop_ui_prop_get( pb_master, 'IK_Stretch', create=True )
+    pb_master['ik_stretch'] = 1.0
+    prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
     prop["min"]         = 0.0
     prop["max"]         = 1.0
     prop["soft_min"]    = 0.0
@@ -242,7 +245,7 @@ def create_leg( cls, bones ):
     drv_modifier.coefficients[1] = -1.0
 
     # Create leg widget
-    create_foot_widget(cls.obj, ctrl, bone_transform_name=None)
+    create_foot_widget(cls.obj, ctrl)
 
     # Create heel ctrl locks
     pb[ heel ].lock_location = True, True, True
@@ -250,7 +253,7 @@ def create_leg( cls, bones ):
     pb[ heel ].lock_scale    = True, True, True
 
     # Add ballsocket widget to heel
-    create_ballsocket_widget(cls.obj, heel, bone_transform_name=None)
+    create_ballsocket_widget(cls.obj, heel)
 
     bpy.ops.object.mode_set(mode='EDIT')
     eb = cls.obj.data.edit_bones
@@ -280,12 +283,12 @@ def create_leg( cls, bones ):
         #pb[ toeik ].lock_location = True, True, True
 
         # Find IK/FK switch property
-        prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
+        prop = rna_idprop_ui_prop_get( pb_master, 'ik_fk_rate' )
 
         # Add driver to limit scale constraint influence
         b        = org_bones[3]
         drv      = pb[b].constraints[-1].driver_add("influence").driver
-        drv.type = 'AVERAGE'
+        drv.type = 'SUM'
 
         var = drv.variables.new()
         var.name = prop.name

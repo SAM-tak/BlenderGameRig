@@ -27,7 +27,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 
 from .utils import (
     MetarigError, new_bone, get_rig_type, create_widget,
-    ORG_PREFIX, MCH_PREFIX, WGT_PREFIX, ROOT_NAME, RIG_DIR,
+    MCH_PREFIX, ROOT_NAME, RIG_DIR,
     org, create_root_widget, get_wgt_name, random_id,
     copy_attributes, gamma_correct
 )
@@ -360,23 +360,6 @@ def generate_rig(context, metarig):
             obj.data.edit_bones[bone].parent = obj.data.edit_bones[root_bone]
 
     bpy.ops.object.mode_set(mode='OBJECT')
-
-    # Lock transforms on all non-control bones
-    r = re.compile("[A-Z][A-Z][A-Z]-")
-    for bone in bones:
-        if r.match(bone):
-            pb = obj.pose.bones[bone]
-            if not bone.startswith(ORG_PREFIX):
-                pb.lock_location = (True, True, True)
-                pb.lock_rotation = (True, True, True)
-                pb.lock_rotation_w = True
-            pb.lock_scale = (True, True, True)
-
-    # All the others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
-    # for bone in bones:
-    #     b = obj.data.bones[bone]
-    #     if not b.name.startswith(ORG_PREFIX) or not b.name in metarig.data.bones:
-    #         b.use_deform = False
 
     # Alter marked driver targets
     if obj.animation_data:

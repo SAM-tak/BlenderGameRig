@@ -6,7 +6,7 @@ parent   = '%s'
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["%s"]', slider = True )
+    layout.prop( pose_bones[ parent ], '["ik_fk_rate"]', text = 'IK/FK', slider = True )
     props = layout.operator("pose.gamerig_arm_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.uarm_fk = controls[1]
     props.farm_fk = controls[2]
@@ -23,14 +23,13 @@ if is_selected( controls ):
     props.hand_ik = controls[4]
     props.pole = ""
 
-
 # IK Stretch on IK Control bone
 if is_selected( ik_ctrl ):
-    layout.prop( pose_bones[ parent ], '["%s"]', slider = True )
+    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["%s"]', slider = True )
+    layout.prop( pose_bones[ parent ], '["fk_limb_follow"]', text = 'FK Limb Follow', slider = True )
 """
 
 #                 0             1              2           3           4           5              6               7             8
@@ -47,7 +46,7 @@ parent   = '%s'
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["%s"]', slider = True )
+    layout.prop( pose_bones[ parent ], '["ik_fk_rate"]', text = 'IK/FK', slider = True )
     props = layout.operator("pose.gamerig_leg_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
@@ -72,11 +71,11 @@ if is_selected( controls ):
 
 # IK Stretch on IK Control bone
 if is_selected( ik_ctrl ):
-    layout.prop( pose_bones[ parent ], '["%s"]', slider = True )
+    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["%s"]', slider = True )
+    layout.prop( pose_bones[ parent ], '["fk_limb_follow"]', text = 'FK Limb Follow', slider = True )
 """
 
 def create_script(bones, limb_type = None):
@@ -102,10 +101,7 @@ def create_script(bones, limb_type = None):
             controls_string,
             ik_ctrl_string,
             bones['fk']['ctrl'][0],
-            bones['fk']['ctrl'][0],
-            'IK/FK',
-            'IK_Stretch',
-            'FK_limb_follow'
+            bones['fk']['ctrl'][0]
         )
 
     elif limb_type == 'leg':
@@ -113,10 +109,7 @@ def create_script(bones, limb_type = None):
             controls_string,
             ik_ctrl_string,
             bones['fk']['ctrl'][0],
-            bones['fk']['ctrl'][0],
-            'IK/FK',
-            'IK_Stretch',
-            'FK_limb_follow'
+            bones['fk']['ctrl'][0]
         )
 
     elif limb_type == 'paw':
@@ -124,8 +117,5 @@ def create_script(bones, limb_type = None):
             controls_string,
             ik_ctrl_string,
             bones['fk']['ctrl'][0],
-            bones['fk']['ctrl'][0],
-            'IK/FK',
-            'IK_Stretch',
-            'FK_limb_follow'
+            bones['fk']['ctrl'][0]
         )

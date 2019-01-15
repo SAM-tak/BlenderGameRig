@@ -113,8 +113,8 @@ def create_hand_widget(rig, bone_name, size=1.0, bone_transform_name=None):
     # Create hand widget
     obj = create_widget(rig, bone_name, bone_transform_name)
     if obj is not None:
-        verts = [(0.0*size, 1.5*size, -0.7000000476837158*size), (1.1920928955078125e-07*size, -0.25*size, -0.6999999284744263*size), (0.0*size, -0.25*size, 0.7000000476837158*size), (-1.1920928955078125e-07*size, 1.5*size, 0.6999999284744263*size), (5.960464477539063e-08*size, 0.7229999899864197*size, -0.699999988079071*size), (-5.960464477539063e-08*size, 0.7229999899864197*size, 0.699999988079071*size), (1.1920928955078125e-07*size, -2.9802322387695312e-08*size, -0.699999988079071*size), (0.0*size, 2.9802322387695312e-08*size, 0.699999988079071*size), ]
-        edges = [(1, 2), (0, 3), (0, 4), (3, 5), (4, 6), (1, 6), (5, 7), (2, 7)]
+        verts = [(-0.7000000476837158*size, 1.4999998807907104*size, 5.960464477539063e-08*size), (-0.6999999284744263*size, -0.24999994039535522*size, -5.960464477539063e-08*size), (0.7000000476837158*size, -0.24999994039535522*size, 0.0*size), (0.6999999284744263*size, 1.4999998807907104*size, 1.1920928955078125e-07*size), (-0.699999988079071*size, 0.7229999899864197*size, 0.0*size), (0.699999988079071*size, 0.7229999899864197*size, 5.960464477539063e-08*size), (-0.699999988079071*size, 0.0*size, -5.960464477539063e-08*size), (0.699999988079071*size, 5.960464477539063e-08*size, 0.0*size), ]
+        edges = [(1, 2), (0, 3), (0, 4), (3, 5), (4, 6), (1, 6), (5, 7), (2, 7), ]
         faces = []
 
         mesh = obj.data
@@ -213,6 +213,59 @@ def create_paw_widget(rig, bone_name, size=1.0, bone_transform_name=None):
 
         mod = obj.modifiers.new("subsurf", 'SUBSURF')
         mod.levels = 2
+        return obj
+    else:
+        return None
+
+
+def create_palm_widget(rig, bone_name, flip_xz, size=1.0, bone_transform_name=None):
+    obj = create_widget(rig, bone_name, bone_transform_name)
+    if obj is not None:
+        mesh = obj.data
+        verts = [(0.1578*size, 0.0*size, -0.3*size), (0.1578*size, 1.0*size, -0.2*size), (-0.1578*size, 1.0*size, -0.2*size), (-0.1578*size, -0.0*size, -0.3*size), (-0.1578*size, -0.0*size, 0.3*size), (-0.1578*size, 0.835*size, 0.2165*size), (0.1578*size, 0.835*size, 0.2165*size), (0.1578*size, 0.0*size, 0.3*size), (0.1578*size, 0.25*size, -0.275*size), (-0.1578*size, 0.25*size, -0.275*size), (0.1578*size, 0.75*size, -0.225*size), (-0.1578*size, 0.75*size, -0.225*size), (0.1578*size, 0.6194*size, 0.2381*size), (0.1578*size, 0.25*size, 0.275*size), (-0.1578*size, 0.25*size, 0.275*size), (-0.1578*size, 0.6194*size, 0.2381*size), ]
+        edges = [(1, 2), (0, 3), (4, 7), (5, 6), (8, 0), (9, 3), (10, 1), (11, 2), (12, 6), (13, 7), (4, 14), (15, 5), (10, 8), (11, 9), (15, 14), (12, 13), ]
+
+        if flip_xz:
+            # Flip x/z coordinates
+            verts = [v[::-1] for v in verts]
+        
+        mesh.from_pydata(verts, edges, [])
+        mesh.update()
+
+        mod = obj.modifiers.new("subsurf", 'SUBSURF')
+        mod.levels = 2
+
+
+def create_thumb_widget(rig, bone_name, flip_xz, size=1.0, bone_transform_name=None):
+    obj = create_widget(rig, bone_name, bone_transform_name)
+    if obj is not None:
+        mesh = obj.data
+        verts = [(0.1578*size, 0.0*size, -0.3*size), (0.1578*size, 1.0*size, -0.2*size), (-0.1578*size, 1.0*size, -0.2*size), (-0.1578*size, -0.0*size, -0.3*size), (-0.1578*size, 0.1224*size, 0.338*size), (-0.1578*size, 0.766*size, 0.2737*size), (0.1578*size, 0.766*size, 0.2737*size), (0.1578*size, 0.1224*size, 0.338*size), (0.1578*size, 0.25*size, -0.275*size), (-0.1578*size, 0.25*size, -0.275*size), (0.1578*size, 0.75*size, -0.225*size), (-0.1578*size, 0.75*size, -0.225*size), (0.1578*size, 0.5515*size, 0.2951*size), (0.1578*size, 0.3209*size, 0.3182*size), (-0.1578*size, 0.3209*size, 0.3182*size), (-0.1578*size, 0.5515*size, 0.2951*size), ]
+        edges = [(1, 2), (0, 3), (4, 7), (5, 6), (8, 0), (9, 3), (10, 1), (11, 2), (12, 6), (13, 7), (4, 14), (15, 5), (10, 8), (11, 9), (15, 14), (12, 13), ]
+
+        if flip_xz:
+            # Flip x/z coordinates
+            verts = [v[::-1] for v in verts]
+        
+        mesh.from_pydata(verts, edges, [])
+        mesh.update()
+
+        mod = obj.modifiers.new("subsurf", 'SUBSURF')
+        mod.levels = 2
+
+
+def create_directed_circle_widget(rig, bone_name, radius=1.0, head_tail=0.0, bone_transform_name=None):
+    """ Creates a directed circle widget, a circle around the y-axis.
+        radius: the radius of the circle
+        head_tail: where along the length of the bone the circle is (0.0=head, 1.0=tail)
+    """
+    obj = create_widget(rig, bone_name, bone_transform_name)
+    if obj != None:
+        verts = [(0.53033, 0.0, -0.53033), (0.6236, 0.0, -0.41668), (0.69291, 0.0, -0.28701), (0.73559, 0.0, -0.14632), (0.75, 0.0, 1.2079e-07), (0.73559, 0.0, 0.14632), (0.69291, 0.0, 0.28701), (0.6236, 0.0, 0.41668), (0.53033, 0.0, 0.53033), (0.41668, 0.0, 0.6236), (0.28701, 0.0, 0.69291), (0.14632, 0.0, 0.73559), (-2.4438e-07, 0.0, 0.75), (-0.14632, 0.0, 0.73559), (-0.28701, 0.0, 0.69291), (-0.41668, 0.0, 0.6236), (-0.53033, 0.0, 0.53033), (-0.6236, 0.0, 0.41668), (-0.69291, 0.0, 0.28701), (-0.73559, 0.0, 0.14632), (-0.75, 0.0, -5.4678e-07), (-0.73559, 0.0, -0.14632), (-0.69291, 0.0, -0.28701), (-0.6236, 0.0, -0.41668), (-0.53033, 0.0, -0.53033), (-0.41668, 0.0, -0.6236), (-0.28701, 0.0, -0.69291), (-0.14632, 0.0, -0.73559), (1.204e-06, 0.0, -0.75), (0.14632, 0.0, -0.73559), (0.28701, 0.0, -0.69291), (0.41668, 0.0, -0.6236), (-0.065618, 0.0, 0.81746), (0.065618, 0.0, 0.81542), (0.0, 0.0, 0.90415), ]
+        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12), (12, 13), (13, 14), (14, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20), (20, 21), (21, 22), (22, 23), (23, 24), (24, 25), (25, 26), (26, 27), (27, 28), (28, 29), (29, 30), (30, 31), (0, 31), (32, 33), (33, 34), (34, 32), ]
+        mesh = obj.data
+        mesh.from_pydata([(a[0] * radius, head_tail, a[2] * radius) for a in verts], edges, [])
+        mesh.update()
         return obj
     else:
         return None

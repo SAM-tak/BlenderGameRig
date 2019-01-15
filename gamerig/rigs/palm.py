@@ -23,8 +23,8 @@ from math import cos, pi
 
 import bpy
 
-from ..utils import MetarigError, copy_bone, create_widget, basename
-
+from ..utils import MetarigError, copy_bone, basename
+from .widgets import create_palm_widget
 
 def bone_siblings(obj, bone):
     """ Returns a list of the siblings of the given bone.
@@ -164,43 +164,7 @@ class Rig:
             i += 1
 
         # Create control widget
-        w = create_widget(self.obj, ctrl)
-        if w is not None:
-            mesh = w.data
-            verts = [
-                (0.1578, 0.0, -0.3),
-                (0.1578, 1.0, -0.2),
-                (-0.1578, 1.0, -0.2),
-                (-0.1578, -0.0, -0.3),
-                (-0.1578, -0.0, 0.3),
-                (-0.1578, 1.0, 0.2),
-                (0.1578, 1.0, 0.2),
-                (0.1578, 0.0, 0.3),
-                (0.1578, 0.25, -0.275),
-                (-0.1578, 0.25, -0.275),
-                (0.1578, 0.75, -0.225),
-                (-0.1578, 0.75, -0.225),
-                (0.1578, 0.75, 0.225),
-                (0.1578, 0.25, 0.275),
-                (-0.1578, 0.25, 0.275),
-                (-0.1578, 0.75, 0.225),
-            ]
-
-            if 'Z' in self.palm_rotation_axis:
-                # Flip x/z coordinates
-                verts = [v[::-1] for v in verts]
-
-            edges = [
-                (1, 2), (0, 3), (4, 7), (5, 6),
-                (8, 0), (9, 3), (10, 1), (11, 2),
-                (12, 6), (13, 7), (4, 14), (15, 5),
-                (10, 8), (11, 9), (15, 14), (12, 13),
-            ]
-            mesh.from_pydata(verts, edges, [])
-            mesh.update()
-
-            mod = w.modifiers.new("subsurf", 'SUBSURF')
-            mod.levels = 2
+        create_palm_widget(self.obj, ctrl, 'Z' in self.palm_rotation_axis)
 
 
 def add_parameters(params):

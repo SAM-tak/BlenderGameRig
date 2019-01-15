@@ -21,7 +21,6 @@ import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ...utils import (
     MetarigError, connected_children_names,
-    create_widget, create_circle_widget,
     flip_bone, copy_bone
 )
 from ..widgets import create_paw_widget, create_ballsocket_widget, create_toe_widget
@@ -106,8 +105,8 @@ def create_paw( cls, bones ):
     # Create ik/fk switch property
     pb_master = pb[ bones['fk']['ctrl'][0] ]
 
-    pb_master['IK_Stretch'] = 1.0
-    prop = rna_idprop_ui_prop_get( pb_master, 'IK_Stretch', create=True )
+    pb_master['ik_stretch'] = 1.0
+    prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
     prop["min"]         = 0.0
     prop["max"]         = 1.0
     prop["soft_min"]    = 0.0
@@ -133,13 +132,13 @@ def create_paw( cls, bones ):
     drv_modifier.coefficients[1] = -1.0
 
     # Create paw widget
-    create_paw_widget(cls.obj, ctrl, bone_transform_name=None)
+    create_paw_widget(cls.obj, ctrl)
 
     # Create heel ctrl locks
     pb[ heel ].lock_location = True, True, True
 
     # Add ballsocket widget to heel
-    create_ballsocket_widget(cls.obj, heel, bone_transform_name=None)
+    create_ballsocket_widget(cls.obj, heel)
 
     bpy.ops.object.mode_set(mode='EDIT')
     eb = cls.obj.data.edit_bones
@@ -160,7 +159,7 @@ def create_paw( cls, bones ):
 
         # Find IK/FK switch property
         pb   = cls.obj.pose.bones
-        prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
+        prop = rna_idprop_ui_prop_get( pb_master, 'ik_fk_rate' )
 
         # Add driver to limit scale constraint influence
         b        = org_bones[3]

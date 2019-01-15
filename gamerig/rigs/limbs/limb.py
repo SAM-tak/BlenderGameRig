@@ -8,12 +8,12 @@ from .paw import create_paw
 from .ui import create_script
 from .limb_utils import *
 from ...utils import (
-    copy_bone, flip_bone, put_bone, create_cube_widget,
-    create_widget, create_circle_widget, create_sphere_widget,
+    copy_bone, flip_bone, put_bone,
+    create_widget, create_sphere_widget,
     MetarigError, org, basename,
     create_limb_widget, connected_children_names
 )
-from ..widgets import create_ikarrow_widget
+from ..widgets import create_ikarrow_widget, create_directed_circle_widget
 
 class Rig:
     def __init__(self, obj, bone_name, params):
@@ -126,7 +126,7 @@ class Rig:
         # Locks and Widget
         pb[ ctrl ].lock_rotation = False, False, True
         pb[ ctrl ].lock_scale = True, True, True
-        create_ikarrow_widget( self.obj, ctrl, bone_transform_name=None )
+        create_ikarrow_widget( self.obj, ctrl )
 
         return { 'ctrl'       : { 'limb' : ctrl },
                  'mch_ik'     : mch_ik,
@@ -192,14 +192,14 @@ class Rig:
         pb[ ctrls[2] ].lock_location = True, True, True
         pb[ ctrls[2] ].lock_scale = True, True, True
 
-        create_limb_widget( self.obj, ctrls[0] )
-        create_limb_widget( self.obj, ctrls[1] )
+        create_limb_widget(self.obj, ctrls[0])
+        create_limb_widget(self.obj, ctrls[1])
 
         if self.limb_type == 'arm':
-            create_circle_widget(self.obj, ctrls[2], radius=0.4, head_tail=0.0)
+            create_directed_circle_widget(self.obj, ctrls[2], radius=-0.4, head_tail=0.0) # negative radius is reasonable. to flip xz
         else:
             create_limb_widget(self.obj, ctrls[2])
-            create_circle_widget(self.obj, ctrls[3], radius=0.4, head_tail=0.5)
+            create_directed_circle_widget(self.obj, ctrls[3], radius=-0.4, head_tail=0.5) # negative radius is reasonable. to flip xz
         
         for c in ctrls:
             if self.fk_layers:
@@ -222,8 +222,8 @@ class Rig:
         pb = self.obj.pose.bones
 
         # Limb Follow Driver
-        pb[fk[0]]['FK_limb_follow'] = 0.0
-        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'FK_limb_follow', create = True )
+        pb[fk[0]]['fk_limb_follow'] = 0.0
+        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'fk_limb_follow', create = True )
 
         prop["min"]         = 0.0
         prop["max"]         = 1.0
@@ -241,8 +241,8 @@ class Rig:
         var.targets[0].data_path = pb[fk[0]].path_from_id() + '[' + '"' + prop.name + '"' + ']'
 
         # Create ik/fk switch property
-        pb[fk[0]]['IK/FK']  = 0.0
-        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'IK/FK', create=True )
+        pb[fk[0]]['ik_fk_rate']  = 0.0
+        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'ik_fk_rate', create=True )
         prop["min"]         = 0.0
         prop["max"]         = 1.0
         prop["soft_min"]    = 0.0

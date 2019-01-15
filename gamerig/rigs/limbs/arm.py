@@ -19,7 +19,7 @@
 # <pep8 compliant>
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError, create_widget, copy_bone
+from ...utils import MetarigError, copy_bone
 from .limb_utils import *
 from ..widgets import create_hand_widget
 
@@ -79,8 +79,8 @@ def create_arm( cls, bones ):
     # Create ik/fk switch property
     pb_master = pb[ bones['fk']['ctrl'][0] ]
 
-    pb_master['IK_Stretch'] = 1.0
-    prop = rna_idprop_ui_prop_get( pb_master, 'IK_Stretch', create=True )
+    pb_master['ik_stretch'] = 1.0
+    prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
     prop["min"]         = 0.0
     prop["max"]         = 1.0
     prop["soft_min"]    = 0.0
@@ -106,7 +106,7 @@ def create_arm( cls, bones ):
     drv_modifier.coefficients[1] = -1.0
 
     # Create hand widget
-    create_hand_widget(cls.obj, ctrl, bone_transform_name=None)
+    create_hand_widget(cls.obj, ctrl)
 
     bones['ik']['ctrl']['terminal'] = [ ctrl ]
 

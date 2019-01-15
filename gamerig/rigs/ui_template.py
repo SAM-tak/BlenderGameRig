@@ -310,42 +310,20 @@ def fk2ik_arm(obj, fk, ik):
     farmi = obj.pose.bones[ik[1]]
     handi = obj.pose.bones[ik[2]]
 
-    if 'auto_stretch' in handi.keys():
-        # This is kept for compatibility with legacy rigify Human
-        # Stretch
-        if handi['auto_stretch'] == 0.0:
-            uarm['stretch_length'] = handi['stretch_length']
-        else:
-            diff = (uarmi.vector.length + farmi.vector.length) / (uarm.vector.length + farm.vector.length)
-            uarm['stretch_length'] *= diff
+    # Upper arm position
+    match_pose_translation(uarm, uarmi)
+    match_pose_rotation(uarm, uarmi)
+    match_pose_scale(uarm, uarmi)
 
-        # Upper arm position
-        match_pose_rotation(uarm, uarmi)
-        #match_pose_scale(uarm, uarmi)
+    # Forearm position
+    match_pose_translation(hand, handi)
+    match_pose_rotation(farm, farmi)
+    match_pose_scale(farm, farmi)
 
-        # Forearm position
-        match_pose_rotation(farm, farmi)
-        #match_pose_scale(farm, farmi)
-
-        # Hand position
-        match_pose_rotation(hand, handi)
-        #match_pose_scale(hand, handi)
-    else:
-        # Upper arm position
-        match_pose_translation(uarm, uarmi)
-        match_pose_rotation(uarm, uarmi)
-        #match_pose_scale(uarm, uarmi)
-
-        # Forearm position
-        #match_pose_translation(hand, handi)
-        match_pose_rotation(farm, farmi)
-        #match_pose_scale(farm, farmi)
-
-        # Hand position
-        match_pose_translation(hand, handi)
-        match_pose_rotation(hand, handi)
-        #match_pose_scale(hand, handi)
-
+    # Hand position
+    match_pose_translation(hand, handi)
+    match_pose_rotation(hand, handi)
+    match_pose_scale(hand, handi)
 
 def ik2fk_arm(obj, fk, ik):
     """ Matches the ik bones in an arm rig to the fk bones.
@@ -354,45 +332,22 @@ def ik2fk_arm(obj, fk, ik):
         ik:  list of ik bone names
     """
     uarm  = obj.pose.bones[fk[0]]
-    farm  = obj.pose.bones[fk[1]]
     hand  = obj.pose.bones[fk[2]]
     uarmi = obj.pose.bones[ik[0]]
-    farmi = obj.pose.bones[ik[1]]
     handi = obj.pose.bones[ik[2]]
 
-    main_parent = obj.pose.bones[ik[4]]
+    # Hand position
+    match_pose_translation(handi, hand)
+    match_pose_rotation(handi, hand)
+    match_pose_scale(handi, hand)
 
-    if ik[3] != "" and main_parent['pole_vector']:
-        pole  = obj.pose.bones[ik[3]]
-    else:
-        pole = None
+    # Upper Arm position
+    match_pose_translation(uarmi, uarm)
+    match_pose_rotation(uarmi, uarm)
+    match_pose_scale(uarmi, uarm)
 
-
-    if pole:
-        # Stretch
-        handi['stretch_length'] = uarm['stretch_length']
-
-        # Hand position
-        match_pose_translation(handi, hand)
-        match_pose_rotation(handi, hand)
-        #match_pose_scale(handi, hand)
-
-        # Pole target position
-        match_pole_target(uarmi, farmi, pole, uarm, (uarmi.length + farmi.length))
-
-    else:
-        # Hand position
-        match_pose_translation(handi, hand)
-        match_pose_rotation(handi, hand)
-        #match_pose_scale(handi, hand)
-
-        # Upper Arm position
-        match_pose_translation(uarmi, uarm)
-        match_pose_rotation(uarmi, uarm)
-        #match_pose_scale(uarmi, uarm)
-
-        # Rotation Correction
-        correct_rotation(uarmi, uarm)
+    # Rotation Correction
+    correct_rotation(uarmi, uarm)
 
 def fk2ik_leg(obj, fk, ik):
     """ Matches the fk bones in a leg rig to the ik bones.
@@ -409,44 +364,20 @@ def fk2ik_leg(obj, fk, ik):
     footi  = obj.pose.bones[ik[2]]
     toei   = obj.pose.bones[ik[3]]
 
-    if 'auto_stretch' in footi.keys():
-        # This is kept for compatibility with legacy rigify Human
-        # Stretch
-        if footi['auto_stretch'] == 0.0:
-            thigh['stretch_length'] = footi['stretch_length']
-        else:
-            thigh['stretch_length'] *= (thighi.vector.length + shini.vector.length) / (thigh.vector.length + shin.vector.length)
-    
-        # Thigh position
-        match_pose_rotation(thigh, thighi)
-        match_pose_scale(thigh, thighi)
+    # Thigh position
+    match_pose_translation(thigh, thighi)
+    match_pose_rotation(thigh, thighi)
+    match_pose_scale(thigh, thighi)
 
-        # Shin position
-        match_pose_rotation(shin, shini)
-        match_pose_scale(shin, shini)
+    # Shin position
+    match_pose_rotation(shin, shini)
+    match_pose_scale(shin, shini)
 
-        # Foot position
-        mat = mfoot.bone.matrix_local.inverted() * foot.bone.matrix_local
-        footmat = get_pose_matrix_in_other_space(mfooti.matrix, foot) * mat
-        set_pose_rotation(foot, footmat)
-        set_pose_scale(foot, footmat)
-
-    else:
-        # Thigh position
-        match_pose_translation(thigh, thighi)
-        match_pose_rotation(thigh, thighi)
-        match_pose_scale(thigh, thighi)
-
-        # Shin position
-        match_pose_rotation(shin, shini)
-        match_pose_scale(shin, shini)
-
-        # Foot position
-        mat = mfoot.bone.matrix_local.inverted() * foot.bone.matrix_local
-        footmat = get_pose_matrix_in_other_space(mfooti.matrix, foot) * mat
-        set_pose_rotation(foot, footmat)
-        set_pose_scale(foot, footmat)
-
+    # Foot position
+    mat = toe.bone.matrix_local.inverted() * foot.bone.matrix_local
+    footmat = get_pose_matrix_in_other_space(toei.matrix, foot) * mat
+    set_pose_rotation(foot, footmat)
+    set_pose_scale(foot, footmat)
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.mode_set(mode='POSE')
 
@@ -468,11 +399,6 @@ def ik2fk_leg(obj, fk, ik):
     footroll = obj.pose.bones[ik[3]]
     mfooti   = obj.pose.bones[ik[4]]
     toei     = obj.pose.bones[ik[5]]
-    pole     = obj.pose.bones[ik[6]] if ik[6] != "" else None
-
-    if pole or not foot:
-        # Stretch
-        footi['stretch_length'] = thigh['stretch_length']
     
     # Clear footroll
     set_pose_rotation(footroll, Matrix())
@@ -482,26 +408,22 @@ def ik2fk_leg(obj, fk, ik):
     footmat = get_pose_matrix_in_other_space(foot.matrix, footi) * mat
     set_pose_translation(footi, footmat)
     set_pose_rotation(footi, footmat)
-    #set_pose_scale(footi, footmat)
+    set_pose_scale(footi, footmat)
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.mode_set(mode='POSE')
 
     # Toe position
     match_pose_translation(toei, toe)
     match_pose_rotation(toei, toe)
-    #match_pose_scale(toei, toe)
+    match_pose_scale(toei, toe)
 
-    if pole or not foot:
-        # Pole target position
-        match_pole_target(thighi, shini, pole, thigh, (thighi.length + shini.length))
-    else:
-        # Thigh position
-        match_pose_translation(thighi, thigh)
-        match_pose_rotation(thighi, thigh)
-        #match_pose_scale(thighi, thigh)
+    # Thigh position
+    match_pose_translation(thighi, thigh)
+    match_pose_rotation(thighi, thigh)
+    match_pose_scale(thighi, thigh)
 
-        # Rotation Correction
-        correct_rotation(thighi,thigh)
+    # Rotation Correction
+    correct_rotation(thighi,thigh)
 
 
 ##############################

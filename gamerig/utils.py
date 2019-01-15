@@ -34,9 +34,7 @@ RIG_DIR = "rigs"  # Name of the directory where rig types are kept
 METARIG_DIR = "metarigs"  # Name of the directory where metarigs are kept
 
 ORG_PREFIX = "ORG-"  # Prefix of original bones.
-JIG_PREFIX = "JIG-"  # Prefix of jig bones. (delete automatically after generaten)
 MCH_PREFIX = "MCH-"  # Prefix of mechanism bones.
-WGT_PREFIX = "WGT-"  # Prefix for widget objects
 ROOT_NAME = "root"   # Name of the root bone.
 
 MODULE_NAME = "gamerig"  # Windows/Mac blender is weird, so __package__ doesn't work --- realy even now?
@@ -79,21 +77,21 @@ def basename(name):
         """
     if name.startswith(ORG_PREFIX):
         return name[len(ORG_PREFIX):]
-    elif name.startswith(JIG_PREFIX):
-        return name[len(JIG_PREFIX):]
     elif name.startswith(MCH_PREFIX):
         return name[len(MCH_PREFIX):]
     else:
         return name
 
 
+def is_org(name):
+    return name.startswith(ORG_PREFIX)
+
+
 def org(name):
     """ Prepends the ORG_PREFIX to a name if it doesn't already have
         it, and returns it.
     """
-    if name.startswith(ORG_PREFIX):
-        return name
-    elif name.startswith(JIG_PREFIX):
+    if is_org(name):
         return name
     else:
         return ORG_PREFIX + name
@@ -490,8 +488,8 @@ def create_limb_widget(rig, bone_name, bone_transform_name=None):
     """
     obj = create_widget(rig, bone_name, bone_transform_name)
     if obj != None:
-        verts = [(-1.1920928955078125e-07, 1.7881393432617188e-07, 0.0), (3.5762786865234375e-07, 1.0000004768371582, 0.0), (0.1767769455909729, 0.5000001192092896, 0.17677664756774902), (0.20786768198013306, 0.5000001192092896, 0.1388925313949585), (0.23097014427185059, 0.5000001192092896, 0.09567084908485413), (0.24519658088684082, 0.5000001192092896, 0.048772573471069336), (0.2500002384185791, 0.5000001192092896, -2.545945676502015e-09), (0.24519658088684082, 0.5000001192092896, -0.048772573471069336), (0.23097014427185059, 0.5000001192092896, -0.09567084908485413), (0.20786768198013306, 0.5000001192092896, -0.13889259099960327), (0.1767769455909729, 0.5000001192092896, -0.1767767071723938), (0.13889282941818237, 0.5000001192092896, -0.20786744356155396), (0.09567105770111084, 0.5000001192092896, -0.23096990585327148), (0.04877278208732605, 0.5000001192092896, -0.24519634246826172), (1.7279069197684294e-07, 0.5000000596046448, -0.25), (-0.0487724244594574, 0.5000001192092896, -0.24519634246826172), (-0.09567070007324219, 0.5000001192092896, -0.2309698462486267), (-0.13889241218566895, 0.5000001192092896, -0.20786738395690918), (-0.17677652835845947, 0.5000001192092896, -0.17677664756774902), (-0.20786726474761963, 0.5000001192092896, -0.13889244198799133), (-0.23096972703933716, 0.5000001192092896, -0.09567070007324219), (-0.24519610404968262, 0.5000001192092896, -0.04877239465713501), (-0.2499997615814209, 0.5000001192092896, 2.1997936983098043e-07), (-0.24519598484039307, 0.5000001192092896, 0.04877282679080963), (-0.23096948862075806, 0.5000001192092896, 0.09567108750343323), (-0.20786696672439575, 0.5000001192092896, 0.1388927698135376), (-0.1767762303352356, 0.5000001192092896, 0.17677688598632812), (-0.13889199495315552, 0.5000001192092896, 0.2078675627708435), (-0.09567028284072876, 0.5000001192092896, 0.23097002506256104), (-0.048771947622299194, 0.5000001192092896, 0.24519634246826172), (6.555903269145347e-07, 0.5000001192092896, 0.25), (0.04877324402332306, 0.5000001192092896, 0.24519622325897217), (0.09567153453826904, 0.5000001192092896, 0.23096966743469238), (0.13889318704605103, 0.5000001192092896, 0.20786714553833008)]
-        edges = [(0, 1), (2, 3), (4, 3), (5, 4), (5, 6), (6, 7), (8, 7), (8, 9), (10, 9), (10, 11), (11, 12), (13, 12), (14, 13), (14, 15), (16, 15), (16, 17), (17, 18), (19, 18), (19, 20), (21, 20), (21, 22), (22, 23), (24, 23), (25, 24), (25, 26), (27, 26), (27, 28), (29, 28), (29, 30), (30, 31), (32, 31), (32, 33), (2, 33)]
+        verts = [(0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.17678, 0.5, 0.17678), (0.20787, 0.5, 0.13889), (0.23097, 0.5, 0.095671), (0.2452, 0.5, 0.048773), (0.25, 0.5, -2.5459e-09), (0.2452, 0.5, -0.048773), (0.23097, 0.5, -0.095671), (0.20787, 0.5, -0.13889), (0.17678, 0.5, -0.17678), (0.13889, 0.5, -0.20787), (0.095671, 0.5, -0.23097), (0.048773, 0.5, -0.2452), (1.7279e-07, 0.5, -0.25), (-0.048772, 0.5, -0.2452), (-0.095671, 0.5, -0.23097), (-0.13889, 0.5, -0.20787), (-0.17678, 0.5, -0.17678), (-0.20787, 0.5, -0.13889), (-0.23097, 0.5, -0.095671), (-0.2452, 0.5, -0.048772), (-0.25, 0.5, 2.1998e-07), (-0.2452, 0.5, 0.048773), (-0.23097, 0.5, 0.095671), (-0.20787, 0.5, 0.13889), (-0.17678, 0.5, 0.17678), (-0.13889, 0.5, 0.20787), (-0.09567, 0.5, 0.23097), (-0.048772, 0.5, 0.2452), (6.5559e-07, 0.5, 0.25), (0.048773, 0.5, 0.2452), (0.095672, 0.5, 0.23097), (0.13889, 0.5, 0.20787), (-0.04, 0.5, -0.26), (0.04, 0.5, -0.26), (0.0, 0.5, -0.3), ]
+        edges = [(0, 1), (2, 3), (4, 3), (5, 4), (5, 6), (6, 7), (8, 7), (8, 9), (10, 9), (10, 11), (11, 12), (13, 12), (14, 13), (14, 15), (16, 15), (16, 17), (17, 18), (19, 18), (19, 20), (21, 20), (21, 22), (22, 23), (24, 23), (25, 24), (25, 26), (27, 26), (27, 28), (29, 28), (29, 30), (30, 31), (32, 31), (32, 33), (2, 33), (34, 35), (35, 36), (36, 34), ]
         mesh = obj.data
         mesh.from_pydata(verts, edges, [])
         mesh.update()
@@ -938,6 +936,11 @@ def write_metarig(obj, layers=False, func_name="create", groups=False):
 
     arm = obj.data
 
+    if arm.gamerig_rig_ui_template:
+        code.append("\n    arm.gamerig_rig_ui_template = '%s'\n" % arm.gamerig_rig_ui_template)
+    else:
+        code.append("\n    arm.gamerig_rig_ui_template = 'ui_template'\n")
+
     # GameRig bone group colors info
     if groups and len(arm.gamerig_colors) > 0:
         code.append("\n    for i in range(" + str(len(arm.gamerig_colors)) + "):")
@@ -1045,7 +1048,7 @@ def write_metarig(obj, layers=False, func_name="create", groups=False):
         code.append("\n    arm.layers = [(x in " + str(active_layers) + ") for x in range(" + str(len(arm.layers)) + ")]")
 
     code.append('\nif __name__ == "__main__":')
-    code.append("    " + func_name + "(bpy.context.active_object)")
+    code.append("    " + func_name + "(bpy.context.active_object)\n")
 
     return "\n".join(code)
 
@@ -1062,8 +1065,10 @@ def write_widget(obj):
     if len(obj.data.vertices) > 0:
         script += "        verts = ["
         for v in obj.data.vertices:
-            script += "(" + str(v.co[0]) + "*size, " + str(v.co[1]) + "*size, " + str(v.co[2]) + "*size), "
+            script += "({:.5}*size, {:.5}*size, {:.5}*size), ".format(v.co[0], v.co[1], v.co[2])
         script += "]\n"
+    else:
+        script += "        verts = []\n"
 
     # Edges
     if len(obj.data.edges) > 0:
@@ -1071,6 +1076,8 @@ def write_widget(obj):
         for e in obj.data.edges:
             script += "(" + str(e.vertices[0]) + ", " + str(e.vertices[1]) + "), "
         script += "]\n"
+    else:
+        script += "        edges = []\n"
 
     # Faces
     if len(obj.data.polygons) > 0:
@@ -1081,11 +1088,12 @@ def write_widget(obj):
                 script += str(v) + ", "
             script += "), "
         script += "]\n"
+    else:
+        script += "        faces = []\n"
 
     # Build mesh
     script += "\n        mesh = obj.data\n"
     script += "        mesh.from_pydata(verts, edges, faces)\n"
-    script += "        mesh.update()\n"
     script += "        mesh.update()\n"
     script += "        return obj\n"
     script += "    else:\n"
@@ -1095,9 +1103,9 @@ def write_widget(obj):
 
 
 def get_wgt_name(rig_name, bone_name):
-    """ Object's with name <rig_name>.WGT-<bone_name> get used as that bone's shape.
+    """ Object's with name <rig_name>.<bone_name> get used as that bone's shape.
     """
-    return '%s.%s%s' % (rig_name, WGT_PREFIX, bone_name)
+    return '%s.%s' % (rig_name, bone_name)
 
 
 def random_id(length=10):

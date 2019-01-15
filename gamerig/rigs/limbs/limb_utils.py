@@ -4,6 +4,7 @@ from ...utils import MetarigError, mch, org, basename
 
 bilateral_suffixes = ['.L','.R']
 
+
 def orient_bone( cls, eb, axis, scale = 1.0, reverse = False ):
     v = Vector((0,0,0))
 
@@ -18,6 +19,7 @@ def orient_bone( cls, eb, axis, scale = 1.0, reverse = False ):
         eb.tail[:] = eb.head + tail_vec
 
     eb.roll = 0.0
+
 
 def make_constraint( cls, bone, constraint ):
     bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -41,23 +43,16 @@ def make_constraint( cls, bone, constraint ):
 
 
 def get_bone_name( name, btype, suffix = '' ):
-    # RE pattern match right or left parts
-    # match the letter "L" (or "R"), followed by an optional dot (".")
-    # and 0 or more digits at the end of the the string
-    pattern = r'^(\S+)(\.\S+)$'
-
-    types = {
-        'mch'  : mch( basename( name ) ),
-        'org'  : name,
-        'ctrl' : basename( name )
-    }
-
-    name = types[btype]
+    if btype == 'mch':
+        name = mch( basename( name ) )
+    elif btype == 'ctrl':
+        name = basename( name )
 
     if suffix:
-        results = re.match( pattern,  name )
-        bname, addition = ('','')
-
+        # RE pattern match right or left parts
+        # match the letter "L" (or "R"), followed by an optional dot (".")
+        # and 0 or more digits at the end of the the string
+        results = re.match( r'^(\S+)(\.\S+)$',  name )
         if results:
             bname, addition = results.groups()
             name = bname + "_" + suffix + addition

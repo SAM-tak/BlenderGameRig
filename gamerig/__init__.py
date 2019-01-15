@@ -254,7 +254,6 @@ def unregister():
     del IDStore.gamerig_types
     del IDStore.gamerig_active_type
     del IDStore.gamerig_rig_ui_template_list
-    del IDStore.gamerig_rig_name
 
     # Classes.
     for cl in classes:

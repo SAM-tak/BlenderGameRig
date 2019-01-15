@@ -34,7 +34,7 @@ class ArmatureMainMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         for cl in self.submenus:
-            layout.menu(cl.bl_idname)
+            layout.menu(cl.bl_idname, icon='OUTLINER_OB_ARMATURE')
         for op, name in self.operators:
             text = capwords(name.replace("_", " ")) + " (Meta-Rig)"
             icon='BONE_DATA' if name == 'single_bone' else 'OUTLINER_OB_ARMATURE'
@@ -42,7 +42,7 @@ class ArmatureMainMenu(bpy.types.Menu):
 
 
 def mainmenu_func(self, context):
-    self.layout.menu(ArmatureMainMenu.bl_idname)
+    self.layout.menu(ArmatureMainMenu.bl_idname, icon='OUTLINER_OB_ARMATURE')
 
 
 class ArmatureSubMenu(bpy.types.Menu):
