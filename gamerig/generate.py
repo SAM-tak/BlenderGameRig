@@ -277,23 +277,23 @@ def generate_rig(context, metarig):
     t.tick("Make list of org bones: ")
     #----------------------------------
     # Create the root bone.
-    bpy.ops.object.mode_set(mode='EDIT')
-    root_bone = new_bone(obj, ROOT_NAME)
-    spread = get_xy_spread(metarig.data.bones) or metarig.data.bones[0].length
-    spread = float('%.3g' % spread)
-    scale = spread/0.589
-    obj.data.edit_bones[root_bone].head = (0, 0, 0)
-    obj.data.edit_bones[root_bone].tail = (0, scale, 0)
-    obj.data.edit_bones[root_bone].roll = 0
-    bpy.ops.object.mode_set(mode='OBJECT')
-    obj.data.bones[root_bone].layers = ROOT_LAYER
+    if metarig.data.gamerig_add_root_bone:
+        bpy.ops.object.mode_set(mode='EDIT')
+        root_bone = new_bone(obj, ROOT_NAME)
+        spread = get_xy_spread(metarig.data.bones) or metarig.data.bones[0].length
+        spread = float('%.3g' % spread)
+        scale = spread/0.589
+        obj.data.edit_bones[root_bone].head = (0, 0, 0)
+        obj.data.edit_bones[root_bone].tail = (0, scale, 0)
+        obj.data.edit_bones[root_bone].roll = 0
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj.data.bones[root_bone].layers = ROOT_LAYER
 
     # Put the rig_name in the armature custom properties
     rna_idprop_ui_prop_get(obj.data, "gamerig_id", create=True)
     obj.data["gamerig_id"] = rig_id
 
     t.tick("Create root bone: ")
-
     #----------------------------------
     try:
         # Collect/initialize all the rigs.
@@ -332,34 +332,15 @@ def generate_rig(context, metarig):
     bones = [bone.name for bone in obj.data.bones]
 
     # Parent any free-floating bones to the root excluding bones with child of constraint.
-    pbones = obj.pose.bones
-
-
-    ik_follow_drivers = []
-
-    if obj.animation_data:
-        for drv in obj.animation_data.drivers:
-            for var in drv.driver.variables:
-                if 'IK_follow' == var.name:
-                    ik_follow_drivers.append(drv.data_path)
-
-    noparent_bones = []
-    for bone in bones:
-        # if 'IK_follow' in pbones[bone].keys():
-        #     noparent_bones += [bone]
-        for d in ik_follow_drivers:
-            if bone in d:
-                noparent_bones += [bone]
-
-    bpy.ops.object.mode_set(mode='EDIT')
-    for bone in bones:
-        if bone in noparent_bones or bone in original_bones:
-            continue
-        elif obj.data.edit_bones[bone].parent is None:
-            obj.data.edit_bones[bone].use_connect = False
-            obj.data.edit_bones[bone].parent = obj.data.edit_bones[root_bone]
-
-    bpy.ops.object.mode_set(mode='OBJECT')
+    if metarig.data.gamerig_add_root_bone:
+        bpy.ops.object.mode_set(mode='EDIT')
+        for bone in bones:
+            if bone in original_bones:
+                continue
+            elif obj.data.edit_bones[bone].parent is None:
+                obj.data.edit_bones[bone].use_connect = False
+                obj.data.edit_bones[bone].parent = obj.data.edit_bones[root_bone]
+        bpy.ops.object.mode_set(mode='OBJECT')
 
     # All the others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
     for bone in bones:
@@ -390,7 +371,8 @@ def generate_rig(context, metarig):
             obj.data.bones[bone].layers = MCH_LAYER
 
     # Create root bone widget
-    create_root_widget(obj, ROOT_NAME)
+    if metarig.data.gamerig_add_root_bone:
+        create_root_widget(obj, ROOT_NAME)
 
     # Assign shapes to bones
     for bone in bones:
