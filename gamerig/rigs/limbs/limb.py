@@ -30,17 +30,14 @@ class Rig:
 
         self.limb_type = params.limb_type
         self.rot_axis  = params.rotation_axis
+        self.allow_ik_stretch = params.allow_ik_stretch
 
-        # Assign values to tweak/FK layers props if opted by user
-        if params.tweak_extra_layers:
-            self.tweak_layers = list(params.tweak_layers)
-        else:
-            self.tweak_layers = None
-
+        # Assign values to FK layers props if opted by user
         if params.fk_extra_layers:
             self.fk_layers = list(params.fk_layers)
         else:
             self.fk_layers = None
+
 
     def create_parent( self ):
         org_bones = self.org_bones
@@ -110,6 +107,7 @@ class Rig:
             'constraint'  : 'IK',
             'subtarget'   : mch_target,
             'chain_count' : 2,
+            'use_stretch' : self.allow_ik_stretch,
         })
 
         pb = self.obj.pose.bones
@@ -128,10 +126,11 @@ class Rig:
         pb[ ctrl ].lock_scale = True, True, True
         create_ikarrow_widget( self.obj, ctrl )
 
-        return { 'ctrl'       : { 'limb' : ctrl },
-                 'mch_ik'     : mch_ik,
-                 'mch_target' : mch_target,
-                 'mch_str'    : mch_str
+        return {
+            'ctrl'       : { 'limb' : ctrl },
+            'mch_ik'     : mch_ik,
+            'mch_target' : mch_target,
+            'mch_str'    : mch_str
         }
 
 
@@ -308,7 +307,8 @@ class Rig:
 
         bones = self.create_terminal( self.limb_type, bones )
 
-        return [ create_script( bones, self.limb_type ) ]
+        return [ create_script( bones, self.limb_type, self.allow_ik_stretch ) ]
+
 
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
@@ -336,46 +336,25 @@ def add_parameters( params ):
         name    = "Rotation Axis",
         default = 'x'
     )
-    """
-    params.segments = bpy.props.IntProperty(
-        name        = 'limb segments',
-        default     = 2,
-        min         = 1,
-        description = 'Number of segments'
-    )
 
-    params.bbones = bpy.props.IntProperty(
-        name        = 'bbone segments',
-        default     = 10,
-        min         = 1,
-        description = 'Number of segments'
-    )
-    """
-    # Setting up extra layers for the FK and tweak
-    params.tweak_extra_layers = bpy.props.BoolProperty(
-        name        = "tweak_extra_layers",
+    params.allow_ik_stretch = bpy.props.BoolProperty(
+        name        = "Allow IK Stretch",
         default     = True,
-        description = ""
-        )
+        description = "Allow IK Stretch"
+    )
 
-    params.tweak_layers = bpy.props.BoolVectorProperty(
-        size        = 32,
-        description = "Layers for the tweak controls to be on",
-        default     = tuple( [ i == 1 for i in range(0, 32) ] )
-        )
-
-    # Setting up extra layers for the FK and tweak
+    # Setting up extra layers for the FK
     params.fk_extra_layers = bpy.props.BoolProperty(
-        name        = "fk_extra_layers",
+        name        = "FK Extra Layers",
         default     = True,
         description = ""
-        )
+    )
 
     params.fk_layers = bpy.props.BoolVectorProperty(
         size        = 32,
         description = "Layers for the FK controls to be on",
         default     = tuple( [ i == 1 for i in range(0, 32) ] )
-        )
+    )
 
 
 def parameters_ui(layout, params):
@@ -387,38 +366,35 @@ def parameters_ui(layout, params):
     r = layout.row()
     r.prop(params, "rotation_axis")
 
-    #r = layout.row()
-    #r.prop(params, "segments")
+    r = layout.row()
+    r.prop(params, "allow_ik_stretch")
 
-    #r = layout.row()
-    #r.prop(params, "bbones")
+    r = layout.row()
+    r.prop(params, "fk_extra_layers")
+    r.active = params.fk_extra_layers
 
-    for layer in [ 'fk', 'tweak' ]:
-        r = layout.row()
-        r.prop(params, layer + "_extra_layers")
-        r.active = params.tweak_extra_layers
+    col = r.column(align=True)
+    row = col.row(align=True)
 
-        col = r.column(align=True)
-        row = col.row(align=True)
+    for i in range(8):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
 
-        for i in range(8):
-            row.prop(params, layer + "_layers", index=i, toggle=True, text="")
+    row = col.row(align=True)
 
-        row = col.row(align=True)
+    for i in range(16,24):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
 
-        for i in range(16,24):
-            row.prop(params, layer + "_layers", index=i, toggle=True, text="")
+    col = r.column(align=True)
+    row = col.row(align=True)
 
-        col = r.column(align=True)
-        row = col.row(align=True)
+    for i in range(8,16):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
 
-        for i in range(8,16):
-            row.prop(params, layer + "_layers", index=i, toggle=True, text="")
+    row = col.row(align=True)
 
-        row = col.row(align=True)
+    for i in range(24,32):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
 
-        for i in range(24,32):
-            row.prop(params, layer + "_layers", index=i, toggle=True, text="")
 
 def create_sample(obj):
     # generated by gamerig.utils.write_metarig
@@ -457,34 +433,12 @@ def create_sample(obj):
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     try:
-        pbone.gamerig_parameters.separate_ik_layers = True
+        pbone.gamerig_parameters.allow_ik_stretch = True
     except AttributeError:
         pass
     try:
         pbone.gamerig_parameters.ik_layers = [
             False, False, False, False, False, False, False, False, True, False,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False
-        ]
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig_parameters.separate_hose_layers = True
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig_parameters.hose_layers = [
-            False, False, False, False, False, False, False, False, False, True,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False
-        ]
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig_parameters.tweak_layers = [
-            False, False, False, False, False, False, False, False, False, True,
             False, False, False, False, False, False, False, False, False, False,
             False, False, False, False, False, False, False, False, False, False,
             False, False

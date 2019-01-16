@@ -114,7 +114,6 @@ class Rig:
         return self.bone_name_map[bonebasename]
 
     def symmetrical_split( self, bones ):
-
         # RE pattern match right or left parts
         # match the letter "L" (or "R"), followed by an optional dot (".")
         # and 0 or more digits at the end of the the string
@@ -169,10 +168,11 @@ class Rig:
             eyes_ctrl_e.length = (eyeL_ctrl_e.head - eyes_ctrl_e.head).length * 0.62
 
             ## Widget for transforming the both eyes
-            for bone in bones['eyes']:
-                if bone in self.bone_name_map:
-                    eye_master = self.copy_bone(self.obj, bone, 'master_' + basename(bone))
-                    eye_master_names.append( eye_master )
+            if any(i for i in self.org_bones if i.startswith('lid.') or i.startswith('brow.')):
+                for bone in bones['eyes']:
+                    if bone in self.bone_name_map:
+                        eye_master = self.copy_bone(self.obj, bone, 'master_' + basename(bone))
+                        eye_master_names.append( eye_master )
             
             ret['eyes'] = [eyeL_ctrl_name, eyeR_ctrl_name, eyes_ctrl_name] + eye_master_names
 
@@ -272,9 +272,23 @@ class Rig:
 
         tweaks = []
 
+        primary_tweaks = [
+            "lid.B.L.002", "lid.T.L.002", "lid.B.R.002", "lid.T.R.002",
+            "chin", "brow.T.L.001", "brow.T.L.002", "brow.T.L.003",
+            "brow.T.R.001", "brow.T.R.002", "brow.T.R.003", "lip.B",
+            "lip.B.L.001", "lip.B.R.001", "cheek.B.L.001", "cheek.B.R.001",
+            "lips.L", "lips.R", "lip.T.L.001", "lip.T.R.001", "lip.T",
+            "nose.002", "nose.L.001", "nose.R.001"
+        ]
+
         for bone in bones + list( uniques.keys() ):
             if bone in self.bone_name_map:
                 tweak_name = basename( bone )
+
+                if tweak_name in primary_tweaks and not self.primary_layers:
+                    continue
+                if not tweak_name in primary_tweaks and not self.secondary_layers:
+                    continue
 
                 # pick name for unique bone from the uniques dictionary
                 if bone in list( uniques.keys() ):
@@ -286,8 +300,7 @@ class Rig:
 
                 tweaks.append( tweak_name )
 
-                eb[ rbn(tweak_name) ].tail[:] = \
-                    eb[ rbn(tweak_name) ].head + Vector(( 0, 0, self.face_length / 7 ))
+                eb[ rbn(tweak_name) ].tail[:] = eb[ rbn(tweak_name) ].head + Vector(( 0, 0, self.face_length / 7 ))
 
                 # create tail bone
                 if bone in tails:
@@ -308,15 +321,6 @@ class Rig:
 
         bpy.ops.object.mode_set(mode ='OBJECT')
         pb = self.obj.pose.bones
-
-        primary_tweaks = [
-            "lid.B.L.002", "lid.T.L.002", "lid.B.R.002", "lid.T.R.002",
-            "chin", "brow.T.L.001", "brow.T.L.002", "brow.T.L.003",
-            "brow.T.R.001", "brow.T.R.002", "brow.T.R.003", "lip.B",
-            "lip.B.L.001", "lip.B.R.001", "cheek.B.L.001", "cheek.B.R.001",
-            "lips.L", "lips.R", "lip.T.L.001", "lip.T.R.001", "lip.T",
-            "nose.002", "nose.L.001", "nose.R.001"
-        ]
 
         for bone in tweaks:
             if bone in self.bone_name_map:
@@ -525,7 +529,8 @@ class Rig:
             # example: 'lip.B' matches 'MCH-target_lip.B.R' and 'MCH-target_lip.B.L' if
             # you cut off the "MCH-target_" [mcht_prefix_len:] and the ".L" or ".R" [:-2]
             for bone in [ bone for bone in mchts if bone[mcht_prefix_len:-2] == lip_tweak ]:
-                eb[ rbn( bone ) ].parent = eb[ rbn( lip_tweak ) ]
+                if lip_tweak in self.bone_name_map:
+                    eb[ rbn( bone ) ].parent = eb[ rbn( lip_tweak ) ]
 
         # parent cheek bones top respetive tweaks
         lips  = [ 'lips.L',   'lips.R'   ]
@@ -547,6 +552,13 @@ class Rig:
             for ear_mt in ear_mts:
                 if ear_ctrl in ear_mt and ear_mt in mchts:
                     eb[ rbn( ear_mt ) ].parent = eb[ rbn( ear_ctrl ) ]
+
+        for bone in [ 'ear.L.002', 'ear.L.003', 'ear.L.004' ]:
+            if 'ear.L' in self.bone_name_map and bone in self.bone_name_map:
+                eb[ rbn( bone ) ].parent = eb[ rbn( 'ear.L' ) ]
+        for bone in [ 'ear.R.002', 'ear.R.003', 'ear.R.004' ]:
+            if 'ear.R' in self.bone_name_map and bone in self.bone_name_map:
+                eb[ rbn( bone ) ].parent = eb[ rbn( 'ear.R' ) ]
 
         # Parent eyelid deform bones (each lid def bone is parented to its respective MCH bone)
         for bone in [ bone for bone in mchts if 'lid' in bone ]:
@@ -650,6 +662,10 @@ class Rig:
             for bone in groups[parent]:
                 if bone in self.bone_name_map and parent in self.bone_name_map:
                     eb[ rbn( bone ) ].parent = eb[ rbn( parent ) ]
+
+        # if MCH-target_jaw has no parent, parent to jaw_master.
+        if mch('target_jaw') in self.bone_name_map and 'jaw_master' in self.bone_name_map and eb[ rbn( mch('target_jaw') ) ].parent is None:
+            eb[ rbn( mch('target_jaw') ) ].parent = eb[ rbn( 'jaw_master' ) ]
 
         # Remaining arbitrary relatioships for tweak bone parenting
         if 'chin.001' in self.bone_name_map and 'chin' in self.bone_name_map:
@@ -2331,10 +2347,10 @@ def create_square_widget(rig, bone_name, size=1.0, bone_transform_name=None):
     obj = create_widget(rig, bone_name, bone_transform_name)
     if obj is not None:
         verts = [
-            (  0.5 * size, -2.9802322387695312e-08 * size,  0.5 * size ),
-            ( -0.5 * size, -2.9802322387695312e-08 * size,  0.5 * size ),
-            (  0.5 * size,  2.9802322387695312e-08 * size, -0.5 * size ),
-            ( -0.5 * size,  2.9802322387695312e-08 * size, -0.5 * size ),
+            (  0.5 * size, 0 * size,  0.5 * size ),
+            ( -0.5 * size, 0 * size,  0.5 * size ),
+            (  0.5 * size, 0 * size, -0.5 * size ),
+            ( -0.5 * size, 0 * size, -0.5 * size ),
         ]
 
         edges = [(0, 1), (2, 3), (0, 2), (3, 1) ]

@@ -29,8 +29,8 @@ from .utils import (
 from . import rig_lists, generate
 
 
-class DATA_PT_gamerig_buttons(bpy.types.Panel):
-    bl_label = "GameRig Buttons"
+class DATA_PT_gamerig(bpy.types.Panel):
+    bl_label = "GameRig"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
@@ -45,7 +45,118 @@ class DATA_PT_gamerig_buttons(bpy.types.Panel):
         layout = self.layout
         obj = context.object
         id_store = C.window_manager
+        armature = obj.data
 
+        ## Layers
+        # Ensure that the layers exist
+        box = layout.box()
+        show = id_store.gamerig_show_layer_names_pane
+        row = box.row()
+        row.prop(id_store, "gamerig_show_layer_names_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
+        row.alignment = 'LEFT'
+        row.label('Layer Names')
+        if 0:
+            for i in range(1 + len(armature.gamerig_layers), 29):
+                armature.gamerig_layers.add()
+        else:
+            # Can't add while drawing, just use button
+            if len(armature.gamerig_layers) < 29:
+                layout.operator("pose.gamerig_layer_init")
+                show = False
+        if show:
+            # UI
+            main_row = box.row(align=True).split(0.06)
+            col1 = main_row.column()
+            col2 = main_row.column()
+            col1.label()
+            for i in range(31):
+                if i == 16 or i == 29:
+                    col1.label()
+                col1.label(str(i+1))
+
+            for i, gamerig_layer in enumerate(armature.gamerig_layers):
+                # note: gamerig_layer == armature.gamerig_layers[i]
+                if (i % 16) == 0:
+                    col = col2.column()
+                    if i == 0:
+                        col.label(text="Top Row:")
+                    else:
+                        col.label(text="Bottom Row:")
+                if (i % 8) == 0:
+                    col = col2.column()
+                if i != 28:
+                    row = col.row(align=True)
+                    icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
+                    row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
+                    #row.prop(armature, "layers", index=i, text="Layer %d" % (i + 1), toggle=True, icon=icon)
+                    row.prop(gamerig_layer, "name", text="")
+                    row.prop(gamerig_layer, "row", text="UI Row")
+                    icon = 'RADIOBUT_ON' if gamerig_layer.selset else 'RADIOBUT_OFF'
+                    row.prop(gamerig_layer, "selset", text="", toggle=True, icon=icon)
+                    row.prop(gamerig_layer, "group", text="Bone Group")
+                else:
+                    row = col.row(align=True)
+
+                    icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
+                    row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
+                    # row.prop(armature, "layers", index=i, text="Layer %d" % (i + 1), toggle=True, icon=icon)
+                    row1 = row.split(align=True).row(align=True)
+                    row1.prop(gamerig_layer, "name", text="")
+                    row1.prop(gamerig_layer, "row", text="UI Row")
+                    row1.enabled = False
+                    icon = 'RADIOBUT_ON' if gamerig_layer.selset else 'RADIOBUT_OFF'
+                    row.prop(gamerig_layer, "selset", text="", toggle=True, icon=icon)
+                    row.prop(gamerig_layer, "group", text="Bone Group")
+                if gamerig_layer.group == 0:
+                    row.label(text='None')
+                else:
+                    row.label(text=armature.gamerig_colors[gamerig_layer.group-1].name)
+
+            # buttons
+            col = col2.column()
+            col.label(text="Reserved:")
+            reserved_names = {30: 'MCH', 31: 'ORG'}
+            for i in range(30, 32):
+                row = col.row(align=True)
+                icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
+                row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
+                row.label(text=reserved_names[i])
+
+        ## Bone Groups
+        box = layout.box()
+        show = id_store.gamerig_show_bone_groups_pane
+        row = box.row()
+        row.prop(id_store, "gamerig_show_bone_groups_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
+        row.alignment = 'LEFT'
+        row.label('Bone Groups')
+        if show:
+            color_sets = obj.data.gamerig_colors
+            idx = obj.data.gamerig_colors_index
+
+            row = box.row()
+            row.operator("armature.gamerig_use_standard_colors", icon='FILE_REFRESH', text='')
+            row = row.row(align=True)
+            row.prop(armature.gamerig_selection_colors, 'select', text='')
+            row.prop(armature.gamerig_selection_colors, 'active', text='')
+            row = box.row(align=True)
+            icon = 'LOCKED' if armature.gamerig_colors_lock else 'UNLOCKED'
+            row.prop(armature, 'gamerig_colors_lock', text = 'Unified select/active colors', icon=icon)
+            row.operator("armature.gamerig_apply_selection_colors", icon='FILE_REFRESH', text='Apply')
+            row = box.row()
+            row.template_list("DATA_UL_gamerig_bone_groups", "", obj.data, "gamerig_colors", obj.data, "gamerig_colors_index")
+
+            col = row.column(align=True)
+            col.operator("armature.gamerig_bone_group_add", icon='ZOOMIN', text="")
+            col.operator("armature.gamerig_bone_group_remove", icon='ZOOMOUT', text="").idx = obj.data.gamerig_colors_index
+            col.menu("DATA_MT_gamerig_bone_groups_specials", icon='DOWNARROW_HLT', text="")
+            row = box.row()
+            row.prop(armature, 'gamerig_theme_to_add', text = 'Theme')
+            op = row.operator("armature.gamerig_bone_group_add_theme", text="Add From Theme")
+            op.theme = armature.gamerig_theme_to_add
+            row = box.row()
+            row.operator("armature.gamerig_add_bone_groups", text="Add Standard")
+
+        ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
             rig_id = obj.data.get('gamerig_id')
             target = next((i for i in C.scene.objects if i != obj and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
@@ -80,93 +191,6 @@ class DATA_PT_gamerig_buttons(bpy.types.Panel):
 
             props = layout.operator("armature.gamerig_metarig_sample_add", text="Add sample")
             props.metarig_type = id_store.gamerig_types[id_store.gamerig_active_type].name
-
-
-class DATA_PT_gamerig_layer_names(bpy.types.Panel):
-    bl_label       = "GameRig Layer Names"
-    bl_space_type  = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context     = "data"
-    bl_options     = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE'\
-            and context.active_object.data.get("gamerig_rig_ui_template") is not None
-
-    def draw(self, context):
-        layout = self.layout
-        obj = context.object
-        arm = obj.data
-
-        # Ensure that the layers exist
-        if 0:
-            for i in range(1 + len(arm.gamerig_layers), 29):
-                arm.gamerig_layers.add()
-        else:
-            # Can't add while drawing, just use button
-            if len(arm.gamerig_layers) < 29:
-                layout.operator("pose.gamerig_layer_init")
-                return
-
-        # UI
-        main_row = layout.row(align=True).split(0.05)
-        col1 = main_row.column()
-        col2 = main_row.column()
-        col1.label()
-        for i in range(32):
-            if i == 16 or i == 29:
-                col1.label()
-            col1.label(str(i+1) + '.')
-
-        for i, gamerig_layer in enumerate(arm.gamerig_layers):
-            # note: gamerig_layer == arm.gamerig_layers[i]
-            if (i % 16) == 0:
-                col = col2.column()
-                if i == 0:
-                    col.label(text="Top Row:")
-                else:
-                    col.label(text="Bottom Row:")
-            if (i % 8) == 0:
-                col = col2.column()
-            if i != 28:
-                row = col.row(align=True)
-                icon = 'RESTRICT_VIEW_OFF' if arm.layers[i] else 'RESTRICT_VIEW_ON'
-                row.prop(arm, "layers", index=i, text="", toggle=True, icon=icon)
-                #row.prop(arm, "layers", index=i, text="Layer %d" % (i + 1), toggle=True, icon=icon)
-                row.prop(gamerig_layer, "name", text="")
-                row.prop(gamerig_layer, "row", text="UI Row")
-                icon = 'RADIOBUT_ON' if gamerig_layer.set else 'RADIOBUT_OFF'
-                row.prop(gamerig_layer, "set", text="", toggle=True, icon=icon)
-                row.prop(gamerig_layer, "group", text="Bone Group")
-            else:
-                row = col.row(align=True)
-
-                icon = 'RESTRICT_VIEW_OFF' if arm.layers[i] else 'RESTRICT_VIEW_ON'
-                row.prop(arm, "layers", index=i, text="", toggle=True, icon=icon)
-                # row.prop(arm, "layers", index=i, text="Layer %d" % (i + 1), toggle=True, icon=icon)
-                row1 = row.split(align=True).row(align=True)
-                row1.prop(gamerig_layer, "name", text="")
-                row1.prop(gamerig_layer, "row", text="UI Row")
-                row1.enabled = False
-                icon = 'RADIOBUT_ON' if gamerig_layer.set else 'RADIOBUT_OFF'
-                row.prop(gamerig_layer, "set", text="", toggle=True, icon=icon)
-                row.prop(gamerig_layer, "group", text="Bone Group")
-            if gamerig_layer.group == 0:
-                row.label(text='None')
-            else:
-                row.label(text=arm.gamerig_colors[gamerig_layer.group-1].name)
-
-        col = col2.column()
-        col.label(text="Reserved:")
-        # reserved_names = {28: 'Root', 29: 'DEF', 30: 'MCH', 31: 'ORG'}
-        reserved_names = {29: 'DEF', 30: 'MCH', 31: 'ORG'}
-        # for i in range(28, 32):
-        for i in range(29, 32):
-            row = col.row(align=True)
-            icon = 'RESTRICT_VIEW_OFF' if arm.layers[i] else 'RESTRICT_VIEW_ON'
-            row.prop(arm, "layers", index=i, text="", toggle=True, icon=icon)
-            row.label(text=reserved_names[i])
 
 
 class DATA_OT_gamerig_add_bone_groups(bpy.types.Operator):
@@ -421,50 +445,7 @@ class DATA_MT_gamerig_bone_groups_specials(bpy.types.Menu):
         layout.operator('armature.gamerig_bone_group_remove_all')
 
 
-class DATA_PT_gamerig_bone_groups(bpy.types.Panel):
-    bl_label       = "GameRig Bone Groups"
-    bl_space_type  = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context     = "data"
-    bl_options     = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE'\
-            and context.active_object.data.get("gamerig_rig_ui_template") is not None
-
-    def draw(self, context):
-        obj = context.object
-        armature = obj.data
-        color_sets = obj.data.gamerig_colors
-        idx = obj.data.gamerig_colors_index
-
-        layout = self.layout
-        row = layout.row()
-        row.operator("armature.gamerig_use_standard_colors", icon='FILE_REFRESH', text='')
-        row = row.row(align=True)
-        row.prop(armature.gamerig_selection_colors, 'select', text='')
-        row.prop(armature.gamerig_selection_colors, 'active', text='')
-        row = layout.row(align=True)
-        icon = 'LOCKED' if armature.gamerig_colors_lock else 'UNLOCKED'
-        row.prop(armature, 'gamerig_colors_lock', text = 'Unified select/active colors', icon=icon)
-        row.operator("armature.gamerig_apply_selection_colors", icon='FILE_REFRESH', text='Apply')
-        row = layout.row()
-        row.template_list("DATA_UL_gamerig_bone_groups", "", obj.data, "gamerig_colors", obj.data, "gamerig_colors_index")
-
-        col = row.column(align=True)
-        col.operator("armature.gamerig_bone_group_add", icon='ZOOMIN', text="")
-        col.operator("armature.gamerig_bone_group_remove", icon='ZOOMOUT', text="").idx = obj.data.gamerig_colors_index
-        col.menu("DATA_MT_gamerig_bone_groups_specials", icon='DOWNARROW_HLT', text="")
-        row = layout.row()
-        row.prop(armature, 'gamerig_theme_to_add', text = 'Theme')
-        op = row.operator("armature.gamerig_bone_group_add_theme", text="Add From Theme")
-        op.theme = armature.gamerig_theme_to_add
-        row = layout.row()
-        row.operator("armature.gamerig_add_bone_groups", text="Add Standard")
-
-
-class BONE_PT_gamerig_buttons(bpy.types.Panel):
+class BONE_PT_gamerig_type(bpy.types.Panel):
     bl_label       = "GameRig Type"
     bl_space_type  = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -625,8 +606,6 @@ class Generate(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
-
 class ToggleArmatureReference(bpy.types.Operator):
     """Toggle armature reference between metarig and generated rig."""
 
@@ -764,34 +743,6 @@ class EncodeWidget(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
-class RenameBones(bpy.types.Operator):
-    """ Creates Python code that will generate the selected metarig
-        as a sample.
-    """
-    bl_idname  = "armature.gamerig_rename_bones"
-    bl_label   = "Rename bones with regex"
-    bl_options = {'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        return context.mode == 'EDIT_ARMATURE' or context.mode == 'POSE'
-
-    def execute(self, context):
-        name = "metarig_sample.py"
-
-        if name in bpy.data.texts:
-            text_block = bpy.data.texts[name]
-            text_block.clear()
-        else:
-            text_block = bpy.data.texts.new(name)
-
-        text = write_metarig(context.active_object, layers=False, func_name="create_sample")
-        text_block.write(text)
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        return {'FINISHED'}
-
 ### Registering ###
 
 classes = (
@@ -804,10 +755,8 @@ classes = (
     DATA_OT_gamerig_bone_group_remove_all,
     DATA_UL_gamerig_bone_groups,
     DATA_MT_gamerig_bone_groups_specials,
-    DATA_PT_gamerig_bone_groups,
-    DATA_PT_gamerig_layer_names,
-    DATA_PT_gamerig_buttons,
-    BONE_PT_gamerig_buttons,
+    DATA_PT_gamerig,
+    BONE_PT_gamerig_type,
     VIEW3D_PT_gamerig_dev_tools,
     LayerInit,
     Generate,

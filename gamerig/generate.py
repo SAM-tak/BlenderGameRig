@@ -28,7 +28,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
     MetarigError, new_bone, get_rig_type, create_widget,
     MCH_PREFIX, ROOT_NAME, RIG_DIR,
-    org, create_root_widget, get_wgt_name, random_id,
+    is_org, org, create_root_widget, get_wgt_name, random_id,
     copy_attributes, gamma_correct
 )
 from . import rig_lists
@@ -361,6 +361,12 @@ def generate_rig(context, metarig):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
+    # All the others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
+    for bone in bones:
+        b = obj.data.bones[bone]
+        if not is_org(b.name) or not b.name in metarig.data.bones:
+            b.use_deform = False
+
     # Alter marked driver targets
     if obj.animation_data:
         for d in obj.animation_data.drivers:
@@ -413,7 +419,7 @@ def generate_rig(context, metarig):
     # Create list of layer name/row pairs
     layer_layout = []
     for l in metarig.data.gamerig_layers:
-        print(l.name)
+        #print(l.name)
         layer_layout += [(l.name, l.row)]
 
     # Generate the UI script
@@ -485,7 +491,7 @@ def create_selection_sets(obj, metarig):
     pbones = obj.pose.bones
 
     for i, name in enumerate(metarig.data.gamerig_layers.keys()):
-        if name == '' or not metarig.data.gamerig_layers[i].set:
+        if name == '' or not metarig.data.gamerig_layers[i].selset:
             continue
 
         bpy.ops.pose.select_all(action='DESELECT')

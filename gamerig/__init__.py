@@ -147,7 +147,7 @@ class GameRigArmatureLayer(bpy.types.PropertyGroup):
 
     name = StringProperty(name="Layer Name", default=" ")
     row = IntProperty(name="Layer Row", default=1, min=1, max=32, description='UI row for this layer')
-    set = BoolProperty(name="Selection Set", default=False, description='Add Selection Set for this layer')
+    selset = BoolProperty(name="Selection Set", default=False, description='Add Selection Set for this layer')
     group = IntProperty(
         name="Bone Group", default=0, min=0, max=32,
         get=get_group, set=set_group, description='Assign Bone Group to this layer'
@@ -179,9 +179,6 @@ def register():
         bpy.utils.register_class(cl)
 
     bpy.types.Armature.gamerig_layers = CollectionProperty(type=GameRigArmatureLayer)
-
-    bpy.types.PoseBone.gamerig_type = StringProperty(name="GameRig Type", description="Rig type for this bone")
-    bpy.types.PoseBone.gamerig_parameters = PointerProperty(type=GameRigParameters)
 
     bpy.types.Armature.gamerig_colors = CollectionProperty(type=GameRigColorSet)
     bpy.types.Armature.gamerig_rig_ui_template = StringProperty(
@@ -224,6 +221,9 @@ def register():
         name='Theme'
     )
 
+    bpy.types.PoseBone.gamerig_type = StringProperty(name="GameRig Type", description="Rig type for this bone")
+    bpy.types.PoseBone.gamerig_parameters = PointerProperty(type=GameRigParameters)
+
     IDStore = bpy.types.WindowManager
     IDStore.gamerig_collection = EnumProperty(
         items=rig_lists.col_enum_list, default="All",
@@ -234,6 +234,9 @@ def register():
     IDStore.gamerig_types = CollectionProperty(type=GameRigName)
     IDStore.gamerig_active_type = IntProperty(name="GameRig Active Type", description="The selected rig type")
     IDStore.gamerig_rig_ui_template_list = CollectionProperty(type=GameRigRigUITemplateName)
+
+    IDStore.gamerig_show_layer_names_pane = BoolProperty(default=False)
+    IDStore.gamerig_show_bone_groups_pane = BoolProperty(default=False)
 
     # Add rig parameters
     for rig in rig_lists.rig_list:
@@ -246,6 +249,16 @@ def register():
 
 def unregister():
     # Properties.
+    del bpy.types.Armature.gamerig_layers
+    del bpy.types.Armature.gamerig_colors
+    del bpy.types.Armature.gamerig_colors
+    del bpy.types.Armature.gamerig_rig_ui_template
+    del bpy.types.Armature.gamerig_rig_name
+    del bpy.types.Armature.gamerig_selection_colors
+    del bpy.types.Armature.gamerig_colors_index
+    del bpy.types.Armature.gamerig_colors_lock
+    del bpy.types.Armature.gamerig_theme_to_add
+
     del bpy.types.PoseBone.gamerig_type
     del bpy.types.PoseBone.gamerig_parameters
 
@@ -254,6 +267,8 @@ def unregister():
     del IDStore.gamerig_types
     del IDStore.gamerig_active_type
     del IDStore.gamerig_rig_ui_template_list
+    del IDStore.gamerig_show_layer_names_pane
+    del IDStore.gamerig_show_bone_groups_pane
 
     # Classes.
     for cl in classes:

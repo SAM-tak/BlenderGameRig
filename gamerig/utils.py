@@ -966,11 +966,11 @@ def write_metarig(obj, layers=False, func_name="create", groups=False):
         for i in range(len(arm.gamerig_layers)):
             name = arm.gamerig_layers[i].name
             row = arm.gamerig_layers[i].row
-            set = arm.gamerig_layers[i].set
+            set = arm.gamerig_layers[i].selset
             group = arm.gamerig_layers[i].group
             code.append('    arm.gamerig_layers[' + str(i) + '].name = "' + name + '"')
             code.append('    arm.gamerig_layers[' + str(i) + '].row = ' + str(row))
-            code.append('    arm.gamerig_layers[' + str(i) + '].set = ' + str(set))
+            code.append('    arm.gamerig_layers[' + str(i) + '].selset = ' + str(set))
             code.append('    arm.gamerig_layers[' + str(i) + '].group = ' + str(group))
 
     # write parents first
@@ -987,6 +987,7 @@ def write_metarig(obj, layers=False, func_name="create", groups=False):
         code.append("    bone.tail[:] = %.4f, %.4f, %.4f" % bone.tail.to_tuple(4))
         code.append("    bone.roll = %.4f" % bone.roll)
         code.append("    bone.use_connect = %s" % str(bone.use_connect))
+        code.append("    bone.use_deform = %s" % str(bone.use_deform))
         if bone.parent:
             code.append("    bone.parent = arm.edit_bones[bones[%r]]" % bone.parent.name)
         code.append("    bones[%r] = bone.name" % bone.name)

@@ -21,11 +21,6 @@ if is_selected( controls ):
     props.uarm_ik = controls[0]
     props.farm_ik = ik_ctrl[1]
     props.hand_ik = controls[4]
-    props.pole = ""
-
-# IK Stretch on IK Control bone
-if is_selected( ik_ctrl ):
-    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
@@ -64,30 +59,28 @@ if is_selected( controls ):
     props.thigh_ik = controls[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = controls[7]
-    props.pole     = ""
     props.footroll = controls[6]
     props.mfoot_ik = ik_ctrl[2]
     props.toe_ik   = controls[5]
 
-# IK Stretch on IK Control bone
-if is_selected( ik_ctrl ):
-    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
-
 # FK limb follow
 if is_selected( fk_ctrl ):
     layout.prop( pose_bones[ parent ], '["fk_limb_follow"]', text = 'FK Limb Follow', slider = True )
+
 """
 
-def create_script(bones, limb_type = None):
+script_ik_stretch = """
+# IK Stretch on IK Control bone
+if is_selected( ik_ctrl ):
+    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
+"""
+
+def create_script(bones, limb_type, allow_ik_stretch):
     # All ctrls have IK/FK switch
     controls =  [ bones['ik']['ctrl']['limb'] ] + bones['fk']['ctrl']
     controls += bones['ik']['ctrl']['terminal']
 
     controls_string = ", ".join(["'" + x + "'" for x in controls])
-
-    # All tweaks have their own bbone prop
-    #tweaks        = bones['tweak']['ctrl'][1:-1]
-    #tweaks_string = ", ".join(["'" + x + "'" for x in tweaks])
 
     # IK ctrl has IK stretch
     ik_ctrl = [ bones['ik']['ctrl']['terminal'][-1] ]
@@ -97,7 +90,7 @@ def create_script(bones, limb_type = None):
     ik_ctrl_string = ", ".join(["'" + x + "'" for x in ik_ctrl])
 
     if limb_type == 'arm':
-        return script_arm % (
+        code = script_arm % (
             controls_string,
             ik_ctrl_string,
             bones['fk']['ctrl'][0],
@@ -105,7 +98,7 @@ def create_script(bones, limb_type = None):
         )
 
     elif limb_type == 'leg':
-        return script_leg % (
+        code = script_leg % (
             controls_string,
             ik_ctrl_string,
             bones['fk']['ctrl'][0],
@@ -113,9 +106,14 @@ def create_script(bones, limb_type = None):
         )
 
     elif limb_type == 'paw':
-        return script_leg % (
+        code = script_leg % (
             controls_string,
             ik_ctrl_string,
             bones['fk']['ctrl'][0],
             bones['fk']['ctrl'][0]
         )
+
+    if allow_ik_stretch:
+        code += script_ik_stretch
+
+    return code

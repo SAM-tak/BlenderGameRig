@@ -60,50 +60,50 @@ def create_arm( cls, bones ):
         'constraint'  : 'STRETCH_TO',
         'subtarget'   : ctrl,
     })
-    make_constraint( cls, bones['ik']['mch_str'], {
-        'constraint'  : 'LIMIT_SCALE',
-        'use_min_y'   : True,
-        'use_max_y'   : True,
-        'max_y'       : 1.0,
-        'owner_space' : 'LOCAL'
-    })
+    if cls.allow_ik_stretch:
+        make_constraint( cls, bones['ik']['mch_str'], {
+            'constraint'  : 'LIMIT_SCALE',
+            'use_min_y'   : True,
+            'use_max_y'   : True,
+            'max_y'       : 1.05,
+            'owner_space' : 'LOCAL'
+        })
 
     pb = cls.obj.pose.bones
 
     # Modify rotation mode for ik and tweak controls
     pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZXY'
 
-    #for b in bones['tweak']['ctrl']:
-    #    pb[b].rotation_mode = 'ZXY'
-
-    # Create ik/fk switch property
     pb_master = pb[ bones['fk']['ctrl'][0] ]
 
-    pb_master['ik_stretch'] = 1.0
-    prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
-    prop["min"]         = 0.0
-    prop["max"]         = 1.0
-    prop["soft_min"]    = 0.0
-    prop["soft_max"]    = 1.0
-    prop["description"] = 'IK Stretch'
+    if cls.allow_ik_stretch:
+        # Create ik stretch property
 
-    # Add driver to limit scale constraint influence
-    b        = bones['ik']['mch_str']
-    drv      = pb[b].constraints[-1].driver_add("influence").driver
-    drv.type = 'SUM'
+        pb_master['ik_stretch'] = 1.0
+        prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
+        prop["min"]         = 0.0
+        prop["max"]         = 1.0
+        prop["soft_min"]    = 0.0
+        prop["soft_max"]    = 1.0
+        prop["description"] = 'IK Stretch'
 
-    var = drv.variables.new()
-    var.name = prop.name
-    var.type = "SINGLE_PROP"
-    var.targets[0].id = cls.obj
-    var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+        # Add driver to limit scale constraint influence
+        b        = bones['ik']['mch_str']
+        drv      = pb[b].constraints[-1].driver_add("influence").driver
+        drv.type = 'SUM'
 
-    drv_modifier = cls.obj.animation_data.drivers[-1].modifiers[0]
+        var = drv.variables.new()
+        var.name = prop.name
+        var.type = "SINGLE_PROP"
+        var.targets[0].id = cls.obj
+        var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
 
-    drv_modifier.mode            = 'POLYNOMIAL'
-    drv_modifier.poly_order      = 1
-    drv_modifier.coefficients[0] = 1.0
-    drv_modifier.coefficients[1] = -1.0
+        drv_modifier = cls.obj.animation_data.drivers[-1].modifiers[0]
+
+        drv_modifier.mode            = 'POLYNOMIAL'
+        drv_modifier.poly_order      = 1
+        drv_modifier.coefficients[0] = 1.0
+        drv_modifier.coefficients[1] = -1.0
 
     # Create hand widget
     create_hand_widget(cls.obj, ctrl)

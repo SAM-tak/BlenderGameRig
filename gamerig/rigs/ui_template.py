@@ -244,59 +244,6 @@ def correct_rotation(bone_ik, bone_fk):
 ## IK/FK snapping functions ##
 ##############################
 
-def match_pole_target(ik_first, ik_last, pole, match_bone, length):
-    """ Places an IK chain's pole target to match ik_first's
-        transforms to match_bone.  All bones should be given as pose bones.
-        You need to be in pose mode on the relevant armature object.
-        ik_first: first bone in the IK chain
-        ik_last:  last bone in the IK chain
-        pole:  pole target bone for the IK chain
-        match_bone:  bone to match ik_first to (probably first bone in a matching FK chain)
-        length:  distance pole target should be placed from the chain center
-    """
-    a = ik_first.matrix.to_translation()
-    b = ik_last.matrix.to_translation() + ik_last.vector
-
-    # Vector from the head of ik_first to the
-    # tip of ik_last
-    ikv = b - a
-
-    # Get a vector perpendicular to ikv
-    pv = perpendicular_vector(ikv).normalized() * length
-
-    def set_pole(pvi):
-        """ Set pole target's position based on a vector
-            from the arm center line.
-        """
-        # Translate pvi into armature space
-        ploc = a + (ikv/2) + pvi
-
-        # Set pole target to location
-        mat = get_pose_matrix_in_other_space(Matrix.Translation(ploc), pole)
-        set_pose_translation(pole, mat)
-
-        bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.object.mode_set(mode='POSE')
-
-    set_pole(pv)
-
-    # Get the rotation difference between ik_first and match_bone
-    angle = rotation_difference(ik_first.matrix, match_bone.matrix)
-
-    # Try compensating for the rotation difference in both directions
-    pv1 = Matrix.Rotation(angle, 4, ikv) * pv
-    set_pole(pv1)
-    ang1 = rotation_difference(ik_first.matrix, match_bone.matrix)
-
-    pv2 = Matrix.Rotation(-angle, 4, ikv) * pv
-    set_pole(pv2)
-    ang2 = rotation_difference(ik_first.matrix, match_bone.matrix)
-
-    # Do the one with the smaller angle
-    if ang1 < ang2:
-        set_pole(pv1)
-
-
 def fk2ik_arm(obj, fk, ik):
     """ Matches the fk bones in an arm rig to the ik bones.
         obj: armature object
@@ -473,7 +420,6 @@ class Arm_IK2FK(bpy.types.Operator):
     uarm_ik = bpy.props.StringProperty(name="Upper Arm IK Name")
     farm_ik = bpy.props.StringProperty(name="Forearm IK Name")
     hand_ik = bpy.props.StringProperty(name="Hand IK Name")
-    pole    = bpy.props.StringProperty(name="Pole IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -483,7 +429,7 @@ class Arm_IK2FK(bpy.types.Operator):
         use_global_undo = context.user_preferences.edit.use_global_undo
         context.user_preferences.edit.use_global_undo = False
         try:
-            ik2fk_arm(context.active_object, fk=[self.uarm_fk, self.farm_fk, self.hand_fk], ik=[self.uarm_ik, self.farm_ik, self.hand_ik, self.pole])
+            ik2fk_arm(context.active_object, fk=[self.uarm_fk, self.farm_fk, self.hand_fk], ik=[self.uarm_ik, self.farm_ik, self.hand_ik])
         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
@@ -538,8 +484,6 @@ class Leg_IK2FK(bpy.types.Operator):
     footroll = bpy.props.StringProperty(name="Foot Roll Name")
     mfoot_ik = bpy.props.StringProperty(name="MFoot IK Name")
     toe_ik   = bpy.props.StringProperty(name="Toe IK Name")
-    pole     = bpy.props.StringProperty(name="Pole IK Name")
-
 
     @classmethod
     def poll(cls, context):
@@ -549,7 +493,7 @@ class Leg_IK2FK(bpy.types.Operator):
         use_global_undo = context.user_preferences.edit.use_global_undo
         context.user_preferences.edit.use_global_undo = False
         try:
-            ik2fk_leg(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.footroll, self.mfoot_ik, self.toe_ik, self.pole])
+            ik2fk_leg(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.footroll, self.mfoot_ik, self.toe_ik])
         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}

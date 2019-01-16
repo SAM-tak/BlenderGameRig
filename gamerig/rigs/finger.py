@@ -99,6 +99,7 @@ class Rig:
 
         # Setting pose bones locks
         pb_master = pb[master_name]
+        pb_master.lock_location = True,True,True
         pb_master.lock_scale = True,False,True
 
         # Pose settings

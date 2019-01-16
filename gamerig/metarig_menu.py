@@ -35,8 +35,7 @@ class ArmatureMainMenu(bpy.types.Menu):
         layout = self.layout
         for cl in self.submenus:
             layout.menu(cl.bl_idname, icon='OUTLINER_OB_ARMATURE')
-        for op, name in self.operators:
-            text = capwords(name.replace("_", " ")) + " (Meta-Rig)"
+        for op, name, text in self.operators:
             icon='BONE_DATA' if name == 'single_bone' else 'OUTLINER_OB_ARMATURE'
             layout.operator(op, icon=icon, text=text)
 
@@ -48,8 +47,7 @@ def mainmenu_func(self, context):
 class ArmatureSubMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
-        for op, name in self.operators:
-            text = capwords(name.replace("_", " ")) + " (Meta-Rig)"
+        for op, name, text in self.operators:
             icon='BONE_DATA' if name == 'single_bone' else 'OUTLINER_OB_ARMATURE'
             layout.operator(op, icon=icon, text=text)
 
@@ -132,20 +130,21 @@ metarig_ops = {}
 for metarig_class in metarigs_dict:
     metarig_ops[metarig_class] = []
     for m in metarigs_dict[metarig_class]:
-        name = m.__name__.rsplit('.', 1)[1]
+        name = '_D_'.join(m.__name__.split('.')[2:]).replace(' ', '_')
+        text = m.__name__.rsplit('.', 1)[-1].capitalize() + " (Meta Rig)"
 
         # Dynamically construct an Operator
         T = type("GameRig_Add_" + name + "_Metarig", (AddMetarigOperatorBase,), {})
-        T.bl_idname = "object.gamerig_" + name + "_metarig_add"
-        T.bl_label = "Add " + name.replace("_", " ").capitalize() + " (Meta Rig)"
+        T.bl_idname = "object.gamerig_" + name.lower() + "_metarig_add"
+        T.bl_label = "Add " + text
         T.bl_options = {'REGISTER', 'UNDO'}
         T.execute = make_metarig_add_execute(m)
 
-        metarig_ops[metarig_class].append((T, name))
+        metarig_ops[metarig_class].append((T, name, text))
 
 
-for mop, name in metarig_ops[utils.METARIG_DIR]:
-    ArmatureMainMenu.operators.append((mop.bl_idname, name))
+for mop, name, text in metarig_ops[utils.METARIG_DIR]:
+    ArmatureMainMenu.operators.append((mop.bl_idname, name, text))
 
 metarigs_dict.pop(utils.METARIG_DIR)
 
@@ -154,13 +153,12 @@ for submenu_name in sorted(list(metarigs_dict.keys())):
     armature_submenu = type('Class_GameRig_' + submenu_name + '_submenu', (ArmatureSubMenu,), {})
     armature_submenu.bl_label = submenu_name
     armature_submenu.bl_idname = 'ARMATURE_MT_GameRig_%s_class' % submenu_name
-    armature_submenu.operators = [(mop.bl_idname, name) for mop, name in metarig_ops[submenu_name]]
+    armature_submenu.operators = [(mop.bl_idname, name, text) for mop, name, text in metarig_ops[submenu_name]]
     ArmatureMainMenu.submenus.append(armature_submenu)
-
 
 def register():
     for op in metarig_ops:
-        for cl, name in metarig_ops[op]:
+        for cl, name, text in metarig_ops[op]:
             bpy.utils.register_class(cl)
 
     for arm_sub in ArmatureMainMenu.submenus:
@@ -173,7 +171,7 @@ def register():
 
 def unregister():
     for op in metarig_ops:
-        for cl, name in metarig_ops[op]:
+        for cl, name, text in metarig_ops[op]:
             bpy.utils.unregister_class(cl)
 
     for arm_sub in ArmatureMainMenu.submenus:
