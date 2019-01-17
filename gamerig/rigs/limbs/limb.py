@@ -1,4 +1,4 @@
-import bpy, re, itertools
+import bpy, re, itertools, math
 from rna_prop_ui import rna_idprop_ui_prop_get
 from math import trunc
 from mathutils import Vector
@@ -50,15 +50,15 @@ class Rig:
         name = get_bone_name( basename( org_bones[0] ), 'mch', 'parent' )
 
         mch = copy_bone( self.obj, org_bones[0], name )
-        orient_bone( self, eb[mch], 'y' )
+        orient_bone( self, eb[mch], 'z' )
         eb[ mch ].length = eb[ org_bones[0] ].length / 4
 
         eb[ mch ].parent = eb[ org_bones[0] ].parent
 
         eb[ mch ].roll = 0.0
 
+        # Constraints
         if self.root_bone:
-            # Constraints
             make_constraint( self, mch, {
                 'constraint'  : 'COPY_ROTATION',
                 'subtarget'   : self.root_bone
@@ -67,6 +67,21 @@ class Rig:
             make_constraint( self, mch, {
                 'constraint'  : 'COPY_SCALE',
                 'subtarget'   : self.root_bone
+            })
+        else:
+            make_constraint( self, mch, {
+                'constraint'   : 'LIMIT_ROTATION',
+                'use_limit_x'  : True,
+                'min_x'        : math.radians(90),
+                'max_x'        : math.radians(90),
+                'use_limit_y'  : True,
+                'min_y'        : 0,
+                'max_y'        : 0,
+                'use_limit_z'  : True,
+                'min_z'        : 0,
+                'max_z'        : 0,
+                'target_space' : 'LOCAL',
+                'owner_space'  : 'WORLD'
             })
 
         return mch
@@ -224,25 +239,24 @@ class Rig:
         bpy.ops.object.mode_set(mode ='OBJECT')
         pb = self.obj.pose.bones
 
-        if self.root_bone:
-            # Limb Follow Driver
-            pb[fk[0]]['fk_limb_follow'] = 0.0
-            prop = rna_idprop_ui_prop_get( pb[fk[0]], 'fk_limb_follow', create = True )
+        # Limb Follow Driver
+        pb[fk[0]]['fk_limb_follow'] = 0.0
+        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'fk_limb_follow', create = True )
 
-            prop["min"]         = 0.0
-            prop["max"]         = 1.0
-            prop["soft_min"]    = 0.0
-            prop["soft_max"]    = 1.0
-            prop["description"] = 'FK Limb Follow'
+        prop["min"]         = 0.0
+        prop["max"]         = 1.0
+        prop["soft_min"]    = 0.0
+        prop["soft_max"]    = 1.0
+        prop["description"] = 'FK Limb Follow'
 
-            drv = pb[ parent ].constraints[ 0 ].driver_add("influence").driver
+        drv = pb[ parent ].constraints[ 0 ].driver_add("influence").driver
 
-            drv.type = 'AVERAGE'
-            var = drv.variables.new()
-            var.name = prop.name
-            var.type = "SINGLE_PROP"
-            var.targets[0].id = self.obj
-            var.targets[0].data_path = pb[fk[0]].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        drv.type = 'AVERAGE'
+        var = drv.variables.new()
+        var.name = prop.name
+        var.type = "SINGLE_PROP"
+        var.targets[0].id = self.obj
+        var.targets[0].data_path = pb[fk[0]].path_from_id() + '[' + '"' + prop.name + '"' + ']'
 
         # Create ik/fk switch property
         pb[fk[0]]['ik_fk_rate']  = 0.0
