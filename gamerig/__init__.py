@@ -181,15 +181,9 @@ def register():
     bpy.types.Armature.gamerig_layers = CollectionProperty(type=GameRigArmatureLayer)
 
     bpy.types.Armature.gamerig_colors = CollectionProperty(type=GameRigColorSet)
-
     bpy.types.Armature.gamerig_rig_ui_template = StringProperty(
         name="GameRig Rig UI Template",
         description="Rig UI Template for this armature"
-    )
-    bpy.types.Armature.gamerig_add_root_bone = BoolProperty(
-        name="GameRig Add Root Bone",
-        description="Add root bone.",
-        default=False
     )
     bpy.types.Armature.gamerig_rig_name = StringProperty(
         name="GameRig Rig Name",
@@ -260,7 +254,6 @@ def unregister():
     del bpy.types.Armature.gamerig_colors
     del bpy.types.Armature.gamerig_rig_ui_template
     del bpy.types.Armature.gamerig_rig_name
-    del bpy.types.Armature.gamerig_add_root_bone
     del bpy.types.Armature.gamerig_selection_colors
     del bpy.types.Armature.gamerig_colors_index
     del bpy.types.Armature.gamerig_colors_lock

@@ -159,7 +159,6 @@ class DATA_PT_gamerig(bpy.types.Panel):
         ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
             rig_id = obj.data.get('gamerig_id')
-            layout.row().prop(obj.data, "gamerig_add_root_bone", text="Add root bone")
             target = next((i for i in C.scene.objects if i != obj and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
             if target:
                 layout.row().operator("pose.gamerig_generate", text="Regenerate Rig", icon='POSE_HLT')
