@@ -286,9 +286,9 @@ def put_bone(obj, bone_name, pos):
 #=============================================
 
 def get_wgt_name(rig_name, bone_name):
-    """ Object's with name widget.<rig_name>.<bone_name> get used as that bone's shape.
+    """ Object's with name widget_<rig_name>_<bone_name> get used as that bone's shape.
     """
-    return 'widget.%s.%s' % (rig_name, bone_name)
+    return 'widget_%s_%s' % (rig_name, bone_name)
 
 
 def obj_to_bone(obj, rig, bone_name):

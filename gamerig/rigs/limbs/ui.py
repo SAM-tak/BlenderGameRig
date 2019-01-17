@@ -70,12 +70,16 @@ if is_selected( fk_ctrl ):
 """
 
 script_ik_stretch = """
-# IK Stretch on IK Control bone
-if is_selected( ik_ctrl ):
+    # IK Stretch on IK Control bone
     layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
 """
 
-def create_script(bones, limb_type, allow_ik_stretch):
+script_ik_follow = """
+    # IK Follow on IK Control bone
+    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
+"""
+
+def create_script(bones, limb_type, allow_ik_stretch, ik_follow):
     # All ctrls have IK/FK switch
     controls =  [ bones['ik']['ctrl']['limb'] ] + bones['fk']['ctrl']
     controls += bones['ik']['ctrl']['terminal']
@@ -113,7 +117,18 @@ def create_script(bones, limb_type, allow_ik_stretch):
             bones['fk']['ctrl'][0]
         )
 
-    if allow_ik_stretch:
-        code += script_ik_stretch
-
+    if allow_ik_stretch or ik_follow:
+        code += """
+if is_selected( ik_ctrl ):
+"""
+        if allow_ik_stretch:
+            code += """
+    # IK Stretch on IK Control bone
+    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
+"""
+        if ik_follow:
+            code += """
+    # IK Follow on IK Control bone
+    layout.prop( pose_bones[ parent ], '["ik_follow"]', text = 'IK Follow', slider = True )
+"""
     return code

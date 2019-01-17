@@ -1106,8 +1106,8 @@ jaw_ctrl_name  = '%s'
 eyes_ctrl_name = '%s'
 
 if is_selected(all_controls):
-    layout.prop(pose_bones[jaw_ctrl_name],  '["%s"]', slider=True)
-    layout.prop(pose_bones[eyes_ctrl_name], '["%s"]', slider=True)
+    layout.prop(pose_bones[jaw_ctrl_name],  '["%s"]', text='Mouth Lock', slider=True)
+    layout.prop(pose_bones[eyes_ctrl_name], '["%s"]', text='Eyes Follow', slider=True)
 """ % (controls_string, jaw_ctrl, eyes_ctrl, jaw_prop, eyes_prop)]
         elif jaw_ctrl:
             return [ """
@@ -1115,7 +1115,7 @@ all_controls   = [%s]
 jaw_ctrl_name  = '%s'
 
 if is_selected(all_controls):
-    layout.prop(pose_bones[jaw_ctrl_name],  '["%s"]', slider=True)
+    layout.prop(pose_bones[jaw_ctrl_name],  '["%s"]', text='Mouth Lock', slider=True)
 """ % (controls_string, jaw_ctrl, jaw_prop)]
         elif eyes_ctrl:
             return [ """
@@ -1123,7 +1123,7 @@ all_controls   = [%s]
 eyes_ctrl_name = '%s'
 
 if is_selected(all_controls):
-    layout.prop(pose_bones[eyes_ctrl_name], '["%s"]', slider=True)
+    layout.prop(pose_bones[eyes_ctrl_name], '["%s"]', text='Eyes Follow', slider=True)
 """ % (controls_string, eyes_ctrl, eyes_prop)]
 
 

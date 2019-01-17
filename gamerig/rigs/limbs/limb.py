@@ -4,7 +4,7 @@ from math import trunc
 from mathutils import Vector
 from ...utils import (
     copy_bone, flip_bone, put_bone, org, basename,
-    connected_children_names,
+    connected_children_names, find_root_bone,
     create_widget,
     MetarigError
 )
@@ -37,6 +37,8 @@ class Rig:
             self.fk_layers = list(params.fk_layers)
         else:
             self.fk_layers = None
+        
+        self.root_bone = find_root_bone(obj, bone_name)
 
 
     def create_parent( self ):
@@ -101,8 +103,7 @@ class Rig:
         eb[ ctrl    ].parent = eb[ parent ]
         eb[ mch_str ].parent = eb[ parent ]
         eb[ mch_ik  ].parent = eb[ ctrl   ]
-
-
+        
         make_constraint( self, mch_ik, {
             'constraint'  : 'IK',
             'subtarget'   : mch_target,
@@ -128,10 +129,10 @@ class Rig:
         create_ikarrow_widget( self.obj, ctrl )
 
         return {
-            'ctrl'       : { 'limb' : ctrl },
-            'mch_ik'     : mch_ik,
-            'mch_target' : mch_target,
-            'mch_str'    : mch_str
+            'ctrl'          : { 'limb' : ctrl },
+            'mch_ik'        : mch_ik,
+            'mch_target'    : mch_target,
+            'mch_str'       : mch_str
         }
 
 
@@ -151,9 +152,7 @@ class Rig:
             ctrls.append( bone )
 
         # MCH
-        mch = copy_bone(
-            self.obj, org_bones[-1], get_bone_name( o, 'mch', 'fk' )
-        )
+        mch = copy_bone(self.obj, org_bones[-1], get_bone_name( o, 'mch', 'fk' ))
 
         eb[ mch ].length /= 4
         
@@ -308,7 +307,7 @@ class Rig:
 
         bones = self.create_terminal( self.limb_type, bones )
 
-        return [ create_script( bones, self.limb_type, self.allow_ik_stretch ) ]
+        return [ create_script( bones, self.limb_type, self.allow_ik_stretch, self.root_bone ) ]
 
 
 def add_parameters( params ):
