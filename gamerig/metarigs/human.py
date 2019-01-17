@@ -46,7 +46,7 @@ def create(obj):
     arm.gamerig_colors[5].select = Color((0.31372547149658203, 0.7843138575553894, 1.0))
     arm.gamerig_colors[5].standard_colors_lock = True
 
-    for i in range(29):
+    for i in range(30):
         arm.gamerig_layers.add()
 
     arm.gamerig_layers[0].name = "Face"
@@ -161,10 +161,14 @@ def create(obj):
     arm.gamerig_layers[27].row = 1
     arm.gamerig_layers[27].selset = False
     arm.gamerig_layers[27].group = 0
-    arm.gamerig_layers[28].name = "Root"
-    arm.gamerig_layers[28].row = 14
+    arm.gamerig_layers[28].name = ""
+    arm.gamerig_layers[28].row = 1
     arm.gamerig_layers[28].selset = False
-    arm.gamerig_layers[28].group = 1
+    arm.gamerig_layers[28].group = 0
+    arm.gamerig_layers[29].name = "Root"
+    arm.gamerig_layers[29].row = 14
+    arm.gamerig_layers[29].selset = False
+    arm.gamerig_layers[29].group = 1
 
     bones = {}
 

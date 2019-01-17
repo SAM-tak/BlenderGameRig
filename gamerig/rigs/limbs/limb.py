@@ -1,4 +1,4 @@
-import bpy, re, itertools, math
+import bpy, re, itertools
 from rna_prop_ui import rna_idprop_ui_prop_get
 from math import trunc
 from mathutils import Vector
@@ -50,7 +50,7 @@ class Rig:
         name = get_bone_name( basename( org_bones[0] ), 'mch', 'parent' )
 
         mch = copy_bone( self.obj, org_bones[0], name )
-        orient_bone( self, eb[mch], 'z' )
+        orient_bone( self, eb[mch], 'y' )
         eb[ mch ].length = eb[ org_bones[0] ].length / 4
 
         eb[ mch ].parent = eb[ org_bones[0] ].parent
@@ -72,15 +72,15 @@ class Rig:
             make_constraint( self, mch, {
                 'constraint'   : 'LIMIT_ROTATION',
                 'use_limit_x'  : True,
-                'min_x'        : math.radians(90),
-                'max_x'        : math.radians(90),
+                'min_x'        : 0,
+                'max_x'        : 0,
                 'use_limit_y'  : True,
                 'min_y'        : 0,
                 'max_y'        : 0,
                 'use_limit_z'  : True,
                 'min_z'        : 0,
                 'max_z'        : 0,
-                'target_space' : 'LOCAL',
+                'target_space' : 'WORLD',
                 'owner_space'  : 'WORLD'
             })
 
