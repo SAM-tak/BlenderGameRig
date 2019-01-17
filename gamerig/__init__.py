@@ -22,7 +22,7 @@ bl_info = {
     "name": "GameRig",
     "version": (0, 9),
     "author": "Osamu Takasugi, (Rigify : Nathan Vegdahl, Lucio Rossi, Ivan Cappiello)",
-    "blender": (2, 79, 0),
+    "blender": (2, 80, 0),
     "description": "Character Rigging framework for Game / Realtime content",
     "location": "Armature properties, Bone properties, View3d tools panel, Armature Add menu",
     "support": "COMMUNITY",
@@ -34,16 +34,11 @@ bl_info = {
 
 if "bpy" in locals():
     import importlib
-    if "generate" in locals():
-        importlib.reload(generate)
-    if "ui" in locals():
-        importlib.reload(ui)
-    if "utils" in locals():
-        importlib.reload(utils)
-    if "metarig_menu" in locals():
-        importlib.reload(metarig_menu)
-    if "rig_lists" in locals():
-        importlib.reload(rig_lists)
+    importlib.reload(generate)
+    importlib.reload(ui)
+    importlib.reload(utils)
+    importlib.reload(metarig_menu)
+    importlib.reload(rig_lists)
 else:
     from . import utils, rig_lists, generate, ui, metarig_menu
 
@@ -67,7 +62,7 @@ class GameRigPreferences(AddonPreferences):
     # when defining this in a submodule of a python package.
     bl_idname = __name__
 
-    shows_dev_tools = BoolProperty(
+    shows_dev_tools : BoolProperty(
         name='Enable Dev Tools',
         description='Dev Tools appears in Tools tab on edit mode.',
         default=False
@@ -78,38 +73,38 @@ class GameRigPreferences(AddonPreferences):
 
 
 class GameRigName(bpy.types.PropertyGroup):
-    name = StringProperty()
+    name : StringProperty()
 
 
 class GameRigColorSet(bpy.types.PropertyGroup):
-    name = StringProperty(name="Color Set", default=" ")
-    active = FloatVectorProperty(
+    name : StringProperty(name="Color Set", default=" ")
+    active : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
         default=(1.0, 1.0, 1.0),
         min=0.0, max=1.0,
         description="color picker"
     )
-    normal = FloatVectorProperty(
+    normal : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
         default=(1.0, 1.0, 1.0),
         min=0.0, max=1.0,
         description="color picker"
     )
-    select = FloatVectorProperty(
+    select : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
         default=(1.0, 1.0, 1.0),
         min=0.0, max=1.0,
         description="color picker"
     )
-    standard_colors_lock = BoolProperty(default=True)
+    standard_colors_lock : BoolProperty(default=True)
 
 
 class GameRigSelectionColors(bpy.types.PropertyGroup):
 
-    select = FloatVectorProperty(
+    select : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
         default=(0.314, 0.784, 1.0),
@@ -117,7 +112,7 @@ class GameRigSelectionColors(bpy.types.PropertyGroup):
         description="color picker"
     )
 
-    active = FloatVectorProperty(
+    active : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
         default=(0.549, 1.0, 1.0),
@@ -127,7 +122,7 @@ class GameRigSelectionColors(bpy.types.PropertyGroup):
 
 
 class GameRigParameters(bpy.types.PropertyGroup):
-    name = StringProperty()
+    name : StringProperty()
 
 
 class GameRigArmatureLayer(bpy.types.PropertyGroup):
@@ -145,16 +140,16 @@ class GameRigArmatureLayer(bpy.types.PropertyGroup):
         else:
             self['group_prop'] = value
 
-    name = StringProperty(name="Layer Name", default=" ")
-    row = IntProperty(name="Layer Row", default=1, min=1, max=32, description='UI row for this layer')
-    selset = BoolProperty(name="Selection Set", default=False, description='Add Selection Set for this layer')
-    group = IntProperty(
+    name : StringProperty(name="Layer Name", default=" ")
+    row : IntProperty(name="Layer Row", default=1, min=1, max=32, description='UI row for this layer')
+    selset : BoolProperty(name="Selection Set", default=False, description='Add Selection Set for this layer')
+    group : IntProperty(
         name="Bone Group", default=0, min=0, max=32,
         get=get_group, set=set_group, description='Assign Bone Group to this layer'
     )
 
 class GameRigRigUITemplateName(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty()
+    name : bpy.props.StringProperty()
 
 
 ##### REGISTER #####

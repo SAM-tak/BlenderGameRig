@@ -136,11 +136,11 @@ def get_pose_matrix_in_other_space(mat, pose_bone):
         par_rest = Matrix()
 
     # Get matrix in bone's current transform space
-    smat = rest_inv * (par_rest * (par_inv * mat))
+    smat = rest_inv @ (par_rest @ (par_inv @ mat))
 
     # Compensate for non-local location
     #if not pose_bone.bone.use_local_location:
-    #    loc = smat.to_translation() * (par_rest.inverted() * rest).to_quaternion()
+    #    loc = smat.to_translation() @ (par_rest.inverted() @ rest).to_quaternion()
     #    smat.translation = loc
 
     return smat
@@ -167,8 +167,8 @@ def set_pose_translation(pose_bone, mat):
         else:
             par_rest = Matrix()
 
-        q = (par_rest.inverted() * rest).to_quaternion()
-        pose_bone.location = q * loc
+        q = (par_rest.inverted() @ rest).to_quaternion()
+        pose_bone.location = q @ loc
 
 
 def set_pose_rotation(pose_bone, mat):
@@ -223,7 +223,7 @@ def match_pose_scale(pose_bone, target_bone):
         This function assumes you are in pose mode on the relevant armature.
     """
     mat = get_pose_matrix_in_other_space(target_bone.matrix, pose_bone)
-    #set_pose_scale(pose_bone, mat)
+    set_pose_scale(pose_bone, mat)
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.mode_set(mode='POSE')
 
@@ -321,8 +321,8 @@ def fk2ik_leg(obj, fk, ik):
     match_pose_scale(shin, shini)
 
     # Foot position
-    mat = toe.bone.matrix_local.inverted() * foot.bone.matrix_local
-    footmat = get_pose_matrix_in_other_space(toei.matrix, foot) * mat
+    mat = toe.bone.matrix_local.inverted() @ foot.bone.matrix_local
+    footmat = get_pose_matrix_in_other_space(toei.matrix, foot) @ mat
     set_pose_rotation(foot, footmat)
     set_pose_scale(foot, footmat)
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -351,8 +351,8 @@ def ik2fk_leg(obj, fk, ik):
     set_pose_rotation(footroll, Matrix())
 
     # Foot position
-    mat = mfooti.bone.matrix_local.inverted() * footi.bone.matrix_local
-    footmat = get_pose_matrix_in_other_space(foot.matrix, footi) * mat
+    mat = mfooti.bone.matrix_local.inverted() @ footi.bone.matrix_local
+    footmat = get_pose_matrix_in_other_space(foot.matrix, footi) @ mat
     set_pose_translation(footi, footmat)
     set_pose_rotation(footi, footmat)
     set_pose_scale(footi, footmat)
@@ -384,13 +384,13 @@ class Arm_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK arm to IK"
     bl_options = {{'UNDO'}}
 
-    uarm_fk = bpy.props.StringProperty(name="Upper Arm FK Name")
-    farm_fk = bpy.props.StringProperty(name="Forerm FK Name")
-    hand_fk = bpy.props.StringProperty(name="Hand FK Name")
+    uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk : bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk : bpy.props.StringProperty(name="Hand FK Name")
 
-    uarm_ik = bpy.props.StringProperty(name="Upper Arm IK Name")
-    farm_ik = bpy.props.StringProperty(name="Forearm IK Name")
-    hand_ik = bpy.props.StringProperty(name="Hand IK Name")
+    uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik : bpy.props.StringProperty(name="Hand IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -413,13 +413,13 @@ class Arm_IK2FK(bpy.types.Operator):
     bl_label = "Snap IK arm to FK"
     bl_options = {{'UNDO'}}
 
-    uarm_fk = bpy.props.StringProperty(name="Upper Arm FK Name")
-    farm_fk = bpy.props.StringProperty(name="Forerm FK Name")
-    hand_fk = bpy.props.StringProperty(name="Hand FK Name")
+    uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk : bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk : bpy.props.StringProperty(name="Hand FK Name")
 
-    uarm_ik = bpy.props.StringProperty(name="Upper Arm IK Name")
-    farm_ik = bpy.props.StringProperty(name="Forearm IK Name")
-    hand_ik = bpy.props.StringProperty(name="Hand IK Name")
+    uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik : bpy.props.StringProperty(name="Hand IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -442,15 +442,15 @@ class Leg_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK leg to IK"
     bl_options = {{'UNDO'}}
 
-    thigh_fk = bpy.props.StringProperty(name="Thigh FK Name")
-    shin_fk  = bpy.props.StringProperty(name="Shin FK Name")
-    foot_fk  = bpy.props.StringProperty(name="Foot FK Name")
-    toe_fk   = bpy.props.StringProperty(name="Toe FK Name")
+    thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk  : bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk  : bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk   : bpy.props.StringProperty(name="Toe FK Name")
 
-    thigh_ik = bpy.props.StringProperty(name="Thigh IK Name")
-    shin_ik  = bpy.props.StringProperty(name="Shin IK Name")
-    foot_ik  = bpy.props.StringProperty(name="Foot IK Name")
-    toe_ik   = bpy.props.StringProperty(name="Toe IK Name")
+    thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
+    toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -473,17 +473,17 @@ class Leg_IK2FK(bpy.types.Operator):
     bl_label = "Snap IK leg to FK"
     bl_options = {{'UNDO'}}
 
-    thigh_fk = bpy.props.StringProperty(name="Thigh FK Name")
-    shin_fk  = bpy.props.StringProperty(name="Shin FK Name")
-    foot_fk  = bpy.props.StringProperty(name="Foot FK Name")
-    toe_fk   = bpy.props.StringProperty(name="Toe FK Name")
+    thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk  : bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk  : bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk   : bpy.props.StringProperty(name="Toe FK Name")
 
-    thigh_ik = bpy.props.StringProperty(name="Thigh IK Name")
-    shin_ik  = bpy.props.StringProperty(name="Shin IK Name")
-    foot_ik  = bpy.props.StringProperty(name="Foot IK Name")
-    footroll = bpy.props.StringProperty(name="Foot Roll Name")
-    mfoot_ik = bpy.props.StringProperty(name="MFoot IK Name")
-    toe_ik   = bpy.props.StringProperty(name="Toe IK Name")
+    thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
+    footroll : bpy.props.StringProperty(name="Foot Roll Name")
+    mfoot_ik : bpy.props.StringProperty(name="MFoot IK Name")
+    toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -508,6 +508,7 @@ class PropertiesPanel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_label = "GameRig Properties"
     bl_idname = "PT_gamerig_properties_{rig_id}"
+    bl_category = 'View'
 
     @classmethod
     def poll(self, context):
@@ -546,6 +547,7 @@ class LayersPanel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_label = "GameRig Layers"
     bl_idname = "PT_gamerig_layers_{rig_id}"
+    bl_category = 'View'
 
     @classmethod
     def poll(self, context):

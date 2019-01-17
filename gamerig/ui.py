@@ -57,18 +57,18 @@ class DATA_PT_gamerig(bpy.types.Panel):
             row = box.row()
             row.prop(id_store, "gamerig_show_layer_names_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
             row.alignment = 'LEFT'
-            row.label('Layer Name Settings')
+            row.label(text='Layer Name Settings')
             
             if show:
                 # UI
-                main_row = box.row(align=True).split(0.06)
+                main_row = box.row(align=True).split(factor=0.06)
                 col1 = main_row.column()
                 col2 = main_row.column()
                 col1.label()
                 for i in range(1, 33):
                     if i == 17 or i == 31:
                         col1.label()
-                    col1.label(str(i))
+                    col1.label(text=str(i))
 
                 for i, gamerig_layer in enumerate(armature.gamerig_layers):
                     # note: gamerig_layer == armature.gamerig_layers[i]
@@ -109,7 +109,7 @@ class DATA_PT_gamerig(bpy.types.Panel):
         row = box.row()
         row.prop(id_store, "gamerig_show_bone_groups_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
         row.alignment = 'LEFT'
-        row.label('Bone Group Settings')
+        row.label(text='Bone Group Settings')
         if show:
             color_sets = obj.data.gamerig_colors
             idx = obj.data.gamerig_colors_index
@@ -127,8 +127,8 @@ class DATA_PT_gamerig(bpy.types.Panel):
             row.template_list("DATA_UL_gamerig_bone_groups", "", obj.data, "gamerig_colors", obj.data, "gamerig_colors_index")
 
             col = row.column(align=True)
-            col.operator("armature.gamerig_bone_group_add", icon='ZOOMIN', text="")
-            col.operator("armature.gamerig_bone_group_remove", icon='ZOOMOUT', text="").idx = obj.data.gamerig_colors_index
+            col.operator("armature.gamerig_bone_group_add", icon='ZOOM_IN', text="")
+            col.operator("armature.gamerig_bone_group_remove", icon='ZOOM_OUT', text="").idx = obj.data.gamerig_colors_index
             col.menu("DATA_MT_gamerig_bone_groups_specials", icon='DOWNARROW_HLT', text="")
             row = box.row()
             row.prop(armature, 'gamerig_theme_to_add', text = 'Theme')
@@ -302,7 +302,7 @@ class DATA_OT_gamerig_bone_group_add_theme(bpy.types.Operator):
     bl_label   = "GameRig Add Bone Group color set from Theme"
     bl_options = {"REGISTER", "UNDO"}
 
-    theme = EnumProperty(
+    theme : EnumProperty(
         items=(
             ('THEME01', 'THEME01', ''),
             ('THEME02', 'THEME02', ''),
@@ -358,7 +358,7 @@ class DATA_OT_gamerig_bone_group_remove(bpy.types.Operator):
     bl_idname = "armature.gamerig_bone_group_remove"
     bl_label  = "GameRig Remove Bone Group color set"
 
-    idx = IntProperty()
+    idx : IntProperty()
 
     @classmethod
     def poll(cls, context):
@@ -402,9 +402,9 @@ class DATA_OT_gamerig_bone_group_remove_all(bpy.types.Operator):
 class DATA_UL_gamerig_bone_groups(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row(align=True)
-        row = row.split(percentage=0.1)
+        row = row.split(factor=0.1)
         row.label(text=str(index+1))
-        row = row.split(percentage=0.7)
+        row = row.split(factor=0.7)
         row.prop(item, "name", text='', emboss=False)
         row = row.row(align=True)
         icon = 'LOCKED' if item.standard_colors_lock else 'UNLOCKED'
@@ -513,9 +513,9 @@ class BONE_PT_gamerig_utility(bpy.types.Panel):
 
 class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
     bl_label       = "GameRig Dev Tools"
-    bl_category    = 'Tools'
     bl_space_type  = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
+    bl_category    = 'View'
 
     @classmethod
     def poll(cls, context):
@@ -600,20 +600,20 @@ class Generate(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return not context.object.hide and not context.object.hide_select
+        return not context.object.hide_viewport and not context.object.hide_select
 
     def execute(self, context):
         import importlib
         importlib.reload(generate)
 
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             generate.generate_rig(context, context.object)
         except MetarigError as rig_exception:
             gamerig_report_exception(self, rig_exception)
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
 
         return {'FINISHED'}
 
@@ -650,7 +650,7 @@ class Sample(bpy.types.Operator):
     bl_label   = "Add a sample metarig for a rig type"
     bl_options = {'UNDO'}
 
-    metarig_type = StringProperty(
+    metarig_type : StringProperty(
         name="Type",
         description="Name of the rig type to generate a sample of",
         maxlen=128,

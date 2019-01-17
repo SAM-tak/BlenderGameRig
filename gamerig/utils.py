@@ -212,8 +212,8 @@ def copy_bone(obj, bone_name, assign_name=''):
 
         edit_bone_2.use_deform = edit_bone_1.use_deform
         edit_bone_2.bbone_segments = edit_bone_1.bbone_segments
-        edit_bone_2.bbone_in = edit_bone_1.bbone_in
-        edit_bone_2.bbone_out = edit_bone_1.bbone_out
+        edit_bone_2.bbone_easein = edit_bone_1.bbone_easein
+        edit_bone_2.bbone_easeout = edit_bone_1.bbone_easeout
 
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -299,7 +299,7 @@ def obj_to_bone(obj, rig, bone_name):
 
     bone = rig.data.bones[bone_name]
 
-    mat = rig.matrix_world * bone.matrix_local
+    mat = rig.matrix_world @ bone.matrix_local
 
     obj.location = mat.to_translation()
 
@@ -319,6 +319,7 @@ def create_widget(rig, bone_name, bone_transform_name=None):
 
     obj_name = get_wgt_name(rig.name, bone_name)
     scene = bpy.context.scene
+    collection = bpy.context.collection
     id_store = bpy.context.window_manager
 
     # Check if it already exists in the scene
@@ -339,7 +340,7 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         # Create mesh object
         mesh = bpy.data.meshes.new(obj_name)
         obj = bpy.data.objects.new(obj_name, mesh)
-        scene.objects.link(obj)
+        collection.objects.link(obj)
         if not hasattr(create_widget, 'created_widgets') or create_widget.created_widgets is None:
             create_widget.created_widgets = []
         create_widget.created_widgets.append((obj, bone_name))
@@ -350,13 +351,13 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         return obj
 
 
-def assign_and_unlink_all_widgets(scene, armature):
+def assign_and_unlink_all_widgets(collection, armature):
     """ Unlink all created widget objects from current scene for cleanup.
     """
     if hasattr(create_widget, 'created_widgets') and create_widget.created_widgets is not None:
         for obj, bone_name in create_widget.created_widgets:
             armature.pose.bones[bone_name].custom_shape = obj
-            scene.objects.unlink(obj)
+            collection.objects.unlink(obj)
         create_widget.created_widgets = None
 
 
@@ -416,8 +417,8 @@ def align_bone_roll(obj, bone1, bone2):
     rot_mat = Matrix.Rotation(angle, 3, axis)
 
     # Roll factor
-    x3 = rot_mat * x1
-    dot = x2 * x3
+    x3 = rot_mat @ x1
+    dot = x2 @ x3
     if dot > 1.0:
         dot = 1.0
     elif dot < -1.0:
@@ -428,8 +429,8 @@ def align_bone_roll(obj, bone1, bone2):
     bone1_e.roll = roll
 
     # Check if we rolled in the right direction
-    x3 = rot_mat * bone1_e.x_axis
-    check = x2 * x3
+    x3 = rot_mat @ bone1_e.x_axis
+    check = x2 @ x3
 
     # If not, reverse
     if check < 0.9999:
@@ -586,7 +587,7 @@ def has_connected_children(bone):
 
 
 def get_layers(layers):
-    """ Does it's best to exctract a set of layers from any data thrown at it.
+    """ Does it's best to extract a set of layers from any data thrown at it.
     """
     if type(layers) == int:
         return [x == layers for x in range(0, 32)]
