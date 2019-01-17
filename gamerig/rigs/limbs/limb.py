@@ -58,15 +58,31 @@ class Rig:
         eb[ mch ].roll = 0.0
 
         # Constraints
-        make_constraint( self, mch, {
-            'constraint'  : 'COPY_ROTATION',
-            'subtarget'   : 'root'
-        })
+        if self.root_bone:
+            make_constraint( self, mch, {
+                'constraint'  : 'COPY_ROTATION',
+                'subtarget'   : 'root'
+            })
 
-        make_constraint( self, mch, {
-            'constraint'  : 'COPY_SCALE',
-            'subtarget'   : 'root'
-        })
+            make_constraint( self, mch, {
+                'constraint'  : 'COPY_SCALE',
+                'subtarget'   : 'root'
+            })
+        else:
+            make_constraint( self, mch, {
+                'constraint'   : 'LIMIT_ROTATION',
+                'use_limit_x'  : True,
+                'min_x'        : 0,
+                'max_x'        : 0,
+                'use_limit_y'  : True,
+                'min_y'        : 0,
+                'max_y'        : 0,
+                'use_limit_z'  : True,
+                'min_z'        : 0,
+                'max_z'        : 0,
+                'target_space' : 'WORLD',
+                'owner_space'  : 'WORLD'
+            })
 
         return mch
 

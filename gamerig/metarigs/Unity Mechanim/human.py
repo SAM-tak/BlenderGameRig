@@ -174,7 +174,7 @@ def create(obj):
 
     bone = arm.edit_bones.new('ORG-root')
     bone.head[:] = 0.0000, 0.0000, 0.0000
-    bone.tail[:] = 0.0000, 0.0000, 1.0000
+    bone.tail[:] = 0.0000, 1.0000, 0.0000
     bone.roll = 0.0000
     bone.use_connect = False
     bone.use_deform = True
