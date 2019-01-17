@@ -20,8 +20,8 @@
 
 import bpy
 
-from ..utils import copy_bone, create_bone_widget, create_circle_widget, basename
-
+from ..utils import copy_bone, basename
+from .widgets import create_bone_widget, create_circle_widget
 
 class Rig:
     """ A "copy" rig.  All it does is duplicate the original bone and
@@ -32,10 +32,10 @@ class Rig:
     def __init__(self, obj, bone, params):
         """ Gather and validate data about the rig.
         """
-        self.obj          = obj
-        self.org_bone     = bone
-        self.basename     = basename(bone)
-        self.params       = params
+        self.obj                 = obj
+        self.org_bone            = bone
+        self.basename            = basename(bone)
+        self.params              = params
         self.control_widget_type = params.control_widget_type
 
     def generate(self):
@@ -107,7 +107,7 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['Bone']]
-    pbone.gamerig_type = 'gamerig.copy'
+    pbone.gamerig_type = 'gamerig.generic'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

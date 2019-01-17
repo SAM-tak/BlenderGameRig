@@ -3,10 +3,10 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     copy_bone, put_bone,
     org, basename, connected_children_names,
-    create_widget, create_sphere_widget, create_circle_widget,
+    create_widget,
     MetarigError
 )
-
+from .widgets import create_sphere_widget, create_circle_widget
 
 class Rig:
 

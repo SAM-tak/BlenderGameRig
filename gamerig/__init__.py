@@ -251,7 +251,6 @@ def unregister():
     # Properties.
     del bpy.types.Armature.gamerig_layers
     del bpy.types.Armature.gamerig_colors
-    del bpy.types.Armature.gamerig_colors
     del bpy.types.Armature.gamerig_rig_ui_template
     del bpy.types.Armature.gamerig_rig_name
     del bpy.types.Armature.gamerig_selection_colors

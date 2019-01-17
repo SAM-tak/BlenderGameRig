@@ -4,16 +4,17 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     copy_bone, flip_bone, put_bone,
     org, basename, make_mechanism_name, connected_children_names,
-    create_sphere_widget, create_widget,
+    create_widget,
     MetarigError
 )
-from .widgets import create_directed_circle_widget
+from .widgets import create_sphere_widget, create_directed_circle_widget
 
 class Rig:
 
     def __init__(self, obj, bone_name, params):
         """ Initialize torso rig and key rig properties
         """
+
         eb = obj.data.edit_bones
 
         self.obj          = obj
@@ -21,6 +22,8 @@ class Rig:
         self.params       = params
         self.spine_length = sum( [ eb[b].length for b in self.org_bones ] )
 
+        self.root_bone_parent = eb[ self.org_bones[0] ].parent.name if eb[ self.org_bones[0] ].parent else None
+        
         # Check if user provided the positions of the neck and pivot
         if params.neck_pos and params.pivot_pos:
             self.neck_pos  = params.neck_pos
@@ -104,8 +107,7 @@ class Rig:
         eb = self.obj.data.edit_bones
 
         # Create torso control bone
-        torso_name = 'torso'
-        ctrl_name  = copy_bone(self.obj, pivot_name, torso_name)
+        ctrl_name  = copy_bone(self.obj, pivot_name, 'torso')
         ctrl_eb    = eb[ ctrl_name ]
 
         self.orient_bone( ctrl_eb, 'y', self.spine_length / 2.5 )
@@ -279,11 +281,17 @@ class Rig:
 
         # Parent deform bones
         for i,b in enumerate( org_bones ):
-            if i > 0: # For all bones but the first (which has no parent)
+            if i == 0:
+                if self.root_bone_parent:
+                    eb[b].parent = eb[ self.root_bone_parent ]
+            else:
                 eb[b].parent      = eb[ org_bones[i-1] ] # to previous
                 eb[b].use_connect = True
 
         # Parent control bones
+        # Torso control => orginal root
+        eb[ bones['pivot']['ctrl'] ].parent = eb[ org_bones[0] ].parent
+
         # Head control => MCH-rotation_head
         eb[ bones['neck']['ctrl'] ].parent = eb[ bones['neck']['mch_head'] ]
 

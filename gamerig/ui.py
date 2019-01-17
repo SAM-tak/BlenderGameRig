@@ -24,7 +24,7 @@ from mathutils import Color
 
 from .utils import (
     get_rig_type, MetarigError, write_metarig, write_widget, unique_name, get_keyed_frames,
-    bones_in_frame, overwrite_prop_animation, unlink_all_widgets
+    bones_in_frame, overwrite_prop_animation
 )
 from . import rig_lists, generate
 
@@ -41,86 +41,67 @@ class DATA_PT_gamerig(bpy.types.Panel):
             and context.active_object.data.get("gamerig_rig_ui_template") is not None
 
     def draw(self, context):
-        C = context
         layout = self.layout
         obj = context.object
-        id_store = C.window_manager
+        id_store = context.window_manager
         armature = obj.data
 
         ## Layers
         # Ensure that the layers exist
-        box = layout.box()
-        show = id_store.gamerig_show_layer_names_pane
-        row = box.row()
-        row.prop(id_store, "gamerig_show_layer_names_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
-        row.alignment = 'LEFT'
-        row.label('Layer Names')
-        if 0:
-            for i in range(1 + len(armature.gamerig_layers), 29):
-                armature.gamerig_layers.add()
+        # Can't add while drawing, just use button
+        if len(armature.gamerig_layers) < 30:
+            layout.operator("pose.gamerig_layer_init")
         else:
-            # Can't add while drawing, just use button
-            if len(armature.gamerig_layers) < 29:
-                layout.operator("pose.gamerig_layer_init")
-                show = False
-        if show:
-            # UI
-            main_row = box.row(align=True).split(0.06)
-            col1 = main_row.column()
-            col2 = main_row.column()
-            col1.label()
-            for i in range(31):
-                if i == 16 or i == 29:
-                    col1.label()
-                col1.label(str(i+1))
+            box = layout.box()
+            show = id_store.gamerig_show_layer_names_pane
+            row = box.row()
+            row.prop(id_store, "gamerig_show_layer_names_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
+            row.alignment = 'LEFT'
+            row.label('Layer Name Settings')
+            
+            if show:
+                # UI
+                main_row = box.row(align=True).split(0.06)
+                col1 = main_row.column()
+                col2 = main_row.column()
+                col1.label()
+                for i in range(1, 33):
+                    if i == 17 or i == 31:
+                        col1.label()
+                    col1.label(str(i))
 
-            for i, gamerig_layer in enumerate(armature.gamerig_layers):
-                # note: gamerig_layer == armature.gamerig_layers[i]
-                if (i % 16) == 0:
-                    col = col2.column()
-                    if i == 0:
-                        col.label(text="Top Row:")
-                    else:
-                        col.label(text="Bottom Row:")
-                if (i % 8) == 0:
-                    col = col2.column()
-                if i != 28:
+                for i, gamerig_layer in enumerate(armature.gamerig_layers):
+                    # note: gamerig_layer == armature.gamerig_layers[i]
+                    if (i % 16) == 0:
+                        col = col2.column()
+                        if i == 0:
+                            col.label(text="Top Row:")
+                        else:
+                            col.label(text="Bottom Row:")
+                    if (i % 8) == 0:
+                        col = col2.column()
                     row = col.row(align=True)
                     icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
                     row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
-                    #row.prop(armature, "layers", index=i, text="Layer %d" % (i + 1), toggle=True, icon=icon)
                     row.prop(gamerig_layer, "name", text="")
                     row.prop(gamerig_layer, "row", text="UI Row")
                     icon = 'RADIOBUT_ON' if gamerig_layer.selset else 'RADIOBUT_OFF'
                     row.prop(gamerig_layer, "selset", text="", toggle=True, icon=icon)
                     row.prop(gamerig_layer, "group", text="Bone Group")
-                else:
-                    row = col.row(align=True)
+                    if gamerig_layer.group == 0:
+                        row.label(text='None')
+                    else:
+                        row.label(text=armature.gamerig_colors[gamerig_layer.group-1].name)
 
+                # buttons
+                col = col2.column()
+                col.label(text="Reserved:")
+                reserved_names = {30: 'MCH', 31: 'ORG'}
+                for i in range(30, 32):
+                    row = col.row(align=True)
                     icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
                     row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
-                    # row.prop(armature, "layers", index=i, text="Layer %d" % (i + 1), toggle=True, icon=icon)
-                    row1 = row.split(align=True).row(align=True)
-                    row1.prop(gamerig_layer, "name", text="")
-                    row1.prop(gamerig_layer, "row", text="UI Row")
-                    row1.enabled = False
-                    icon = 'RADIOBUT_ON' if gamerig_layer.selset else 'RADIOBUT_OFF'
-                    row.prop(gamerig_layer, "selset", text="", toggle=True, icon=icon)
-                    row.prop(gamerig_layer, "group", text="Bone Group")
-                if gamerig_layer.group == 0:
-                    row.label(text='None')
-                else:
-                    row.label(text=armature.gamerig_colors[gamerig_layer.group-1].name)
-
-            # buttons
-            col = col2.column()
-            col.label(text="Reserved:")
-            reserved_names = {30: 'MCH', 31: 'ORG'}
-            for i in range(30, 32):
-                row = col.row(align=True)
-                icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
-                row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
-                row.label(text=reserved_names[i])
+                    row.label(text=reserved_names[i])
 
         ## Bone Groups
         box = layout.box()
@@ -128,7 +109,7 @@ class DATA_PT_gamerig(bpy.types.Panel):
         row = box.row()
         row.prop(id_store, "gamerig_show_bone_groups_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
         row.alignment = 'LEFT'
-        row.label('Bone Groups')
+        row.label('Bone Group Settings')
         if show:
             color_sets = obj.data.gamerig_colors
             idx = obj.data.gamerig_colors_index
@@ -159,7 +140,7 @@ class DATA_PT_gamerig(bpy.types.Panel):
         ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
             rig_id = obj.data.get('gamerig_id')
-            target = next((i for i in C.scene.objects if i != obj and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
+            target = next((i for i in context.scene.objects if i != obj and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
             if target:
                 layout.row().operator("pose.gamerig_generate", text="Regenerate Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Overwrite to '%s'" % target.name, icon='INFO')
@@ -514,6 +495,22 @@ class BONE_PT_gamerig_type(bpy.types.Panel):
                     rig.parameters_ui(box, bone.gamerig_parameters)
 
 
+class BONE_PT_gamerig_utility(bpy.types.Panel):
+    bl_label       = "GameRig Utility"
+    bl_space_type  = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context     = "bone"
+
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
+            and context.active_object.data.get("gamerig_id") is not None
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("pose.gamerig_reveal_unlinked_widget")
+
+
 class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
     bl_label       = "GameRig Dev Tools"
     bl_category    = 'Tools'
@@ -570,10 +567,26 @@ class LayerInit(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         arm = obj.data
-        for i in range(1 + len(arm.gamerig_layers), 30):
+        for i in range(1 + len(arm.gamerig_layers), 31):
             arm.gamerig_layers.add()
-        arm.gamerig_layers[28].name = 'Root'
-        arm.gamerig_layers[28].row = 14
+        return {'FINISHED'}
+
+
+class RevealUnlinkedWidget(bpy.types.Operator):
+    """Reveal unlinked widget in current scene.
+    """
+    bl_idname  = "pose.gamerig_reveal_unlinked_widget"
+    bl_label   = "Reveal unlinked widget to current scene"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene and context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
+         and context.active_pose_bone.custom_shape is not None\
+         and not (context.active_pose_bone.custom_shape.name in context.scene.objects)
+
+    def execute(self, context):
+        context.scene.objects.link(context.active_pose_bone.custom_shape)
         return {'FINISHED'}
 
 
@@ -597,7 +610,6 @@ class Generate(bpy.types.Operator):
         context.user_preferences.edit.use_global_undo = False
         try:
             generate.generate_rig(context, context.object)
-            unlink_all_widgets()
         except MetarigError as rig_exception:
             gamerig_report_exception(self, rig_exception)
         finally:
@@ -757,8 +769,10 @@ classes = (
     DATA_MT_gamerig_bone_groups_specials,
     DATA_PT_gamerig,
     BONE_PT_gamerig_type,
+    BONE_PT_gamerig_utility,
     VIEW3D_PT_gamerig_dev_tools,
     LayerInit,
+    RevealUnlinkedWidget,
     Generate,
     Sample,
     EncodeMetarig,

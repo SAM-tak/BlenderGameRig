@@ -2,18 +2,18 @@ import bpy, re, itertools
 from rna_prop_ui import rna_idprop_ui_prop_get
 from math import trunc
 from mathutils import Vector
+from ...utils import (
+    copy_bone, flip_bone, put_bone, org, basename,
+    connected_children_names,
+    create_widget,
+    MetarigError
+)
+from ..widgets import create_sphere_widget, create_limb_widget, create_ikarrow_widget, create_directed_circle_widget
 from .arm import create_arm
 from .leg import create_leg
 from .paw import create_paw
 from .ui import create_script
 from .limb_utils import *
-from ...utils import (
-    copy_bone, flip_bone, put_bone,
-    create_widget, create_sphere_widget,
-    MetarigError, org, basename,
-    create_limb_widget, connected_children_names
-)
-from ..widgets import create_ikarrow_widget, create_directed_circle_widget
 
 class Rig:
     def __init__(self, obj, bone_name, params):
@@ -122,6 +122,7 @@ class Rig:
             pb[ mch_ik ].lock_ik_x = False
 
         # Locks and Widget
+        pb[ ctrl ].lock_location = True, True, True
         pb[ ctrl ].lock_rotation = False, False, True
         pb[ ctrl ].lock_scale = True, True, True
         create_ikarrow_widget( self.obj, ctrl )

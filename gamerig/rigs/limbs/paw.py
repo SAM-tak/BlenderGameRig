@@ -20,8 +20,9 @@
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ...utils import (
-    MetarigError, connected_children_names,
-    flip_bone, copy_bone
+    connected_children_names,
+    flip_bone, copy_bone,
+    MetarigError
 )
 from ..widgets import create_paw_widget, create_ballsocket_widget, create_toe_widget
 from .limb_utils import *

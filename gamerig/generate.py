@@ -24,19 +24,19 @@ import time
 import traceback
 import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
-
 from .utils import (
-    MetarigError, new_bone, get_rig_type, create_widget,
-    MCH_PREFIX, ROOT_NAME, RIG_DIR,
-    is_org, org, create_root_widget, get_wgt_name, random_id,
-    copy_attributes, gamma_correct
+    new_bone, get_rig_type, create_widget, assign_and_unlink_all_widgets,
+    is_org, org, get_wgt_name, random_id,
+    MCH_PREFIX, RIG_DIR,
+    copy_attributes, gamma_correct,
+    MetarigError
 )
 from . import rig_lists
+
 
 RIG_MODULE = "rigs"
 ORG_LAYER = [n == 31 for n in range(0, 32)]  # Armature layer that original bones should be moved to.
 MCH_LAYER = [n == 30 for n in range(0, 32)]  # Armature layer that mechanism bones should be moved to.
-ROOT_LAYER = [n == 28 for n in range(0, 32)]  # Armature layer that root bone should be moved to.
 
 
 class Timer:
@@ -64,7 +64,6 @@ def generate_rig(context, metarig):
     metarig.data["gamerig_id"] = rig_id
 
     # Initial configuration
-    # mode_orig = context.mode  # UNUSED
     rest_backup = metarig.data.pose_position
     metarig.data.pose_position = 'REST'
 
@@ -79,16 +78,10 @@ def generate_rig(context, metarig):
     # regenerate in the same object.  If not, create a new
     # object to generate the rig in.
     print("Fetch rig (id : %s)." % rig_id)
-    toggledArmatureModifiers = []
     obj = next((i for i in scene.objects if i != metarig and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None)
 
-    if obj is None:
-        print("Create new rig.")
-        name = metarig.data.get("gamerig_rig_name") or "rig"
-        obj = bpy.data.objects.new(name, bpy.data.armatures.new(name))  # in case name 'rig' exists it will be rig.001
-        obj.draw_type = 'WIRE'
-        scene.objects.link(obj)
-    else:
+    toggledArmatureModifiers = []
+    if obj is not None:
         print("Overwrite existing rig.")
         try:
             # toggle armature object to metarig if it using generated rig.
@@ -96,16 +89,24 @@ def generate_rig(context, metarig):
             for i in scene.objects:
                 for j in i.modifiers:
                     if j.type == 'ARMATURE' and j.object == obj:
-                        toggledArmatureModifiers += [j]
+                        toggledArmatureModifiers.append(j)
                         j.object = metarig
             # Get rid of anim data in case the rig already existed
             print("Clear rig animation data.")
             obj.animation_data_clear()
         except KeyError:
-            name = obj.name or metarig.data.get("gamerig_rig_name") or "rig"
-            obj = bpy.data.objects.new(name, bpy.data.armatures.new(name))
-            obj.draw_type = 'WIRE'
-            scene.objects.link(obj)
+            print("Overwrite failed.")
+            obj = None
+    
+    if obj is None:
+        print("Create new rig.")
+        name = metarig.data.get("gamerig_rig_name") or "rig"
+        obj = bpy.data.objects.new(name, bpy.data.armatures.new(name))  # in case name 'rig' exists it will be rig.001
+        obj.draw_type = 'WIRE'
+        scene.objects.link(obj)
+        # Put the rig_name in the armature custom properties
+        rna_idprop_ui_prop_get(obj.data, "gamerig_id", create=True)
+        obj.data["gamerig_id"] = rig_id
 
     obj.data.pose_position = 'POSE'
 
@@ -241,11 +242,10 @@ def generate_rig(context, metarig):
                         v2.targets[i].id = obj
 
                     # Mark targets that may need to be altered after rig generation
-                    tar = v2.targets[i]
+                    target = v2.targets[i]
                     # If a custom property
-                    if v2.type == 'SINGLE_PROP' \
-                    and re.match('^pose.bones\["[^"\]]*"\]\["[^"\]]*"\]$', tar.data_path):
-                        tar.data_path = "GAMERIG-" + tar.data_path
+                    if v2.type == 'SINGLE_PROP' and re.match('^pose.bones\["[^"\]]*"\]\["[^"\]]*"\]$', tar.data_path):
+                        target.data_path = "GAMERIG-" + target.data_path
 
             # Copy key frames
             for i in range(len(d1.keyframe_points)):
@@ -273,26 +273,7 @@ def generate_rig(context, metarig):
         bones_sorted += [name]
     bones_sorted.sort()  # first sort by names
     bones_sorted.sort(key=lambda bone: len(obj.pose.bones[bone].parent_recursive))  # then parents before children
-
     t.tick("Make list of org bones: ")
-    #----------------------------------
-    # Create the root bone.
-    bpy.ops.object.mode_set(mode='EDIT')
-    root_bone = new_bone(obj, ROOT_NAME)
-    spread = get_xy_spread(metarig.data.bones) or metarig.data.bones[0].length
-    spread = float('%.3g' % spread)
-    scale = spread/0.589
-    obj.data.edit_bones[root_bone].head = (0, 0, 0)
-    obj.data.edit_bones[root_bone].tail = (0, scale, 0)
-    obj.data.edit_bones[root_bone].roll = 0
-    bpy.ops.object.mode_set(mode='OBJECT')
-    obj.data.bones[root_bone].layers = ROOT_LAYER
-
-    # Put the rig_name in the armature custom properties
-    rna_idprop_ui_prop_get(obj.data, "gamerig_id", create=True)
-    obj.data["gamerig_id"] = rig_id
-
-    t.tick("Create root bone: ")
 
     #----------------------------------
     try:
@@ -304,6 +285,7 @@ def generate_rig(context, metarig):
         t.tick("Initialize rigs: ")
 
         # Generate all the rigs.
+        tt = Timer()
         ui_scripts = []
         for rig in rigs:
             # Go into editmode in the rig armature
@@ -313,7 +295,8 @@ def generate_rig(context, metarig):
             bpy.ops.object.mode_set(mode='EDIT')
             scripts = rig.generate()
             if scripts is not None:
-                ui_scripts += [scripts[0]]
+                ui_scripts.append(scripts[0])
+            tt.tick("Generate rig : %s: " % rig)
         t.tick("Generate rigs: ")
     except Exception as e:
         # Cleanup if something goes wrong
@@ -331,36 +314,6 @@ def generate_rig(context, metarig):
     # Get a list of all the bones in the armature
     bones = [bone.name for bone in obj.data.bones]
 
-    # Parent any free-floating bones to the root excluding bones with child of constraint.
-    pbones = obj.pose.bones
-
-
-    ik_follow_drivers = []
-
-    if obj.animation_data:
-        for drv in obj.animation_data.drivers:
-            for var in drv.driver.variables:
-                if 'IK_follow' == var.name:
-                    ik_follow_drivers.append(drv.data_path)
-
-    noparent_bones = []
-    for bone in bones:
-        # if 'IK_follow' in pbones[bone].keys():
-        #     noparent_bones += [bone]
-        for d in ik_follow_drivers:
-            if bone in d:
-                noparent_bones += [bone]
-
-    bpy.ops.object.mode_set(mode='EDIT')
-    for bone in bones:
-        if bone in noparent_bones or bone in original_bones:
-            continue
-        elif obj.data.edit_bones[bone].parent is None:
-            obj.data.edit_bones[bone].use_connect = False
-            obj.data.edit_bones[bone].parent = obj.data.edit_bones[root_bone]
-
-    bpy.ops.object.mode_set(mode='OBJECT')
-
     # All the others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
     for bone in bones:
         b = obj.data.bones[bone]
@@ -371,14 +324,13 @@ def generate_rig(context, metarig):
     if obj.animation_data:
         for d in obj.animation_data.drivers:
             for v in d.driver.variables:
-                for tar in v.targets:
-                    if tar.data_path.startswith("GAMERIG-"):
-                        temp, bone, prop = tuple([x.strip('"]') for x in tar.data_path.split('["')])
-                        if bone in obj.data.bones \
-                        and prop in obj.pose.bones[bone].keys():
-                            tar.data_path = tar.data_path[7:]
+                for target in v.targets:
+                    if target.data_path.startswith("GAMERIG-"):
+                        temp, bone, prop = tuple([x.strip('"]') for x in target.data_path.split('["')])
+                        if bone in obj.data.bones and prop in obj.pose.bones[bone].keys():
+                            target.data_path = target.data_path[7:]
                         else:
-                            tar.data_path = 'pose.bones["%s"]["%s"]' % (org(bone), prop)
+                            target.data_path = 'pose.bones["%s"]["%s"]' % (org(bone), prop)
 
     # Move all the original bones to their layer.
     for bone in original_bones:
@@ -389,20 +341,8 @@ def generate_rig(context, metarig):
         if obj.data.bones[bone].name.startswith(MCH_PREFIX):
             obj.data.bones[bone].layers = MCH_LAYER
 
-    # Create root bone widget
-    create_root_widget(obj, ROOT_NAME)
-
     # Assign shapes to bones
-    for bone in bones:
-        wgt_name = get_wgt_name(obj.name, obj.data.bones[bone].name)
-        if wgt_name in context.scene.objects:
-            # Weird temp thing because it won't let me index by object name
-            for ob in context.scene.objects:
-                if ob.name == wgt_name:
-                    obj.pose.bones[bone].custom_shape = ob
-                    break
-            # This is what it should do:
-            # obj.pose.bones[bone].custom_shape = context.scene.objects[wgt_name]
+    assign_and_unlink_all_widgets(context.scene, obj)
     # Reveal all the layers with control bones on them
     vis_layers = [False for n in range(0, 32)]
     for bone in bones:
@@ -413,7 +353,7 @@ def generate_rig(context, metarig):
     obj.data.layers = vis_layers
 
     # Ensure the collection of layer names exists
-    for i in range(1 + len(metarig.data.gamerig_layers), 29):
+    for i in range(1 + len(metarig.data.gamerig_layers), 30):
         metarig.data.gamerig_layers.add()
 
     # Create list of layer name/row pairs
@@ -613,7 +553,7 @@ def layers_ui(layers, layout):
     """
 
     rows = {}
-    for i in range(28):
+    for i in range(30):
         if layers[i]:
             if layout[i][1] not in rows:
                 rows[layout[i][1]] = []
@@ -633,13 +573,5 @@ def layers_ui(layers, layout):
                 i = 0
             code += "        row.prop(context.active_object.data, 'layers', index=%s, toggle=True, text='%s')\n" % (str(l[1]), l[0])
             i += 1
-
-    # Root layer
-    code += "\n        row = col.row()"
-    code += "\n        row.separator()"
-    code += "\n        row = col.row()"
-    code += "\n        row.separator()\n"
-    code += "\n        row = col.row()\n"
-    code += "        row.prop(context.active_object.data, 'layers', index=28, toggle=True, text='Root')\n"
 
     return code

@@ -80,10 +80,10 @@ def get_metarig_list(path, depth=0):
             module_name = f[:-3]
             try:
                 if depth == 1:
-                    metarigs += [utils.get_metarig_module(module_name, utils.METARIG_DIR + '.' + path)]
+                    metarigs.append(utils.get_metarig_module(module_name, utils.METARIG_DIR + '.' + path))
                 else:
-                    metarigs += [utils.get_metarig_module(module_name, utils.METARIG_DIR)]
-            except (ImportError):
+                    metarigs.append(utils.get_metarig_module(module_name, utils.METARIG_DIR))
+            except ImportError:
                 pass
 
     if depth == 1:
@@ -131,7 +131,7 @@ for metarig_class in metarigs_dict:
     metarig_ops[metarig_class] = []
     for m in metarigs_dict[metarig_class]:
         name = '_D_'.join(m.__name__.split('.')[2:]).replace(' ', '_')
-        text = m.__name__.rsplit('.', 1)[-1].capitalize() + " (Meta Rig)"
+        text = ' '.join((i.capitalize() for i in m.__name__.rsplit('.', 1)[-1].split('_'))) + " (Meta Rig)"
 
         # Dynamically construct an Operator
         T = type("GameRig_Add_" + name + "_Metarig", (AddMetarigOperatorBase,), {})

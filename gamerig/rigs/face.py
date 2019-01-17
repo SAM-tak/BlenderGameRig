@@ -2,7 +2,8 @@ import bpy, re
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
-    MetarigError, copy_bone, flip_bone, connected_children_names, create_widget,
+    MetarigError, copy_bone, flip_bone, connected_children_names, find_root_bone,
+    create_widget,
     org, basename, mch, MCH_PREFIX
 )
 from .widgets import create_face_widget, create_eye_widget, create_eyes_widget, create_ear_widget, create_jaw_widget

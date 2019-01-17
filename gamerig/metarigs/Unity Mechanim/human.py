@@ -17,17 +17,17 @@ def create(obj):
 
     arm.gamerig_colors[0].name = "Root"
     arm.gamerig_colors[0].active = Color((0.5490196347236633, 1.0, 1.0))
-    arm.gamerig_colors[0].normal = Color((0.4352940022945404, 0.18431399762630463, 0.4156860113143921))
+    arm.gamerig_colors[0].normal = Color((0.67384934425354, 0.09994713962078094, 0.605361819267273))
     arm.gamerig_colors[0].select = Color((0.31372547149658203, 0.7843138575553894, 1.0))
     arm.gamerig_colors[0].standard_colors_lock = True
-    arm.gamerig_colors[1].name = "IK"
+    arm.gamerig_colors[1].name = "FK"
     arm.gamerig_colors[1].active = Color((0.5490196347236633, 1.0, 1.0))
-    arm.gamerig_colors[1].normal = Color((0.6039220094680786, 0.0, 0.0))
+    arm.gamerig_colors[1].normal = Color((0.2890395522117615, 1.0, 0.08723420649766922))
     arm.gamerig_colors[1].select = Color((0.31372547149658203, 0.7843138575553894, 1.0))
     arm.gamerig_colors[1].standard_colors_lock = True
-    arm.gamerig_colors[2].name = "Special"
+    arm.gamerig_colors[2].name = "IK"
     arm.gamerig_colors[2].active = Color((0.5490196347236633, 1.0, 1.0))
-    arm.gamerig_colors[2].normal = Color((0.9568629860877991, 0.7882350087165833, 0.04705899953842163))
+    arm.gamerig_colors[2].normal = Color((0.9568628668785095, 0.21056735515594482, 0.234207421541214))
     arm.gamerig_colors[2].select = Color((0.31372547149658203, 0.7843138575553894, 1.0))
     arm.gamerig_colors[2].standard_colors_lock = True
     arm.gamerig_colors[3].name = "Tweak"
@@ -35,36 +35,36 @@ def create(obj):
     arm.gamerig_colors[3].normal = Color((0.03921600058674812, 0.21176500618457794, 0.5803920030593872))
     arm.gamerig_colors[3].select = Color((0.31372547149658203, 0.7843138575553894, 1.0))
     arm.gamerig_colors[3].standard_colors_lock = True
-    arm.gamerig_colors[4].name = "FK"
+    arm.gamerig_colors[4].name = "Special"
     arm.gamerig_colors[4].active = Color((0.5490196347236633, 1.0, 1.0))
-    arm.gamerig_colors[4].normal = Color((0.11764699965715408, 0.5686269998550415, 0.035294000059366226))
+    arm.gamerig_colors[4].normal = Color((0.7191200852394104, 0.7356600761413574, 0.011989133432507515))
     arm.gamerig_colors[4].select = Color((0.31372547149658203, 0.7843138575553894, 1.0))
     arm.gamerig_colors[4].standard_colors_lock = True
     arm.gamerig_colors[5].name = "Extra"
     arm.gamerig_colors[5].active = Color((0.5490196347236633, 1.0, 1.0))
-    arm.gamerig_colors[5].normal = Color((0.9686279892921448, 0.2509799897670746, 0.09411799907684326))
+    arm.gamerig_colors[5].normal = Color((0.09200122952461243, 0.041189342737197876, 0.9686281681060791))
     arm.gamerig_colors[5].select = Color((0.31372547149658203, 0.7843138575553894, 1.0))
     arm.gamerig_colors[5].standard_colors_lock = True
 
-    for i in range(29):
+    for i in range(30):
         arm.gamerig_layers.add()
 
     arm.gamerig_layers[0].name = "Face"
     arm.gamerig_layers[0].row = 1
     arm.gamerig_layers[0].selset = False
-    arm.gamerig_layers[0].group = 5
+    arm.gamerig_layers[0].group = 2
     arm.gamerig_layers[1].name = "Face (Primary)"
     arm.gamerig_layers[1].row = 2
     arm.gamerig_layers[1].selset = False
-    arm.gamerig_layers[1].group = 2
+    arm.gamerig_layers[1].group = 4
     arm.gamerig_layers[2].name = "Face (Secondary)"
     arm.gamerig_layers[2].row = 2
     arm.gamerig_layers[2].selset = False
-    arm.gamerig_layers[2].group = 3
+    arm.gamerig_layers[2].group = 6
     arm.gamerig_layers[3].name = "Torso"
     arm.gamerig_layers[3].row = 3
     arm.gamerig_layers[3].selset = False
-    arm.gamerig_layers[3].group = 3
+    arm.gamerig_layers[3].group = 2
     arm.gamerig_layers[4].name = "Torso (Tweak)"
     arm.gamerig_layers[4].row = 4
     arm.gamerig_layers[4].selset = False
@@ -72,71 +72,71 @@ def create(obj):
     arm.gamerig_layers[5].name = "Fingers"
     arm.gamerig_layers[5].row = 5
     arm.gamerig_layers[5].selset = False
-    arm.gamerig_layers[5].group = 6
-    arm.gamerig_layers[6].name = "Fingers (Tweak)"
-    arm.gamerig_layers[6].row = 6
+    arm.gamerig_layers[5].group = 2
+    arm.gamerig_layers[6].name = ""
+    arm.gamerig_layers[6].row = 1
     arm.gamerig_layers[6].selset = False
-    arm.gamerig_layers[6].group = 4
-    arm.gamerig_layers[7].name = "Arm.L (IK)"
-    arm.gamerig_layers[7].row = 7
+    arm.gamerig_layers[6].group = 0
+    arm.gamerig_layers[7].name = ""
+    arm.gamerig_layers[7].row = 1
     arm.gamerig_layers[7].selset = False
-    arm.gamerig_layers[7].group = 2
-    arm.gamerig_layers[8].name = "Arm.L (FK)"
-    arm.gamerig_layers[8].row = 8
+    arm.gamerig_layers[7].group = 0
+    arm.gamerig_layers[8].name = "Arm.L (IK)"
+    arm.gamerig_layers[8].row = 6
     arm.gamerig_layers[8].selset = False
-    arm.gamerig_layers[8].group = 5
-    arm.gamerig_layers[9].name = "Arm.L (Tweak)"
-    arm.gamerig_layers[9].row = 9
+    arm.gamerig_layers[8].group = 3
+    arm.gamerig_layers[9].name = "Arm.L (FK)"
+    arm.gamerig_layers[9].row = 7
     arm.gamerig_layers[9].selset = False
-    arm.gamerig_layers[9].group = 4
-    arm.gamerig_layers[10].name = "Arm.R (IK)"
-    arm.gamerig_layers[10].row = 7
+    arm.gamerig_layers[9].group = 2
+    arm.gamerig_layers[10].name = ""
+    arm.gamerig_layers[10].row = 1
     arm.gamerig_layers[10].selset = False
-    arm.gamerig_layers[10].group = 2
-    arm.gamerig_layers[11].name = "Arm.R (FK)"
-    arm.gamerig_layers[11].row = 8
+    arm.gamerig_layers[10].group = 0
+    arm.gamerig_layers[11].name = ""
+    arm.gamerig_layers[11].row = 1
     arm.gamerig_layers[11].selset = False
-    arm.gamerig_layers[11].group = 5
-    arm.gamerig_layers[12].name = "Arm.R (Tweak)"
-    arm.gamerig_layers[12].row = 9
+    arm.gamerig_layers[11].group = 0
+    arm.gamerig_layers[12].name = "Arm.R (IK)"
+    arm.gamerig_layers[12].row = 6
     arm.gamerig_layers[12].selset = False
-    arm.gamerig_layers[12].group = 4
-    arm.gamerig_layers[13].name = "Leg.L (IK)"
-    arm.gamerig_layers[13].row = 10
+    arm.gamerig_layers[12].group = 3
+    arm.gamerig_layers[13].name = "Arm.R (FK)"
+    arm.gamerig_layers[13].row = 7
     arm.gamerig_layers[13].selset = False
     arm.gamerig_layers[13].group = 2
-    arm.gamerig_layers[14].name = "Leg.L (FK)"
-    arm.gamerig_layers[14].row = 11
+    arm.gamerig_layers[14].name = ""
+    arm.gamerig_layers[14].row = 1
     arm.gamerig_layers[14].selset = False
-    arm.gamerig_layers[14].group = 5
-    arm.gamerig_layers[15].name = "Leg.L (Tweak)"
-    arm.gamerig_layers[15].row = 12
+    arm.gamerig_layers[14].group = 0
+    arm.gamerig_layers[15].name = ""
+    arm.gamerig_layers[15].row = 1
     arm.gamerig_layers[15].selset = False
-    arm.gamerig_layers[15].group = 4
-    arm.gamerig_layers[16].name = "Leg.R (IK)"
-    arm.gamerig_layers[16].row = 10
+    arm.gamerig_layers[15].group = 0
+    arm.gamerig_layers[16].name = "Leg.L (IK)"
+    arm.gamerig_layers[16].row = 8
     arm.gamerig_layers[16].selset = False
-    arm.gamerig_layers[16].group = 2
-    arm.gamerig_layers[17].name = "Leg.R (FK)"
-    arm.gamerig_layers[17].row = 11
+    arm.gamerig_layers[16].group = 3
+    arm.gamerig_layers[17].name = "Leg.L (FK)"
+    arm.gamerig_layers[17].row = 9
     arm.gamerig_layers[17].selset = False
-    arm.gamerig_layers[17].group = 5
-    arm.gamerig_layers[18].name = "Leg.R (Tweak)"
-    arm.gamerig_layers[18].row = 12
+    arm.gamerig_layers[17].group = 2
+    arm.gamerig_layers[18].name = ""
+    arm.gamerig_layers[18].row = 1
     arm.gamerig_layers[18].selset = False
-    arm.gamerig_layers[18].group = 4
+    arm.gamerig_layers[18].group = 0
     arm.gamerig_layers[19].name = ""
     arm.gamerig_layers[19].row = 1
     arm.gamerig_layers[19].selset = False
     arm.gamerig_layers[19].group = 0
-    arm.gamerig_layers[20].name = ""
-    arm.gamerig_layers[20].row = 1
+    arm.gamerig_layers[20].name = "Leg.R (IK)"
+    arm.gamerig_layers[20].row = 8
     arm.gamerig_layers[20].selset = False
-    arm.gamerig_layers[20].group = 0
-    arm.gamerig_layers[21].name = ""
-    arm.gamerig_layers[21].row = 1
+    arm.gamerig_layers[20].group = 3
+    arm.gamerig_layers[21].name = "Leg.R (FK)"
+    arm.gamerig_layers[21].row = 9
     arm.gamerig_layers[21].selset = False
-    arm.gamerig_layers[21].group = 0
+    arm.gamerig_layers[21].group = 2
     arm.gamerig_layers[22].name = ""
     arm.gamerig_layers[22].row = 1
     arm.gamerig_layers[22].selset = False
@@ -161,19 +161,31 @@ def create(obj):
     arm.gamerig_layers[27].row = 1
     arm.gamerig_layers[27].selset = False
     arm.gamerig_layers[27].group = 0
-    arm.gamerig_layers[28].name = "Root"
-    arm.gamerig_layers[28].row = 14
+    arm.gamerig_layers[28].name = ""
+    arm.gamerig_layers[28].row = 1
     arm.gamerig_layers[28].selset = False
-    arm.gamerig_layers[28].group = 1
+    arm.gamerig_layers[28].group = 0
+    arm.gamerig_layers[29].name = "Root"
+    arm.gamerig_layers[29].row = 10
+    arm.gamerig_layers[29].selset = False
+    arm.gamerig_layers[29].group = 1
 
     bones = {}
 
+    bone = arm.edit_bones.new('ORG-root')
+    bone.head[:] = 0.0000, 0.0000, 0.0000
+    bone.tail[:] = 0.0000, 0.0000, 1.0000
+    bone.roll = 0.0000
+    bone.use_connect = False
+    bone.use_deform = True
+    bones['ORG-root'] = bone.name
     bone = arm.edit_bones.new('ORG-hips')
     bone.head[:] = 0.0000, 0.0433, 0.9062
     bone.tail[:] = 0.0000, -0.0035, 1.0727
     bone.roll = 0.0000
     bone.use_connect = False
     bone.use_deform = True
+    bone.parent = arm.edit_bones[bones['ORG-root']]
     bones['ORG-hips'] = bone.name
     bone = arm.edit_bones.new('ORG-waist')
     bone.head[:] = 0.0000, -0.0035, 1.0727
@@ -625,6 +637,14 @@ def create(obj):
     bones['ORG-f_pinky.03.R'] = bone.name
 
     bpy.ops.object.mode_set(mode='OBJECT')
+    pbone = obj.pose.bones[bones['ORG-root']]
+    pbone.gamerig_type = 'root'
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False]
     pbone = obj.pose.bones[bones['ORG-hips']]
     pbone.gamerig_type = 'torso'
     pbone.lock_location = (False, False, False)
@@ -664,13 +684,13 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     try:
         pbone.gamerig_parameters.limb_type = "leg"
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
@@ -688,9 +708,9 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
     try:
-        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
@@ -720,7 +740,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-shin.R']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -728,7 +748,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-upper_chest']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -744,7 +764,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-foot.R']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -752,9 +772,9 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-shoulder.L']]
-    pbone.gamerig_type = 'copy'
+    pbone.gamerig_type = 'generic'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
@@ -762,7 +782,7 @@ def create(obj):
     pbone.rotation_mode = 'YXZ'
     pbone.bone.layers = [False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-shoulder.R']]
-    pbone.gamerig_type = 'copy'
+    pbone.gamerig_type = 'generic'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
@@ -784,7 +804,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-heel.L']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -792,7 +812,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-toe.R']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -800,7 +820,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-heel.R']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -808,7 +828,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-upper_arm.L']]
     pbone.gamerig_type = 'limbs.limb'
     pbone.lock_location = (False, False, False)
@@ -816,13 +836,13 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     try:
         pbone.gamerig_parameters.tweak_layers = [False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
@@ -836,13 +856,13 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     try:
         pbone.gamerig_parameters.tweak_layers = [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
@@ -876,7 +896,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-forearm.R']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -884,7 +904,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-eye.L']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -916,7 +936,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-hand.R']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
@@ -924,7 +944,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-f_index.01.L']]
     pbone.gamerig_type = 'finger'
     pbone.lock_location = (False, False, False)
@@ -1218,7 +1238,7 @@ def create(obj):
         bone.select_tail = True
         arm.edit_bones.active = bone
 
-    arm.layers = [(x in [0, 3, 5, 7, 10, 13, 16]) for x in range(32)]
+    arm.layers = [(x in [0, 3, 5, 8, 12, 16, 20, 29]) for x in range(32)]
 
 if __name__ == "__main__":
     create(bpy.context.active_object)

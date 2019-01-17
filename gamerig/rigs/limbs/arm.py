@@ -20,8 +20,8 @@
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ...utils import MetarigError, copy_bone
-from .limb_utils import *
 from ..widgets import create_hand_widget
+from .limb_utils import *
 
 def create_arm( cls, bones ):
     org_bones = cls.org_bones

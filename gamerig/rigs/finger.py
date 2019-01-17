@@ -3,10 +3,11 @@ from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     copy_bone, flip_bone, connected_children_names,
-    create_circle_widget, create_sphere_widget, create_widget,
-    MetarigError,
-    basename, mch
+    basename, mch,
+    create_widget,
+    MetarigError
 )
+from .widgets import create_circle_widget, create_sphere_widget
 
 class Rig:
 
