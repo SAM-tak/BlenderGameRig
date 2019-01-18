@@ -81,15 +81,18 @@ script_ik_follow = """
 
 def create_script(bones, limb_type, allow_ik_stretch, ik_follow):
     # All ctrls have IK/FK switch
-    controls =  [ bones['ik']['ctrl']['limb'] ] + bones['fk']['ctrl']
+    controls =  [ bones['ik']['ctrl']['limb'] ]
+    controls += bones['fk']['ctrl']
     controls += bones['ik']['ctrl']['terminal']
 
     controls_string = ", ".join(["'" + x + "'" for x in controls])
 
     # IK ctrl has IK stretch
-    ik_ctrl = [ bones['ik']['ctrl']['terminal'][-1] ]
-    ik_ctrl += [ bones['ik']['mch_ik'] ]
-    ik_ctrl += [ bones['ik']['mch_target'] ]
+    ik_ctrl = [
+        bones['ik']['ctrl']['terminal'][-1],
+        bones['ik']['mch_ik'],
+        bones['ik']['mch_target']
+    ]
 
     ik_ctrl_string = ", ".join(["'" + x + "'" for x in ik_ctrl])
 
