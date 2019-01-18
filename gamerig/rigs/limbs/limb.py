@@ -61,12 +61,12 @@ class Rig:
         if self.root_bone:
             make_constraint( self, mch, {
                 'constraint'  : 'COPY_ROTATION',
-                'subtarget'   : 'root'
+                'subtarget'   : self.root_bone
             })
 
             make_constraint( self, mch, {
                 'constraint'  : 'COPY_SCALE',
-                'subtarget'   : 'root'
+                'subtarget'   : self.root_bone
             })
         else:
             make_constraint( self, mch, {
@@ -197,10 +197,13 @@ class Rig:
             eb[ mch      ].use_connect = True
 
         # Constrain MCH's scale to root
-        make_constraint( self, mch, {
-            'constraint'  : 'COPY_SCALE',
-            'subtarget'   : 'root'
-        })
+        if self.root_bone:
+            make_constraint( self, mch, {
+                'constraint'  : 'COPY_SCALE',
+                'subtarget'   : self.root_bone
+            })
+        else:
+            bpy.ops.object.mode_set(mode ='OBJECT')
 
         # Locks and widgets
         pb = self.obj.pose.bones

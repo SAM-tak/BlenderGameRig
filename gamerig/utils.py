@@ -98,6 +98,11 @@ def basename(name):
 def is_org(name):
     return name.startswith(ORG_PREFIX) or name.startswith(JIG_PREFIX)
 
+def is_jig(name):
+    return name.startswith(JIG_PREFIX)
+
+def is_mch(name):
+    return name.startswith(MCH_PREFIX)
 
 def org(name):
     """ Prepends the ORG_PREFIX to a name if it doesn't already have

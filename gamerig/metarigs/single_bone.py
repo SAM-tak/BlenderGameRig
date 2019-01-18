@@ -11,6 +11,7 @@ def create(obj):
 
     arm.gamerig_rig_ui_template = 'ui_template'
 
+
     for i in range(6):
         arm.gamerig_colors.add()
 
@@ -173,20 +174,21 @@ def create(obj):
 
     bone = arm.edit_bones.new('Bone')
     bone.head[:] = 0.0000, 0.0000, 0.0000
-    bone.tail[:] = 0.0000, 0.0000, 1.0000
+    bone.tail[:] = 0.0000, 1.0000, 0.0000
     bone.roll = 0.0000
     bone.use_connect = False
+    bone.use_deform = False
     bones['Bone'] = bone.name
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['Bone']]
-    pbone.gamerig_type = ''
+    pbone.gamerig_type = 'root'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone.bone.layers = [True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False]
 
     bpy.ops.object.mode_set(mode='EDIT')
     for bone in arm.edit_bones:
@@ -200,7 +202,7 @@ def create(obj):
         bone.select_tail = True
         arm.edit_bones.active = bone
 
-    arm.layers = [(x in [0]) for x in range(32)]
+    arm.layers = [(x in [29]) for x in range(32)]
 
 if __name__ == "__main__":
     create(bpy.context.active_object)

@@ -50,7 +50,7 @@ def get_rig_list(path):
             rig = utils.get_rig_type(module_name)
             # Check if it's a rig itself
             if hasattr(rig, "Rig"):
-                rigs += [f]
+                rigs.append(f)
             else:
                 # Check for sub-rigs
                 sub_dict = get_rig_list(os.path.join(path, f, ""))  # "" adds a final slash
@@ -63,7 +63,7 @@ def get_rig_list(path):
             module_name = os.path.join(path, t).replace(os.sep, ".")
             rig = utils.get_rig_type(module_name)
             if hasattr(rig, "Rig"):
-                rigs += [t]
+                rigs.append(t)
             elif hasattr(rig, "UI_TEMPLATE"):
                 if hasattr(rig, "UI_LABEL_TEXT") and rig.UI_LABEL_TEXT:
                     if len(rig.UI_LABEL_TEXT) > 1:
@@ -73,7 +73,7 @@ def get_rig_list(path):
                 else:
                     riguitemplates[module_name] = [rig.UI_TEMPLATE, module_name, '']
             if hasattr(rig, 'IMPLEMENTATION') and rig.IMPLEMENTATION:
-                implementation_rigs += [t]
+                implementation_rigs.append(t)
     rigs.sort()
 
     rigs_dict['rig_list'] = rigs
@@ -88,7 +88,7 @@ def get_collection_list(rig_list):
     for r in rig_list:
         a = r.split(".")
         if len(a) >= 2 and a[0] not in collection_list:
-            collection_list += [a[0]]
+            collection_list.append(a[0])
     return collection_list
 
 

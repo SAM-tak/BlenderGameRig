@@ -47,8 +47,8 @@ class Rig:
             mch_bone  = copy_bone( self.obj, name, mch(basename(name)) )
 
             # Adding to lists
-            ctrl_chain    += [ctrl_bone]
-            mch_chain     += [mch_bone]
+            ctrl_chain.append(ctrl_bone)
+            mch_chain.append(mch_bone)
 
         # Restoring org chain parenting
         eb[ org_bones[0] ].parent = eb[ root_parent_name ]

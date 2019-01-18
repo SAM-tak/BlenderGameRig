@@ -524,7 +524,7 @@ class PropertiesPanel(bpy.types.Panel):
         rig_id = "{rig_id}"
         try:
             selected_bones = [bone.name for bone in context.selected_pose_bones]
-            selected_bones += [context.active_pose_bone.name]
+            selected_bones.append(context.active_pose_bone.name)
         except (AttributeError, TypeError):
             return
 

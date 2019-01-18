@@ -173,7 +173,7 @@ def create(obj):
     bones = {}
 
     bone = arm.edit_bones.new('ORG-hips')
-    bone.head[:] = 0.0000, 0.0433, 0.9062
+    bone.head[:] = 0.0000, 0.0337, 0.9062
     bone.tail[:] = 0.0000, -0.0052, 1.0803
     bone.roll = 0.0000
     bone.use_connect = False
@@ -283,14 +283,14 @@ def create(obj):
     bone.use_deform = True
     bone.parent = arm.edit_bones[bones['ORG-foot.L']]
     bones['ORG-toe.L'] = bone.name
-    bone = arm.edit_bones.new('ORG-heel.L')
+    bone = arm.edit_bones.new('JIG-heel.L')
     bone.head[:] = 0.1979, 0.0411, 0.0000
     bone.tail[:] = 0.2695, 0.0411, 0.0000
     bone.roll = 0.0000
     bone.use_connect = False
-    bone.use_deform = True
+    bone.use_deform = False
     bone.parent = arm.edit_bones[bones['ORG-foot.L']]
-    bones['ORG-heel.L'] = bone.name
+    bones['JIG-heel.L'] = bone.name
     bone = arm.edit_bones.new('ORG-toe.R')
     bone.head[:] = -0.2353, -0.0836, 0.0156
     bone.tail[:] = -0.2354, -0.1437, 0.0151
@@ -299,14 +299,14 @@ def create(obj):
     bone.use_deform = True
     bone.parent = arm.edit_bones[bones['ORG-foot.R']]
     bones['ORG-toe.R'] = bone.name
-    bone = arm.edit_bones.new('ORG-heel.R')
+    bone = arm.edit_bones.new('JIG-heel.R')
     bone.head[:] = -0.1979, 0.0411, 0.0000
     bone.tail[:] = -0.2695, 0.0411, 0.0000
     bone.roll = 0.0000
     bone.use_connect = False
-    bone.use_deform = True
+    bone.use_deform = False
     bone.parent = arm.edit_bones[bones['ORG-foot.R']]
-    bones['ORG-heel.R'] = bone.name
+    bones['JIG-heel.R'] = bone.name
     bone = arm.edit_bones.new('ORG-upper_arm.L')
     bone.head[:] = 0.1748, 0.0239, 1.4057
     bone.tail[:] = 0.4329, 0.0465, 1.4017
@@ -845,7 +845,7 @@ def create(obj):
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-    pbone = obj.pose.bones[bones['ORG-heel.L']]
+    pbone = obj.pose.bones[bones['JIG-heel.L']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
@@ -861,7 +861,7 @@ def create(obj):
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-    pbone = obj.pose.bones[bones['ORG-heel.R']]
+    pbone = obj.pose.bones[bones['JIG-heel.R']]
     pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
