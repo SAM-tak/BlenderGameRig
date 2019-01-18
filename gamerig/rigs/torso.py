@@ -166,7 +166,7 @@ class Rig:
             mch_name = copy_bone( self.obj, org(b), make_mechanism_name(b) )
             eb[mch_name].length /= 4
 
-            mch += [ mch_name ]
+            mch.append(mch_name)
 
         # Tweak bones
         for b in neck_bones[:-1]: # All except last bone
@@ -175,7 +175,7 @@ class Rig:
 
             eb[twk_name].length /= 2
 
-            twk += [ twk_name ]
+            twk.append(twk_name)
 
         return {
             'ctrl_neck' : neck,
@@ -217,8 +217,8 @@ class Rig:
             twk_name = copy_bone( self.obj, org(b), twk_name )
             eb[twk_name].length /= 2
 
-            mch += [ mch_name ]
-            twk += [ twk_name ]
+            mch.append( mch_name )
+            twk.append( twk_name )
 
         return {
             'ctrl'    : chest,
@@ -253,17 +253,15 @@ class Rig:
         twk,mch = [],[]
         for b in hip_bones:
             mch_name = copy_bone( self.obj, org(b), make_mechanism_name(b) )
-            self.orient_bone(
-                eb[mch_name], 'y', self.spine_length / 10, reverse = True
-            )
+            self.orient_bone(eb[mch_name], 'y', self.spine_length / 10, reverse = True)
 
             twk_name = "tweak_" + b
             twk_name = copy_bone( self.obj, org( b ), twk_name )
 
             eb[twk_name].length /= 2
 
-            mch += [ mch_name ]
-            twk += [ twk_name ]
+            mch.append( mch_name )
+            twk.append( twk_name )
 
         return {
             'ctrl'   : hips,
@@ -610,9 +608,10 @@ class Rig:
             self.locks_and_widgets( bones )
 
 
-        controls =  [ bones['neck']['ctrl'],  bones['neck']['ctrl_neck'] ]
-        controls += [ bones['chest']['ctrl'], bones['hips']['ctrl']      ]
-        controls += [ bones['pivot']['ctrl'] ]
+        controls = [
+            bones['neck']['ctrl'], bones['neck']['ctrl_neck'], bones['chest']['ctrl'],
+            bones['hips']['ctrl'], bones['pivot']['ctrl']
+        ]
 
         # Create UI
         controls_string = ", ".join(["'" + x + "'" for x in controls])

@@ -342,7 +342,7 @@ def create_leg( cls, bones ):
         # Create toe circle widget
         create_toe_widget(cls.obj, toeik)
 
-        bones['ik']['ctrl']['terminal'] += [ toeik ]
+        bones['ik']['ctrl']['terminal'].append(toeik)
 
     bones['ik']['ctrl']['terminal'] += [ heel, ctrl ]
 

@@ -352,21 +352,24 @@ class Rig:
         if org_tongue_bones and len(org_tongue_bones) > 0:
             org_to_ctrls['tongue'] = [ org_tongue_bones[0] ]
 
-        tweak_unique = { 'lip.T.L'     : 'lip.T',
-                         'lip.B.L'     : 'lip.B'  }
+        tweak_unique = {
+            'lip.T.L' : 'lip.T',
+            'lip.B.L' : 'lip.B'
+        }
 
         org_to_ctrls = { key : [ org( bone ) for bone in org_to_ctrls[key] if org(bone) in org_bones ] for key in org_to_ctrls.keys() }
         tweak_unique = { org( key ) : tweak_unique[key] for key in tweak_unique.keys() }
 
-        tweak_exceptions = [] # bones not used to create tweaks
-        tweak_exceptions += [ bone for bone in org_bones if 'temple' in bone ]
+        tweak_exceptions = [ bone for bone in org_bones if 'temple' in bone ]
 
-        tweak_tail =  [ 'brow.B.L.003', 'brow.B.R.003', 'nose.003', 'chin.001' ]
-        tweak_tail += [ 'lip.T.L.001', 'lip.T.R.001', 'tongue.002' ]
+        tweak_tail =  [ 'brow.B.L.003', 'brow.B.R.003', 'nose.003', 'chin.001', 'lip.T.L.001', 'lip.T.R.001', 'tongue.002' ]
 
-        tweak_exceptions += [ 'lip.T.R', 'lip.B.R', 'ear.L.001', 'ear.R.001' ] + list(tweak_unique.keys())
-        tweak_exceptions += [ 'face', 'cheek.T.L', 'cheek.T.R', 'cheek.B.L', 'cheek.B.R' ]
-        tweak_exceptions += [ 'ear.L', 'ear.R', 'eye.L', 'eye.R' ]
+        tweak_exceptions += [ 'lip.T.R', 'lip.B.R', 'ear.L.001', 'ear.R.001' ]
+        tweak_exceptions += list(tweak_unique.keys())
+        tweak_exceptions += [
+            'face', 'cheek.T.L', 'cheek.T.R', 'cheek.B.L', 'cheek.B.R',
+            'ear.L', 'ear.R', 'eye.L', 'eye.R'
+        ]
 
         tweak_exceptions += org_to_ctrls.keys()
         tweak_exceptions += org_to_ctrls['teeth']
@@ -1087,8 +1090,7 @@ class Rig:
 
 
         # Create UI
-        all_controls = []
-        all_controls += [ bone for bone in [ bgroup for bgroup in [ all_bones['ctrls'][group]  for group in list( all_bones['ctrls' ].keys() ) ] ] ]
+        all_controls =  [ bone for bone in [ bgroup for bgroup in [ all_bones['ctrls'][group]  for group in list( all_bones['ctrls' ].keys() ) ] ] ]
         all_controls += [ bone for bone in [ bgroup for bgroup in [ all_bones['tweaks'][group] for group in list( all_bones['tweaks'].keys() ) ] ] ]
 
         all_ctrls = []

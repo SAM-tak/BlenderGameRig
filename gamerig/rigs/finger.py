@@ -61,8 +61,8 @@ class Rig:
             mch_bone  = copy_bone( self.obj, name, mch(basename(name)) )
 
             # Adding to lists
-            ctrl_chain    += [ctrl_bone]
-            mch_chain     += [mch_bone]
+            ctrl_chain.append(ctrl_bone)
+            mch_chain.append(mch_bone)
 
         # Restoring org chain parenting
         eb[ org_bones[0] ].parent = eb[ root_parent_name ]
@@ -141,7 +141,7 @@ class Rig:
                 # Flip x/z coordinates
                 temp = []
                 for v in verts:
-                    temp += [(v[2], v[1], v[0])]
+                    temp.append((v[2], v[1], v[0]))
                 verts = temp
             edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]
             mesh.from_pydata(verts, edges, [])

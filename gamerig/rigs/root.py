@@ -87,6 +87,7 @@ def create_sample(obj):
     bone.tail[:] = 0.0000, 1.0000, 0.0000
     bone.roll = 0.0000
     bone.use_connect = False
+    bone.use_deform = False
     bones['Bone'] = bone.name
 
     bpy.ops.object.mode_set(mode='OBJECT')

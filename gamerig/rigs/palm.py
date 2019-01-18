@@ -40,7 +40,7 @@ def bone_siblings(obj, bone):
 
     for b in parent.children:
         if b.name != bone:
-            bones += [b.name]
+            bones.append(b.name)
 
     return bones
 

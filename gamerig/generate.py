@@ -26,8 +26,7 @@ import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
     new_bone, get_rig_type, create_widget, assign_and_unlink_all_widgets,
-    is_org, org, get_wgt_name, random_id,
-    MCH_PREFIX, RIG_DIR,
+    is_org, is_mch,is_jig,  org, get_wgt_name, random_id,
     copy_attributes, gamma_correct,
     MetarigError
 )
@@ -270,7 +269,7 @@ def generate_rig(context, metarig):
     # (root-most -> leaf-most, alphabetical)
     bones_sorted = []
     for name in original_bones:
-        bones_sorted += [name]
+        bones_sorted.append(name)
     bones_sorted.sort()  # first sort by names
     bones_sorted.sort(key=lambda bone: len(obj.pose.bones[bone].parent_recursive))  # then parents before children
     t.tick("Make list of org bones: ")
@@ -338,7 +337,7 @@ def generate_rig(context, metarig):
 
     # Move all the bones with names starting with "MCH-" to their layer.
     for bone in bones:
-        if obj.data.bones[bone].name.startswith(MCH_PREFIX):
+        if is_mch(obj.data.bones[bone].name):
             obj.data.bones[bone].layers = MCH_LAYER
 
     # Assign shapes to bones
@@ -360,7 +359,7 @@ def generate_rig(context, metarig):
     layer_layout = []
     for l in metarig.data.gamerig_layers:
         #print(l.name)
-        layer_layout += [(l.name, l.row)]
+        layer_layout.append((l.name, l.row))
 
     # Generate the UI script
     rig_ui_name = 'gamerig_ui_%s.py' % rig_id
@@ -388,6 +387,12 @@ def generate_rig(context, metarig):
     # Add rig_ui to logic
     create_persistent_rig_ui(obj, script)
     
+    # Remove all jig bones.
+    bpy.ops.object.mode_set(mode='EDIT')
+    for bone in [bone.name for bone in obj.data.edit_bones]:
+        if is_jig(bone):
+            obj.data.edit_bones.remove(obj.data.edit_bones[bone])
+
     #----------------------------------
     # Deconfigure
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -405,6 +410,9 @@ def generate_rig(context, metarig):
             child.matrix_world = mat
     # Restore active collection
     view_layer.active_layer_collection = layer_collection
+
+    t.tick("The rest: ")
+
 
     t.tick("The rest: ")
 
@@ -528,7 +536,7 @@ def get_bone_rigs(obj, bone_name, halt_on_missing=False):
                 print('print_exc():')
                 traceback.print_exc(file=sys.stdout)
         else:
-            rigs += [rig]
+            rigs.append(rig)
     return rigs
 
 
@@ -575,7 +583,7 @@ def layers_ui(layers, layout):
         if layers[i]:
             if layout[i][1] not in rows:
                 rows[layout[i][1]] = []
-            rows[layout[i][1]] += [(layout[i][0], i)]
+            rows[layout[i][1]].append((layout[i][0], i))
 
     keys = list(rows.keys())
     keys.sort()
