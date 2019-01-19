@@ -495,22 +495,6 @@ class BONE_PT_gamerig_type(bpy.types.Panel):
                     rig.parameters_ui(box, bone.gamerig_parameters)
 
 
-class BONE_PT_gamerig_utility(bpy.types.Panel):
-    bl_label       = "GameRig Utility"
-    bl_space_type  = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context     = "bone"
-
-    @classmethod
-    def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
-            and context.active_object.data.get("gamerig_id") is not None
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator("pose.gamerig_reveal_unlinked_widget")
-
-
 class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
     bl_label       = "GameRig Dev Tools"
     bl_space_type  = 'VIEW_3D'
@@ -519,7 +503,8 @@ class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in ['EDIT_ARMATURE', 'EDIT_MESH'] and context.user_preferences.addons['gamerig'].preferences.shows_dev_tools
+        return context.mode in ['EDIT_ARMATURE', 'EDIT_MESH']\
+         and context.preferences.addons['gamerig'].preferences.shows_dev_tools
 
     def draw(self, context):
         obj = context.active_object
@@ -533,6 +518,23 @@ class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
             if context.mode == 'EDIT_MESH':
                 r = self.layout.row()
                 r.operator("mesh.gamerig_encode_mesh_widget", text="Encode Mesh Widget to Python")
+
+
+class BONE_PT_gamerig_utility(bpy.types.Panel):
+    bl_label       = "GameRig Utility"
+    bl_space_type  = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context     = "bone"
+
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
+          and context.active_object.data.get("gamerig_id") is not None\
+          and context.preferences.addons['gamerig'].preferences.shows_dev_tools
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("pose.gamerig_reveal_unlinked_widget")
 
 
 def gamerig_report_exception(operator, exception):
@@ -586,7 +588,7 @@ class RevealUnlinkedWidget(bpy.types.Operator):
          and not (context.active_pose_bone.custom_shape.name in context.scene.objects)
 
     def execute(self, context):
-        context.scene.objects.link(context.active_pose_bone.custom_shape)
+        context.collection.objects.link(context.active_pose_bone.custom_shape)
         return {'FINISHED'}
 
 
