@@ -42,20 +42,8 @@ def create_arm( cls, bones ):
     eb[ bones['ik']['mch_target'] ].parent      = eb[ ctrl ]
     eb[ bones['ik']['mch_target'] ].use_connect = False
 
-    if cls.root_bone:
-        # add IK Follow feature
-        mch_ik_socket = copy_bone( cls.obj, cls.root_bone, mch('socket_' + ctrl) )
-        eb[ mch_ik_socket ].length /= 4
-        eb[ mch_ik_socket ].use_connect = False
-        eb[ mch_ik_socket ].parent = None
-        eb[ ctrl    ].parent = eb[ mch_ik_socket ]
-
-        make_constraint( cls, mch_ik_socket, {
-            'constraint'   : 'COPY_TRANSFORMS',
-            'subtarget'    : cls.root_bone,
-            'target_space' : 'WORLD',
-            'owner_space'  : 'WORLD',
-        })
+    # add IK Follow feature
+    mch_ik_socket = make_ik_follow_bone( cls, eb, ctrl )
 
     # Set up constraints
     # Constrain mch target bone to the ik control and mch stretch
@@ -93,9 +81,8 @@ def create_arm( cls, bones ):
 
     if cls.allow_ik_stretch:
         # Create ik stretch property
-
-        pb_master['ik_stretch'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
+        pb_master['IK Stretch'] = 1.0
+        prop = rna_idprop_ui_prop_get( pb_master, 'IK Stretch', create=True )
         prop["min"]         = 0.0
         prop["max"]         = 1.0
         prop["soft_min"]    = 0.0
@@ -105,10 +92,10 @@ def create_arm( cls, bones ):
         # Add driver to limit scale constraint influence
         b        = bones['ik']['mch_str']
         drv      = pb[b].constraints[-1].driver_add("influence").driver
-        drv.type = 'SUM'
+        drv.type = 'AVERAGE'
 
         var = drv.variables.new()
-        var.name = prop.name
+        var.name = 'ik_stretch'
         var.type = "SINGLE_PROP"
         var.targets[0].id = cls.obj
         var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
@@ -120,24 +107,8 @@ def create_arm( cls, bones ):
         drv_modifier.coefficients[0] = 1.0
         drv_modifier.coefficients[1] = -1.0
         
-    if cls.root_bone:
-        # Add IK Follow property and driver
-        pb_master['ik_follow'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb_master, 'ik_follow', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'IK Follow'
-
-        drv      = pb[mch_ik_socket].constraints[-1].driver_add("influence").driver
-        drv.type = 'SUM'
-
-        var = drv.variables.new()
-        var.name = prop.name
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = cls.obj
-        var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+    # Add IK Follow property and driver
+    setup_ik_follow(cls, pb, pb_master, mch_ik_socket)
 
     # Create hand widget
     create_hand_widget(cls.obj, ctrl)

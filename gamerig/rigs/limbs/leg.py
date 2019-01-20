@@ -19,14 +19,12 @@
 # <pep8 compliant>
 import bpy, math
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError, connected_children_names, copy_bone, put_bone, flip_bone
+from ...utils import MetarigError, connected_children_names, new_bone, copy_bone, put_bone, flip_bone
 from ..widgets import create_foot_widget, create_ballsocket_widget, create_toe_widget
 from .limb_utils import *
 
 def create_leg( cls, bones ):
-    org_bones = list(
-        [cls.org_bones[0]] + connected_children_names(cls.obj, cls.org_bones[0])
-    )
+    org_bones = list([cls.org_bones[0]] + connected_children_names(cls.obj, cls.org_bones[0]))
 
     bones['ik']['ctrl']['terminal'] = []
 
@@ -120,20 +118,8 @@ def create_leg( cls, bones ):
     eb[ rock1_mch ].parent = eb[ rock2_mch ]
     eb[ rock2_mch ].parent = eb[ ctrl ]
 
-    if cls.root_bone:
-        # add IK Follow feature
-        mch_ik_socket = copy_bone( cls.obj, cls.root_bone, mch('socket_' + ctrl) )
-        eb[ mch_ik_socket ].length /= 4
-        eb[ mch_ik_socket ].use_connect = False
-        eb[ mch_ik_socket ].parent = None
-        eb[ ctrl    ].parent = eb[ mch_ik_socket ]
-
-        make_constraint( cls, mch_ik_socket, {
-            'constraint'   : 'COPY_TRANSFORMS',
-            'subtarget'    : cls.root_bone,
-            'target_space' : 'WORLD',
-            'owner_space'  : 'WORLD',
-        })
+    # add IK Follow feature
+    mch_ik_socket = make_ik_follow_bone( cls, eb, ctrl )
 
     # Constrain rock and roll MCH bones
     make_constraint( cls, roll1_mch, {
@@ -234,9 +220,9 @@ def create_leg( cls, bones ):
     pb_master = pb[ bones['fk']['ctrl'][0] ]
 
     if cls.allow_ik_stretch:
-        # Create ik_stretch property
-        pb_master['ik_stretch'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
+        # Create 'IK Stretch' property
+        pb_master['IK Stretch'] = 1.0
+        prop = rna_idprop_ui_prop_get( pb_master, 'IK Stretch', create=True )
         prop["min"]         = 0.0
         prop["max"]         = 1.0
         prop["soft_min"]    = 0.0
@@ -249,7 +235,7 @@ def create_leg( cls, bones ):
         drv.type = 'AVERAGE'
 
         var = drv.variables.new()
-        var.name = prop.name
+        var.name = 'ik_stretch'
         var.type = "SINGLE_PROP"
         var.targets[0].id = cls.obj
         var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
@@ -261,24 +247,8 @@ def create_leg( cls, bones ):
         drv_modifier.coefficients[0] = 1.0
         drv_modifier.coefficients[1] = -1.0
     
-    if cls.root_bone:
-        # Add IK Follow property and driver
-        pb_master['ik_follow'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb_master, 'ik_follow', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'IK Follow'
-
-        drv      = pb[mch_ik_socket].constraints[-1].driver_add("influence").driver
-        drv.type = 'SUM'
-
-        var = drv.variables.new()
-        var.name = prop.name
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = cls.obj
-        var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+    # Add IK Follow property and driver
+    setup_ik_follow(cls, pb, pb_master, mch_ik_socket)
 
     # Create leg widget
     create_foot_widget(cls.obj, ctrl)
@@ -319,7 +289,7 @@ def create_leg( cls, bones ):
         #pb[ toeik ].lock_location = True, True, True
 
         # Find IK/FK switch property
-        prop = rna_idprop_ui_prop_get( pb_master, 'ik_fk_rate' )
+        prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
 
         # Add driver to limit scale constraint influence
         b        = org_bones[3]
@@ -327,7 +297,7 @@ def create_leg( cls, bones ):
         drv.type = 'SUM'
 
         var = drv.variables.new()
-        var.name = prop.name
+        var.name = 'ik_fk_switch'
         var.type = "SINGLE_PROP"
         var.targets[0].id = cls.obj
         var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'

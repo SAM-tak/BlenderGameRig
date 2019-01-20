@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
-    copy_bone, flip_bone, connected_children_names,
+    copy_bone, connected_children_names,
     basename, mch,
     create_widget,
     MetarigError

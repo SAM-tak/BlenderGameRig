@@ -67,6 +67,9 @@ def create_paw( cls, bones ):
     orient_bone( cls, eb[ ctrl ], 'y', reverse = True )
     eb[ ctrl ].length = l
 
+    # add IK Follow feature
+    mch_ik_socket = make_ik_follow_bone( cls, eb, ctrl )
+
     # Set up constraints
     # Constrain mch target bone to the ik control and mch stretch
 
@@ -108,8 +111,8 @@ def create_paw( cls, bones ):
     if cls.allow_ik_stretch:
         # Create ik stretch property
 
-        pb_master['ik_stretch'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb_master, 'ik_stretch', create=True )
+        pb_master['IK Stretch'] = 1.0
+        prop = rna_idprop_ui_prop_get( pb_master, 'IK Stretch', create=True )
         prop["min"]         = 0.0
         prop["max"]         = 1.0
         prop["soft_min"]    = 0.0
@@ -122,7 +125,7 @@ def create_paw( cls, bones ):
         drv.type = 'AVERAGE'
 
         var = drv.variables.new()
-        var.name = prop.name
+        var.name = 'ik_stretch'
         var.type = "SINGLE_PROP"
         var.targets[0].id = cls.obj
         var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
@@ -133,6 +136,9 @@ def create_paw( cls, bones ):
         drv_modifier.poly_order      = 1
         drv_modifier.coefficients[0] = 1.0
         drv_modifier.coefficients[1] = -1.0
+    
+    # Add IK Follow property and driver
+    setup_ik_follow(cls, pb, pb_master, mch_ik_socket)
 
     # Create paw widget
     create_paw_widget(cls.obj, ctrl)
@@ -162,7 +168,7 @@ def create_paw( cls, bones ):
 
         # Find IK/FK switch property
         pb   = cls.obj.pose.bones
-        prop = rna_idprop_ui_prop_get( pb_master, 'ik_fk_rate' )
+        prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
 
         # Add driver to limit scale constraint influence
         b        = org_bones[3]
@@ -170,7 +176,7 @@ def create_paw( cls, bones ):
         drv.type = 'AVERAGE'
 
         var = drv.variables.new()
-        var.name = prop.name
+        var.name = 'ik_fk_switch'
         var.type = "SINGLE_PROP"
         var.targets[0].id = cls.obj
         var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'

@@ -173,9 +173,6 @@ def register():
     for cl in classes:
         bpy.utils.register_class(cl)
 
-    bpy.types.Armature.gamerig_layers = CollectionProperty(type=GameRigArmatureLayer)
-
-    bpy.types.Armature.gamerig_colors = CollectionProperty(type=GameRigColorSet)
     bpy.types.Armature.gamerig_rig_ui_template = StringProperty(
         name="GameRig Rig UI Template",
         description="Rig UI Template for this armature"
@@ -186,8 +183,9 @@ def register():
         default="rig"
     )
 
+    bpy.types.Armature.gamerig_layers = CollectionProperty(type=GameRigArmatureLayer)
+    bpy.types.Armature.gamerig_colors = CollectionProperty(type=GameRigColorSet)
     bpy.types.Armature.gamerig_selection_colors = PointerProperty(type=GameRigSelectionColors)
-
     bpy.types.Armature.gamerig_colors_index = IntProperty(default=-1)
     bpy.types.Armature.gamerig_colors_lock = BoolProperty(default=True)
     bpy.types.Armature.gamerig_theme_to_add = EnumProperty(
@@ -244,10 +242,10 @@ def register():
 
 def unregister():
     # Properties.
-    del bpy.types.Armature.gamerig_layers
-    del bpy.types.Armature.gamerig_colors
     del bpy.types.Armature.gamerig_rig_ui_template
     del bpy.types.Armature.gamerig_rig_name
+    del bpy.types.Armature.gamerig_layers
+    del bpy.types.Armature.gamerig_colors
     del bpy.types.Armature.gamerig_selection_colors
     del bpy.types.Armature.gamerig_colors_index
     del bpy.types.Armature.gamerig_colors_lock

@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
-    copy_bone, flip_bone, put_bone,
+    copy_bone, put_bone,
     org, basename, make_mechanism_name, connected_children_names,
     create_widget,
     MetarigError
@@ -461,21 +461,21 @@ class Rig:
         # Setting the torso's props
         torso = pb[ bones['pivot']['ctrl'] ]
 
-        props  = [ 'head_follow', 'neck_follow' ]
+        props  = [ 'Head Follow', 'Neck Follow' ]
         owners = [ bones['neck']['mch_head'], bones['neck']['mch_neck'] ]
 
-        for prop in props:
-            if prop == 'neck_follow':
-                torso[prop] = 0.5
+        for pname in props:
+            if pname == 'Neck Follow':
+                torso[pname] = 0.5
             else:
-                torso[prop] = 0.0
+                torso[pname] = 0.0
 
-            prop = rna_idprop_ui_prop_get( torso, prop, create=True )
+            prop = rna_idprop_ui_prop_get( torso, pname, create=True )
             prop["min"]         = 0.0
             prop["max"]         = 1.0
             prop["soft_min"]    = 0.0
             prop["soft_max"]    = 1.0
-            prop["description"] = prop
+            prop["description"] = pname
 
         # driving the follow rotation switches for neck and head
         for bone, prop, in zip( owners, props ):
@@ -484,7 +484,7 @@ class Rig:
             drv.type = 'AVERAGE'
 
             var = drv.variables.new()
-            var.name = prop
+            var.name = prop.replace(' ', '_').lower()
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
             var.targets[0].data_path = torso.path_from_id() + '['+ '"' + prop + '"' + ']'
@@ -500,9 +500,9 @@ class Rig:
             # Add driver to stretch constraint
             tweaks =  bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['tweak'] + [ bones['neck']['ctrl'] ]
             for bone, t in zip(self.org_bones, tweaks):
-                pb[t]['tweak_stretch'] = 1.0
+                pb[t]['Tweak Stretch'] = 1.0
 
-                prop = rna_idprop_ui_prop_get( pb[t], 'tweak_stretch', create=True )
+                prop = rna_idprop_ui_prop_get( pb[t], 'Tweak Stretch', create=True )
                 prop["min"]         = 0.0
                 prop["max"]         = 1.0
                 prop["soft_min"]    = 0.0
@@ -515,7 +515,7 @@ class Rig:
                     drv.type = 'SUM'
 
                     var = drv.variables.new()
-                    var.name = prop.name
+                    var.name = 'tweak_stretch'
                     var.type = "SINGLE_PROP"
                     var.targets[0].id = self.obj
                     var.targets[0].data_path = pb[t].path_from_id() + '['+ '"' + prop.name + '"' + ']'
@@ -619,15 +619,15 @@ class Rig:
 controls = [%s]
 torso    = '%s'
 if is_selected( controls ):
-    layout.prop( pose_bones[ torso ], '["head_follow"]', text = 'Head Follow', slider = True )
-    layout.prop( pose_bones[ torso ], '["neck_follow"]', text = 'Neck Follow', slider = True )
+    layout.prop( pose_bones[ torso ], '["Head Follow"]', text='Head Follow (' + torso + ')', slider = True )
+    layout.prop( pose_bones[ torso ], '["Neck Follow"]', text='Neck Follow (' + torso + ')', slider = True )
 """ % (controls_string, bones['pivot']['ctrl'])
         if self.stretchable_tweak:
             code += """
 tweaks = %s
 for tweak in tweaks:
     if is_selected( tweak ):
-        layout.prop( pose_bones[ tweak ], '["tweak_stretch"]', text = 'Tweak Stretch', slider = True )
+        layout.prop( pose_bones[ tweak ], '["Tweak Stretch"]', text='Tweak Stretch (' + tweak + ')', slider = True )
 """ % (bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['tweak'] + [ bones['neck']['ctrl'] ])
         return [code]
 
@@ -637,14 +637,14 @@ def add_parameters( params ):
     """
     params.neck_pos = bpy.props.IntProperty(
         name        = 'Neck Position',
-        default     = 6,
+        default     = 4,
         min         = 0,
         description = 'Neck start position'
     )
 
     params.pivot_pos = bpy.props.IntProperty(
         name         = 'Pivot Position',
-        default      = 3,
+        default      = 2,
         min          = 0,
         description  = 'Position of the torso control and pivot point'
     )

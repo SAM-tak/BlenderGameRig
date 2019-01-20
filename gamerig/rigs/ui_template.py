@@ -525,7 +525,8 @@ class PropertiesPanel(bpy.types.Panel):
         rig_id = "{rig_id}"
         try:
             selected_bones = [bone.name for bone in context.selected_pose_bones]
-            selected_bones.append(context.active_pose_bone.name)
+            if context.active_pose_bone and not context.active_pose_bone.name in selected_bones:
+                selected_bones.append(context.active_pose_bone.name)
         except (AttributeError, TypeError):
             return
 
@@ -560,7 +561,6 @@ class LayersPanel(bpy.types.Panel):
         layout = self.layout
         col = layout.column()
 {layers}
-
 
 for cl in (Arm_FK2IK, Arm_IK2FK, Leg_FK2IK, Leg_IK2FK, PropertiesPanel, LayersPanel):
     register_class(cl)

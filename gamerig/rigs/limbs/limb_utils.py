@@ -1,8 +1,7 @@
 import bpy, re
+from rna_prop_ui import rna_idprop_ui_prop_get
 from mathutils import Vector
-from ...utils import MetarigError, mch, org, basename
-
-bilateral_suffixes = ['.L','.R']
+from ...utils import MetarigError, mch, org, basename, copy_bone, new_bone
 
 
 def orient_bone( cls, eb, axis, scale = 1.0, reverse = False ):
@@ -60,3 +59,44 @@ def get_bone_name( name, btype, suffix = '' ):
             name = name  + "_" + suffix
 
     return name
+
+
+def make_ik_follow_bone(cls, eb, ctrl):
+    """ add IK Follow feature
+    """
+    if cls.root_bone:
+        mch_ik_socket = copy_bone( cls.obj, cls.root_bone, mch('socket_' + ctrl) )
+        eb[ mch_ik_socket ].length /= 4
+        eb[ mch_ik_socket ].use_connect = False
+        eb[ mch_ik_socket ].parent = None
+        eb[ ctrl    ].parent = eb[ mch_ik_socket ]
+        return mch_ik_socket
+
+
+def setup_ik_follow(cls, pb, pb_master, mch_ik_socket):
+    """ Add IK Follow constrain and property and driver
+    """
+    if cls.root_bone:
+        make_constraint( cls, mch_ik_socket, {
+            'constraint'   : 'COPY_TRANSFORMS',
+            'subtarget'    : cls.root_bone,
+            'target_space' : 'WORLD',
+            'owner_space'  : 'WORLD',
+        })
+
+        pb_master['IK Follow'] = 1.0
+        prop = rna_idprop_ui_prop_get( pb_master, 'IK Follow', create=True )
+        prop["min"]         = 0.0
+        prop["max"]         = 1.0
+        prop["soft_min"]    = 0.0
+        prop["soft_max"]    = 1.0
+        prop["description"] = 'IK Follow'
+
+        drv      = pb[mch_ik_socket].constraints[-1].driver_add("influence").driver
+        drv.type = 'SUM'
+
+        var = drv.variables.new()
+        var.name = 'ik_follow'
+        var.type = "SINGLE_PROP"
+        var.targets[0].id = cls.obj
+        var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'

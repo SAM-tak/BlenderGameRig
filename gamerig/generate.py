@@ -25,7 +25,7 @@ import traceback
 import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
-    new_bone, get_rig_type, create_widget, assign_and_unlink_all_widgets,
+    get_rig_type, create_widget, assign_and_unlink_all_widgets,
     is_org, is_mch,is_jig,  org, get_wgt_name, random_id,
     copy_attributes, gamma_correct,
     MetarigError
