@@ -6,7 +6,7 @@ parent   = '%s'
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["ik_fk_rate"]', text = 'IK/FK', slider = True )
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
     props = layout.operator("pose.gamerig_arm_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.uarm_fk = controls[1]
     props.farm_fk = controls[2]
@@ -24,7 +24,7 @@ if is_selected( controls ):
 
 # FK limb follow
 if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["fk_limb_follow"]', text = 'FK Limb Follow', slider = True )
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
 """
 
 #                 0             1              2           3           4           5              6               7             8
@@ -41,7 +41,7 @@ parent   = '%s'
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["ik_fk_rate"]', text = 'IK/FK', slider = True )
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
     props = layout.operator("pose.gamerig_leg_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
@@ -65,18 +65,7 @@ if is_selected( controls ):
 
 # FK limb follow
 if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["fk_limb_follow"]', text = 'FK Limb Follow', slider = True )
-
-"""
-
-script_ik_stretch = """
-    # IK Stretch on IK Control bone
-    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
-"""
-
-script_ik_follow = """
-    # IK Follow on IK Control bone
-    layout.prop( pose_bones[ parent ], '["ik_stretch"]', text = 'IK Stretch', slider = True )
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
 """
 
 def create_script(bones, limb_type, allow_ik_stretch, ik_follow):
@@ -132,6 +121,6 @@ if is_selected( ik_ctrl ):
         if ik_follow:
             code += """
     # IK Follow on IK Control bone
-    layout.prop( pose_bones[ parent ], '["ik_follow"]', text = 'IK Follow', slider = True )
+    layout.prop( pose_bones[ parent ], '["IK Follow"]', text = 'IK Follow', slider = True )
 """
     return code

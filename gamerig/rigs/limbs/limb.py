@@ -3,7 +3,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from math import trunc
 from mathutils import Vector
 from ...utils import (
-    copy_bone, flip_bone, put_bone, org, basename,
+    copy_bone, org, basename,
     connected_children_names, find_root_bone,
     create_widget,
     MetarigError
@@ -107,7 +107,7 @@ class Rig:
         mch_str = copy_bone(
             self.obj,
             org_bones[0],
-            get_bone_name( org_bones[0], 'mch', 'ik_stretch' )
+            get_bone_name( org_bones[0], 'mch', 'IK Stretch' )
         )
 
         if self.limb_type == 'arm':
@@ -240,8 +240,8 @@ class Rig:
         pb = self.obj.pose.bones
 
         # Limb Follow Driver
-        pb[fk[0]]['fk_limb_follow'] = 0.0
-        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'fk_limb_follow', create = True )
+        pb[fk[0]]['FK Limb Follow'] = 0.0
+        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'FK Limb Follow', create = True )
 
         prop["min"]         = 0.0
         prop["max"]         = 1.0
@@ -253,14 +253,14 @@ class Rig:
 
         drv.type = 'AVERAGE'
         var = drv.variables.new()
-        var.name = prop.name
+        var.name = 'fk_limb_follow'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
         var.targets[0].data_path = pb[fk[0]].path_from_id() + '[' + '"' + prop.name + '"' + ']'
 
-        # Create ik/fk switch property
-        pb[fk[0]]['ik_fk_rate']  = 0.0
-        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'ik_fk_rate', create=True )
+        # Create IK/FK switch property
+        pb[fk[0]]['IK/FK']  = 0.0
+        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'IK/FK', create=True )
         prop["min"]         = 0.0
         prop["max"]         = 1.0
         prop["soft_min"]    = 0.0
@@ -287,7 +287,7 @@ class Rig:
             drv.type = 'AVERAGE'
 
             var = drv.variables.new()
-            var.name = prop.name
+            var.name = 'ik_fk_switch'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb[fk[0]].path_from_id() + '['+ '"' + prop.name + '"' + ']'

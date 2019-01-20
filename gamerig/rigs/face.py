@@ -4,7 +4,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     MetarigError, copy_bone, flip_bone, connected_children_names, find_root_bone,
     create_widget,
-    org, basename, mch, MCH_PREFIX
+    org, basename, mch, insert_before_first_period, MCH_PREFIX
 )
 from .widgets import create_face_widget, create_eye_widget, create_eyes_widget, create_ear_widget, create_jaw_widget
 
@@ -169,11 +169,10 @@ class Rig:
             eyes_ctrl_e.length = (eyeL_ctrl_e.head - eyes_ctrl_e.head).length * 0.62
 
             ## Widget for transforming the both eyes
-            if any(i for i in self.org_bones if i.startswith('lid.') or i.startswith('brow.')):
-                for bone in bones['eyes']:
-                    if bone in self.bone_name_map:
-                        eye_master = self.copy_bone(self.obj, bone, 'master_' + basename(bone))
-                        eye_master_names.append( eye_master )
+            for bone in bones['eyes']:
+                if bone in self.bone_name_map:
+                    eye_master = self.copy_bone(self.obj, bone, insert_before_first_period(basename(bone), '_master'))
+                    eye_master_names.append( eye_master )
             
             ret['eyes'] = [eyeL_ctrl_name, eyeR_ctrl_name, eyes_ctrl_name] + eye_master_names
 
@@ -1004,8 +1003,8 @@ class Rig:
         jaw_ctrl  = all_bones['ctrls']['jaw'][0] if 'jaw' in all_bones['ctrls'] else None
         eyes_ctrl = all_bones['ctrls']['eyes'][2] if 'eyes' in all_bones['ctrls'] else None
 
-        jaw_prop  = 'mouth_lock'
-        eyes_prop = 'eyes_follow'
+        jaw_prop  = 'Mouth Lock'
+        eyes_prop = 'Eyes Follow'
 
         for bone, prop_name in zip( [ jaw_ctrl, eyes_ctrl ], [ jaw_prop, eyes_prop ] ):
             if bone in self.bone_name_map and prop_name:
@@ -1030,7 +1029,7 @@ class Rig:
                 drv.type='SUM'
 
                 var = drv.variables.new()
-                var.name = jaw_prop
+                var.name = 'mouth_lock'
                 var.type = "SINGLE_PROP"
                 var.targets[0].id = self.obj
                 var.targets[0].data_path = pb[ rbn(jaw_ctrl) ].path_from_id() + '['+ '"' + jaw_prop + '"' + ']'
@@ -1044,12 +1043,10 @@ class Rig:
             drv.type='SUM'
 
             var = drv.variables.new()
-            var.name = eyes_prop
+            var.name = 'eyes_follow'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb[ rbn(eyes_ctrl) ].path_from_id() + '['+ '"' + eyes_prop + '"' + ']'
-
-        return jaw_prop, eyes_prop
 
     def create_bones(self):
         rbn = self.rbn
@@ -1086,8 +1083,7 @@ class Rig:
         all_bones, tweak_unique, mchts = self.create_bones()
         self.parent_bones( all_bones, tweak_unique, mchts )
         self.constraints( all_bones, mchts )
-        jaw_prop, eyes_prop = self.drivers_and_props( all_bones )
-
+        self.drivers_and_props( all_bones )
 
         # Create UI
         all_controls =  [ bone for bone in [ bgroup for bgroup in [ all_bones['ctrls'][group]  for group in list( all_bones['ctrls' ].keys() ) ] ] ]
@@ -1108,25 +1104,25 @@ jaw_ctrl_name  = '%s'
 eyes_ctrl_name = '%s'
 
 if is_selected(all_controls):
-    layout.prop(pose_bones[jaw_ctrl_name],  '["%s"]', text='Mouth Lock', slider=True)
-    layout.prop(pose_bones[eyes_ctrl_name], '["%s"]', text='Eyes Follow', slider=True)
-""" % (controls_string, jaw_ctrl, eyes_ctrl, jaw_prop, eyes_prop)]
+    layout.prop(pose_bones[jaw_ctrl_name],  '["Mouth Lock"]', text='Mouth Lock (' + jaw_ctrl_name + ')', slider=True)
+    layout.prop(pose_bones[eyes_ctrl_name], '["Eyes Follow"]', text='Eyes Follow (' + eyes_ctrl_name + ')', slider=True)
+""" % (controls_string, jaw_ctrl, eyes_ctrl)]
         elif jaw_ctrl:
             return [ """
 all_controls   = [%s]
 jaw_ctrl_name  = '%s'
 
 if is_selected(all_controls):
-    layout.prop(pose_bones[jaw_ctrl_name],  '["%s"]', text='Mouth Lock', slider=True)
-""" % (controls_string, jaw_ctrl, jaw_prop)]
+    layout.prop(pose_bones[jaw_ctrl_name],  '["Mouth Lock"]', text='Mouth Lock (' + jaw_ctrl_name + ')', slider=True)
+""" % (controls_string, jaw_ctrl)]
         elif eyes_ctrl:
             return [ """
 all_controls   = [%s]
 eyes_ctrl_name = '%s'
 
 if is_selected(all_controls):
-    layout.prop(pose_bones[eyes_ctrl_name], '["%s"]', text='Eyes Follow', slider=True)
-""" % (controls_string, eyes_ctrl, eyes_prop)]
+    layout.prop(pose_bones[eyes_ctrl_name], '["Eyes Follow"]', text='Eyes Follow (' + eyes_ctrl_name + ')', slider=True)
+""" % (controls_string, eyes_ctrl)]
 
 
 def add_parameters(params):

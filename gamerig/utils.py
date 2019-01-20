@@ -98,11 +98,14 @@ def basename(name):
 def is_org(name):
     return name.startswith(ORG_PREFIX) or name.startswith(JIG_PREFIX)
 
+
 def is_jig(name):
     return name.startswith(JIG_PREFIX)
 
+
 def is_mch(name):
     return name.startswith(MCH_PREFIX)
+
 
 def org(name):
     """ Prepends the ORG_PREFIX to a name if it doesn't already have
@@ -126,12 +129,9 @@ def mch(name):
 make_mechanism_name = mch
 
 
-def insert_before_lr(name, text):
-    if name[-1] in ['l', 'L', 'r', 'R'] and name[-2] in ['.', '-', '_']:
-        return name[:-2] + text + name[-2:]
-    else:
-        return name + text
-
+def insert_before_first_period(name, text):
+    t = name.split('.', 1)
+    return t[0] + text + '.' + t[1] if len(t) > 1 else name + text
 
 #=======================
 # Bone manipulation
