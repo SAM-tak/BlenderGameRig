@@ -311,11 +311,11 @@ class Limb:
         setattr(v,axis,scale)
 
         if reverse:
-            tail_vec = v * self.obj.matrix_world
+            tail_vec = v @ self.obj.matrix_world
             eb.head[:] = eb.tail
             eb.tail[:] = eb.head + tail_vec
         else:
-            tail_vec = v * self.obj.matrix_world
+            tail_vec = v @ self.obj.matrix_world
             eb.tail[:] = eb.head + tail_vec
 
         eb.roll = 0.0
