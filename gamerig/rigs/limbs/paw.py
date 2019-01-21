@@ -45,7 +45,7 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator("pose.gamerig_leg_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props = layout.operator("pose.gamerig_paw_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -53,18 +53,18 @@ if is_selected( controls ):
     props.thigh_ik = controls[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
-    props.toe_ik   = controls[5]
-    props = layout.operator("pose.gamerig_leg_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props.toe_ik   = ik_ctrl[0]
+    props = layout.operator("pose.gamerig_paw_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
     props.toe_fk   = controls[4]
     props.thigh_ik = controls[0]
     props.shin_ik  = ik_ctrl[1]
-    props.foot_ik  = controls[7]
-    props.footroll = controls[6]
+    props.foot_ik  = controls[5]
     props.mfoot_ik = ik_ctrl[2]
-    props.toe_ik   = controls[5]
+    props.toe_ik   = controls[6]
+    props.mtoe_ik  = ik_ctrl[0]
 
 # FK limb follow
 if is_selected( fk_ctrl ):
@@ -200,7 +200,7 @@ if is_selected( fk_ctrl ):
             drv_modifier.coefficients[0] = 1.0
             drv_modifier.coefficients[1] = -1.0
 
-        bones['ik']['ctrl']['terminal'] += [ heel, ctrl ]
+        bones['ik']['ctrl']['terminal'] += [ heel, ctrl, toes_mch ]
 
         return bones
 
