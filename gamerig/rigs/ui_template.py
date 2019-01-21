@@ -384,13 +384,13 @@ class Arm_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK arm to IK"
     bl_options = {{'UNDO'}}
 
-    uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
-    farm_fk : bpy.props.StringProperty(name="Forerm FK Name")
-    hand_fk : bpy.props.StringProperty(name="Hand FK Name")
+    uarm_fk: bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk: bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk: bpy.props.StringProperty(name="Hand FK Name")
 
-    uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
-    farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
-    hand_ik : bpy.props.StringProperty(name="Hand IK Name")
+    uarm_ik: bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik: bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik: bpy.props.StringProperty(name="Hand IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -413,13 +413,13 @@ class Arm_IK2FK(bpy.types.Operator):
     bl_label = "Snap IK arm to FK"
     bl_options = {{'UNDO'}}
 
-    uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
-    farm_fk : bpy.props.StringProperty(name="Forerm FK Name")
-    hand_fk : bpy.props.StringProperty(name="Hand FK Name")
+    uarm_fk: bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk: bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk: bpy.props.StringProperty(name="Hand FK Name")
 
-    uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
-    farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
-    hand_ik : bpy.props.StringProperty(name="Hand IK Name")
+    uarm_ik: bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik: bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik: bpy.props.StringProperty(name="Hand IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -442,15 +442,15 @@ class Leg_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK leg to IK"
     bl_options = {{'UNDO'}}
 
-    thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
-    shin_fk  : bpy.props.StringProperty(name="Shin FK Name")
-    foot_fk  : bpy.props.StringProperty(name="Foot FK Name")
-    toe_fk   : bpy.props.StringProperty(name="Toe FK Name")
+    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
 
-    thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
-    shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
-    foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
-    toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
+    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
+    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -473,17 +473,17 @@ class Leg_IK2FK(bpy.types.Operator):
     bl_label = "Snap IK leg to FK"
     bl_options = {{'UNDO'}}
 
-    thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
-    shin_fk  : bpy.props.StringProperty(name="Shin FK Name")
-    foot_fk  : bpy.props.StringProperty(name="Foot FK Name")
-    toe_fk   : bpy.props.StringProperty(name="Toe FK Name")
+    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
 
-    thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
-    shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
-    foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
-    footroll : bpy.props.StringProperty(name="Foot Roll Name")
-    mfoot_ik : bpy.props.StringProperty(name="MFoot IK Name")
-    toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
+    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
+    footroll: bpy.props.StringProperty(name="Foot Roll Name")
+    mfoot_ik: bpy.props.StringProperty(name="MFoot IK Name")
+    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
 
     @classmethod
     def poll(cls, context):

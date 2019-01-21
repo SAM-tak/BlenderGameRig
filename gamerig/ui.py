@@ -302,7 +302,7 @@ class DATA_OT_gamerig_bone_group_add_theme(bpy.types.Operator):
     bl_label   = "GameRig Add Bone Group color set from Theme"
     bl_options = {"REGISTER", "UNDO"}
 
-    theme : EnumProperty(
+    theme: EnumProperty(
         items=(
             ('THEME01', 'THEME01', ''),
             ('THEME02', 'THEME02', ''),
@@ -358,7 +358,7 @@ class DATA_OT_gamerig_bone_group_remove(bpy.types.Operator):
     bl_idname = "armature.gamerig_bone_group_remove"
     bl_label  = "GameRig Remove Bone Group color set"
 
-    idx : IntProperty()
+    idx: IntProperty()
 
     @classmethod
     def poll(cls, context):
@@ -652,7 +652,7 @@ class Sample(bpy.types.Operator):
     bl_label   = "Add a sample metarig for a rig type"
     bl_options = {'UNDO'}
 
-    metarig_type : StringProperty(
+    metarig_type: StringProperty(
         name="Type",
         description="Name of the rig type to generate a sample of",
         maxlen=128,
