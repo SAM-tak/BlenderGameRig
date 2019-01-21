@@ -21,98 +21,195 @@ import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ...utils import MetarigError, copy_bone
 from ..widgets import create_hand_widget
-from .limb_utils import *
+from .limb import *
 
-def create_arm( cls, bones ):
-    org_bones = cls.org_bones
+class Rig(Limb):
 
-    bpy.ops.object.mode_set(mode='EDIT')
-    eb = cls.obj.data.edit_bones
+    def __init__(self, obj, bone_name, params):
+        super().__init__(obj, bone_name, params)
+        self.limb_type = 'arm' # TODO: remove it
+        self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:3]
 
-    ctrl = get_bone_name( org_bones[2], 'ctrl', 'ik' )
 
-    # Create IK arm control
-    ctrl = copy_bone( cls.obj, org_bones[2], ctrl )
+    def generate(self):
+        return super().generate(self.create_arm, """
+controls = [%s]
+ik_ctrl  = [%s]
+fk_ctrl  = '%s'
+parent   = '%s'
 
-    # clear parent (so that gamerig will parent to root)
-    eb[ ctrl ].parent      = None
-    eb[ ctrl ].use_connect = False
+# IK/FK Switch on all Control Bones
+if is_selected( controls ):
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
+    props = layout.operator("pose.gamerig_arm_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props.uarm_fk = controls[1]
+    props.farm_fk = controls[2]
+    props.hand_fk = controls[3]
+    props.uarm_ik = controls[0]
+    props.farm_ik = ik_ctrl[1]
+    props.hand_ik = controls[4]
+    props = layout.operator("pose.gamerig_arm_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props.uarm_fk = controls[1]
+    props.farm_fk = controls[2]
+    props.hand_fk = controls[3]
+    props.uarm_ik = controls[0]
+    props.farm_ik = ik_ctrl[1]
+    props.hand_ik = controls[4]
 
-    # Parent
-    eb[ bones['ik']['mch_target'] ].parent      = eb[ ctrl ]
-    eb[ bones['ik']['mch_target'] ].use_connect = False
+# FK limb follow
+if is_selected( fk_ctrl ):
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
+""")
 
-    # add IK Follow feature
-    mch_ik_socket = make_ik_follow_bone( cls, eb, ctrl )
 
-    # Set up constraints
-    # Constrain mch target bone to the ik control and mch stretch
+    def create_arm(self, bones):
+        org_bones = self.org_bones
 
-    make_constraint( cls, bones['ik']['mch_target'], {
-        'constraint'  : 'COPY_LOCATION',
-        'subtarget'   : bones['ik']['mch_str'],
-        'head_tail'   : 1.0
-    })
+        bpy.ops.object.mode_set(mode='EDIT')
+        eb = self.obj.data.edit_bones
 
-    # Constrain mch ik stretch bone to the ik control
-    make_constraint( cls, bones['ik']['mch_str'], {
-        'constraint'  : 'DAMPED_TRACK',
-        'subtarget'   : ctrl,
-    })
-    make_constraint( cls, bones['ik']['mch_str'], {
-        'constraint'  : 'STRETCH_TO',
-        'subtarget'   : ctrl,
-    })
-    if cls.allow_ik_stretch:
-        make_constraint( cls, bones['ik']['mch_str'], {
-            'constraint'  : 'LIMIT_SCALE',
-            'use_min_y'   : True,
-            'use_max_y'   : True,
-            'max_y'       : 1.05,
-            'owner_space' : 'LOCAL'
+        ctrl = get_bone_name( org_bones[2], 'ctrl', 'ik' )
+
+        # Create IK arm control
+        ctrl = copy_bone( self.obj, org_bones[2], ctrl )
+
+        # clear parent (so that gamerig will parent to root)
+        eb[ ctrl ].parent      = None
+        eb[ ctrl ].use_connect = False
+
+        # Parent
+        eb[ bones['ik']['mch_target'] ].parent      = eb[ ctrl ]
+        eb[ bones['ik']['mch_target'] ].use_connect = False
+
+        # add IK Follow feature
+        mch_ik_socket = self.make_ik_follow_bone(eb, ctrl)
+
+        # Set up constraints
+        # Constrain mch target bone to the ik control and mch stretch
+
+        self.make_constraint(bones['ik']['mch_target'], {
+            'constraint'  : 'COPY_LOCATION',
+            'subtarget'   : bones['ik']['mch_str'],
+            'head_tail'   : 1.0
         })
 
-    pb = cls.obj.pose.bones
+        # Constrain mch ik stretch bone to the ik control
+        self.make_constraint(bones['ik']['mch_str'], {
+            'constraint'  : 'DAMPED_TRACK',
+            'subtarget'   : ctrl,
+        })
+        self.make_constraint(bones['ik']['mch_str'], {
+            'constraint'  : 'STRETCH_TO',
+            'subtarget'   : ctrl,
+        })
 
-    # Modify rotation mode for ik and tweak controls
-    pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZXY'
+        pb = self.obj.pose.bones
 
-    pb_master = pb[ bones['fk']['ctrl'][0] ]
+        # Modify rotation mode for ik and tweak controls
+        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZXY'
 
-    if cls.allow_ik_stretch:
-        # Create ik stretch property
-        pb_master['IK Stretch'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb_master, 'IK Stretch', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'IK Stretch'
+        pb_master = pb[ bones['fk']['ctrl'][0] ]
 
-        # Add driver to limit scale constraint influence
-        b        = bones['ik']['mch_str']
-        drv      = pb[b].constraints[-1].driver_add("influence").driver
-        drv.type = 'AVERAGE'
+        # Add IK Stretch property and driver
+        self.setup_ik_stretch(bones, pb, pb_master)
+            
+        # Add IK Follow property and driver
+        self.setup_ik_follow(pb, pb_master, mch_ik_socket)
 
-        var = drv.variables.new()
-        var.name = 'ik_stretch'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = cls.obj
-        var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+        # Create hand widget
+        create_hand_widget(self.obj, ctrl)
 
-        drv_modifier = cls.obj.animation_data.drivers[-1].modifiers[0]
+        bones['ik']['ctrl']['terminal'] = [ ctrl ]
 
-        drv_modifier.mode            = 'POLYNOMIAL'
-        drv_modifier.poly_order      = 1
-        drv_modifier.coefficients[0] = 1.0
-        drv_modifier.coefficients[1] = -1.0
-        
-    # Add IK Follow property and driver
-    setup_ik_follow(cls, pb, pb_master, mch_ik_socket)
+        return bones
 
-    # Create hand widget
-    create_hand_widget(cls.obj, ctrl)
 
-    bones['ik']['ctrl']['terminal'] = [ ctrl ]
+def add_parameters( params ):
+    """ Add the parameters of this rig type to the
+        GameRigParameters PropertyGroup
+    """
+    Limb.add_parameters(params)
 
-    return bones
+
+def parameters_ui(layout, params):
+    """ Create the ui for the rig parameters."""
+    Limb.parameters_ui(layout, params)
+
+
+def create_sample(obj):
+    # generated by gamerig.utils.write_metarig
+    bpy.ops.object.mode_set(mode='EDIT')
+    arm = obj.data
+
+    bones = {}
+
+    bone = arm.edit_bones.new('ORG-upper_arm.L')
+    bone.head[:] = 0.0000, 0.0000, 0.0000
+    bone.tail[:] = 0.2588, 0.0148, 0.0000
+    bone.roll = 1.5232
+    bone.use_connect = False
+    bone.use_deform = True
+    bones['ORG-upper_arm.L'] = bone.name
+    bone = arm.edit_bones.new('ORG-forearm.L')
+    bone.head[:] = 0.2588, 0.0148, 0.0000
+    bone.tail[:] = 0.4940, 0.0000, 0.0000
+    bone.roll = 1.5232
+    bone.use_connect = True
+    bone.use_deform = True
+    bone.parent = arm.edit_bones[bones['ORG-upper_arm.L']]
+    bones['ORG-forearm.L'] = bone.name
+    bone = arm.edit_bones.new('ORG-hand.L')
+    bone.head[:] = 0.4940, 0.0000, 0.0000
+    bone.tail[:] = 0.5657, 0.0000, 0.0000
+    bone.roll = -3.1196
+    bone.use_connect = True
+    bone.use_deform = True
+    bone.parent = arm.edit_bones[bones['ORG-forearm.L']]
+    bones['ORG-hand.L'] = bone.name
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    pbone = obj.pose.bones[bones['ORG-upper_arm.L']]
+    pbone.gamerig_type = 'limbs.arm'
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+    try:
+        pbone.gamerig_parameters.tweak_layers = [False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    except AttributeError:
+        pass
+    try:
+        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    except AttributeError:
+        pass
+    try:
+        pbone.gamerig_parameters.allow_ik_stretch = True
+    except AttributeError:
+        pass
+    pbone = obj.pose.bones[bones['ORG-forearm.L']]
+    pbone.gamerig_type = ''
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+    pbone = obj.pose.bones[bones['ORG-hand.L']]
+    pbone.gamerig_type = ''
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    for bone in arm.edit_bones:
+        bone.select = False
+        bone.select_head = False
+        bone.select_tail = False
+    for b in bones:
+        bone = arm.edit_bones[bones[b]]
+        bone.select = True
+        bone.select_head = True
+        bone.select_tail = True
+        arm.edit_bones.active = bone

@@ -311,7 +311,7 @@ def create_toe_widget(rig, bone_name, size=1.0, bone_transform_name=None):
 def create_paw_widget(rig, bone_name, size=1.0, bone_transform_name=None):
     obj = create_widget(rig, bone_name, bone_transform_name)
     if obj is not None:
-        verts = [(-0.6999998688697815*size, -1.1231716871261597*size, 0.0*size), (-0.7000001072883606*size, 0.626828134059906*size, 0.0*size), (0.6999998688697815*size, 0.6268283724784851*size, 0.0*size), (0.7000001072883606*size, -1.1231716871261597*size, 0.0*size), (-0.6999998688697815*size, -0.3461717963218689*size, 0.0*size), (0.7000001072883606*size, -0.3461715579032898*size, 0.0*size), (-0.7000001072883606*size, 0.37682825326919556*size, 0.0*size), (0.6999998688697815*size, 0.3768284320831299*size, 0.0*size), ]
+        verts = [(-0.64747*size, -0.17301*size, 0.0*size), (-0.64747*size, 1.112*size, 0.0*size), (0.64747*size, 1.112*size, 0.0*size), (0.64747*size, -0.17301*size, 0.0*size), (-0.64747*size, 0.32895*size, 0.0*size), (0.64747*size, 0.32895*size, 0.0*size), (-0.64747*size, 0.86204*size, 0.0*size), (0.64747*size, 0.86204*size, 0.0*size), ]
         edges = [(1, 2), (0, 3), (0, 4), (3, 5), (4, 6), (1, 6), (5, 7), (2, 7), ]
         faces = []
 

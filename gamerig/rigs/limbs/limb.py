@@ -3,32 +3,20 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from math import trunc
 from mathutils import Vector
 from ...utils import (
-    copy_bone, org, basename,
+    copy_bone, org, mch, basename,
     connected_children_names, find_root_bone,
     create_widget,
     MetarigError
 )
 from ..widgets import create_sphere_widget, create_limb_widget, create_ikarrow_widget, create_directed_circle_widget
-from .arm import create_arm
-from .leg import create_leg
-from .paw import create_paw
-from .ui import create_script
-from .limb_utils import *
 
-class Rig:
+class Limb:
     def __init__(self, obj, bone_name, params):
-        """ Initialize torso rig and key rig properties """
+        """ Initialize limb rig and key rig properties """
         self.obj       = obj
         self.params    = params
+        self.limb_type = 'limb' # TODO: remove it
 
-        if params.limb_type == 'arm':
-            # The basic limb is the first 3 bones for a arm
-            self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:3]
-        else:
-            # The basic limb is the first 4 bones for a paw or leg
-            self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:4]
-
-        self.limb_type = params.limb_type
         self.rot_axis  = params.rotation_axis
         self.allow_ik_stretch = params.allow_ik_stretch
 
@@ -50,7 +38,7 @@ class Rig:
         name = get_bone_name( basename( org_bones[0] ), 'mch', 'parent' )
 
         mch = copy_bone( self.obj, org_bones[0], name )
-        orient_bone( self, eb[mch], 'y' )
+        self.orient_bone( eb[mch], 'y' )
         eb[ mch ].length = eb[ org_bones[0] ].length / 4
 
         eb[ mch ].parent = eb[ org_bones[0] ].parent
@@ -59,17 +47,17 @@ class Rig:
 
         # Constraints
         if self.root_bone:
-            make_constraint( self, mch, {
+            self.make_constraint( mch, {
                 'constraint'  : 'COPY_ROTATION',
                 'subtarget'   : self.root_bone
             })
 
-            make_constraint( self, mch, {
+            self.make_constraint( mch, {
                 'constraint'  : 'COPY_SCALE',
                 'subtarget'   : self.root_bone
             })
         else:
-            make_constraint( self, mch, {
+            self.make_constraint( mch, {
                 'constraint'   : 'LIMIT_ROTATION',
                 'use_limit_x'  : True,
                 'min_x'        : 0,
@@ -120,7 +108,7 @@ class Rig:
         eb[ mch_str ].parent = eb[ parent ]
         eb[ mch_ik  ].parent = eb[ ctrl   ]
         
-        make_constraint( self, mch_ik, {
+        self.make_constraint( mch_ik, {
             'constraint'  : 'IK',
             'subtarget'   : mch_target,
             'chain_count' : 2,
@@ -154,9 +142,6 @@ class Rig:
 
     def create_fk( self, parent ):
         org_bones = self.org_bones.copy()
-
-        # if self.limb_type == 'paw':  # Paw base chain is one bone longer
-        #     org_bones.pop()
 
         bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
@@ -198,7 +183,7 @@ class Rig:
 
         # Constrain MCH's scale to root
         if self.root_bone:
-            make_constraint( self, mch, {
+            self.make_constraint( mch, {
                 'constraint'  : 'COPY_SCALE',
                 'subtarget'   : self.root_bone
             })
@@ -273,11 +258,11 @@ class Rig:
 
         for o, i, f in itertools.zip_longest( org, iks, fk ):
             if i is not None:
-                make_constraint( self, o, {
+                self.make_constraint(o, {
                     'constraint'  : 'COPY_TRANSFORMS',
                     'subtarget'   : i
                 })
-            make_constraint( self, o, {
+            self.make_constraint(o, {
                 'constraint'  : 'COPY_TRANSFORMS',
                 'subtarget'   : f
             })
@@ -292,21 +277,12 @@ class Rig:
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb[fk[0]].path_from_id() + '['+ '"' + prop.name + '"' + ']'
 
-            make_constraint( self, o, {
+            self.make_constraint(o, {
                 'constraint'  : 'MAINTAIN_VOLUME'
             })
 
 
-    def create_terminal( self, limb_type, bones ):
-        if   limb_type == 'arm':
-            return create_arm( self, bones )
-        elif limb_type == 'leg':
-            return create_leg( self, bones )
-        elif limb_type == 'paw':
-            return create_paw( self, bones )
-
-
-    def generate( self ):
+    def generate(self, create_terminal, script_template):
         bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
@@ -324,178 +300,254 @@ class Rig:
 
         self.org_parenting_and_switch(self.org_bones, bones['ik'], bones['fk']['ctrl'], bones['parent'])
 
-        bones = self.create_terminal( self.limb_type, bones )
+        bones = create_terminal( bones )
 
-        return [ create_script( bones, self.limb_type, self.allow_ik_stretch, self.root_bone ) ]
-
-
-def add_parameters( params ):
-    """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
-    """
-
-    items = [
-        ('arm', 'Arm', ''),
-        ('leg', 'Leg', ''),
-        ('paw', 'Paw', '')
-    ]
-    params.limb_type = bpy.props.EnumProperty(
-        items   = items,
-        name    = "Limb Type",
-        default = 'arm'
-    )
-
-    items = [
-        ('x', 'X', ''),
-        ('y', 'Y', ''),
-        ('z', 'Z', '')
-    ]
-    params.rotation_axis = bpy.props.EnumProperty(
-        items   = items,
-        name    = "Rotation Axis",
-        default = 'x'
-    )
-
-    params.allow_ik_stretch = bpy.props.BoolProperty(
-        name        = "Allow IK Stretch",
-        default     = True,
-        description = "Allow IK Stretch"
-    )
-
-    # Setting up extra layers for the FK
-    params.fk_extra_layers = bpy.props.BoolProperty(
-        name        = "FK Extra Layers",
-        default     = True,
-        description = ""
-    )
-
-    params.fk_layers = bpy.props.BoolVectorProperty(
-        size        = 32,
-        description = "Layers for the FK controls to be on",
-        default     = tuple( [ i == 1 for i in range(0, 32) ] )
-    )
+        return [ self.create_script( bones, script_template ) ]
 
 
-def parameters_ui(layout, params):
-    """ Create the ui for the rig parameters."""
+    def orient_bone( self, eb, axis, scale = 1.0, reverse = False ):
+        v = Vector((0,0,0))
 
-    r = layout.row()
-    r.prop(params, "limb_type")
+        setattr(v,axis,scale)
 
-    r = layout.row()
-    r.prop(params, "rotation_axis")
+        if reverse:
+            tail_vec = v * self.obj.matrix_world
+            eb.head[:] = eb.tail
+            eb.tail[:] = eb.head + tail_vec
+        else:
+            tail_vec = v * self.obj.matrix_world
+            eb.tail[:] = eb.head + tail_vec
 
-    r = layout.row()
-    r.prop(params, "allow_ik_stretch")
-
-    r = layout.row()
-    r.prop(params, "fk_extra_layers")
-    r.active = params.fk_extra_layers
-
-    col = r.column(align=True)
-    row = col.row(align=True)
-
-    for i in range(8):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-    row = col.row(align=True)
-
-    for i in range(16,24):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-    col = r.column(align=True)
-    row = col.row(align=True)
-
-    for i in range(8,16):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-    row = col.row(align=True)
-
-    for i in range(24,32):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
+        eb.roll = 0.0
 
 
-def create_sample(obj):
-    # generated by gamerig.utils.write_metarig
-    bpy.ops.object.mode_set(mode='EDIT')
-    arm = obj.data
+    def make_constraint( self, bone, constraint ):
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+        pb = self.obj.pose.bones
 
-    bones = {}
+        owner_pb = pb[bone]
+        const    = owner_pb.constraints.new( constraint['constraint'] )
 
-    bone = arm.edit_bones.new('upper_arm.L')
-    bone.head[:] = -0.0016, 0.0060, -0.0012
-    bone.tail[:] = 0.2455, 0.0678, -0.1367
-    bone.roll = 2.0724
-    bone.use_connect = False
-    bones['upper_arm.L'] = bone.name
-    bone = arm.edit_bones.new('forearm.L')
-    bone.head[:] = 0.2455, 0.0678, -0.1367
-    bone.tail[:] = 0.4625, 0.0285, -0.2797
-    bone.roll = 2.1535
-    bone.use_connect = True
-    bone.parent = arm.edit_bones[bones['upper_arm.L']]
-    bones['forearm.L'] = bone.name
-    bone = arm.edit_bones.new('hand.L')
-    bone.head[:] = 0.4625, 0.0285, -0.2797
-    bone.tail[:] = 0.5265, 0.0205, -0.3273
-    bone.roll = 2.2103
-    bone.use_connect = True
-    bone.parent = arm.edit_bones[bones['forearm.L']]
-    bones['hand.L'] = bone.name
+        constraint['target'] = self.obj
 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    pbone = obj.pose.bones[bones['upper_arm.L']]
-    pbone.gamerig_type = 'gamerig.limbs.limb'
-    pbone.lock_location = (False, False, False)
-    pbone.lock_rotation = (False, False, False)
-    pbone.lock_rotation_w = False
-    pbone.lock_scale = (False, False, False)
-    pbone.rotation_mode = 'QUATERNION'
-    try:
-        pbone.gamerig_parameters.allow_ik_stretch = True
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig_parameters.ik_layers = [
-            False, False, False, False, False, False, False, False, True, False,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False
+        # filter contraint props to those that actually exist in the currnet
+        # type of constraint, then assign values to each
+        for p in [ k for k in constraint.keys() if k in dir(const) ]:
+            if p in dir( const ):
+                setattr( const, p, constraint[p] )
+            else:
+                raise MetarigError(
+                    "GAMERIG ERROR: property %s does not exist in %s constraint" % (
+                        p, constraint['constraint']
+                ))
+
+
+    def setup_ik_stretch(self, bones, pb, pb_master):
+        if self.allow_ik_stretch:
+            self.make_constraint(bones['ik']['mch_str'], {
+                'constraint'  : 'LIMIT_SCALE',
+                'use_min_y'   : True,
+                'use_max_y'   : True,
+                'max_y'       : 1.05,
+                'owner_space' : 'LOCAL'
+            })
+            
+            # Create ik stretch property
+            pb_master['IK Stretch'] = 1.0
+            prop = rna_idprop_ui_prop_get( pb_master, 'IK Stretch', create=True )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = 'IK Stretch'
+
+            # Add driver to limit scale constraint influence
+            b        = bones['ik']['mch_str']
+            drv      = pb[b].constraints[-1].driver_add("influence").driver
+            drv.type = 'AVERAGE'
+
+            var = drv.variables.new()
+            var.name = 'ik_stretch'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+
+            drv_modifier.mode            = 'POLYNOMIAL'
+            drv_modifier.poly_order      = 1
+            drv_modifier.coefficients[0] = 1.0
+            drv_modifier.coefficients[1] = -1.0
+
+
+    def make_ik_follow_bone(self, eb, ctrl):
+        """ add IK Follow feature
+        """
+        if self.root_bone:
+            mch_ik_socket = copy_bone( self.obj, self.root_bone, mch('socket_' + ctrl) )
+            eb[ mch_ik_socket ].length /= 4
+            eb[ mch_ik_socket ].use_connect = False
+            eb[ mch_ik_socket ].parent = None
+            eb[ ctrl    ].parent = eb[ mch_ik_socket ]
+            return mch_ik_socket
+
+
+    def setup_ik_follow(self, pb, pb_master, mch_ik_socket):
+        """ Add IK Follow constrain and property and driver
+        """
+        if self.root_bone:
+            self.make_constraint(mch_ik_socket, {
+                'constraint'   : 'COPY_TRANSFORMS',
+                'subtarget'    : self.root_bone,
+                'target_space' : 'WORLD',
+                'owner_space'  : 'WORLD',
+            })
+
+            pb_master['IK Follow'] = 1.0
+            prop = rna_idprop_ui_prop_get( pb_master, 'IK Follow', create=True )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = 'IK Follow'
+
+            drv      = pb[mch_ik_socket].constraints[-1].driver_add("influence").driver
+            drv.type = 'SUM'
+
+            var = drv.variables.new()
+            var.name = 'ik_follow'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+
+
+    def create_script(self, bones, script_template):
+        # All ctrls have IK/FK switch
+        controls =  [ bones['ik']['ctrl']['limb'] ]
+        controls += bones['fk']['ctrl']
+        controls += bones['ik']['ctrl']['terminal']
+
+        controls_string = ", ".join(["'" + x + "'" for x in controls])
+
+        # IK ctrl has IK stretch
+        ik_ctrl = [
+            bones['ik']['ctrl']['terminal'][-1],
+            bones['ik']['mch_ik'],
+            bones['ik']['mch_target']
         ]
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig_parameters.fk_layers = [
-            False, False, False, False, False, False, False, False, True, False,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False, False, False, False, False, False, False, False, False,
-            False, False
-        ]
-    except AttributeError:
-        pass
-    pbone = obj.pose.bones[bones['forearm.L']]
-    pbone.gamerig_type = ''
-    pbone.lock_location = (False, False, False)
-    pbone.lock_rotation = (False, False, False)
-    pbone.lock_rotation_w = False
-    pbone.lock_scale = (False, False, False)
-    pbone.rotation_mode = 'QUATERNION'
-    pbone = obj.pose.bones[bones['hand.L']]
-    pbone.gamerig_type = ''
-    pbone.lock_location = (False, False, False)
-    pbone.lock_rotation = (False, False, False)
-    pbone.lock_rotation_w = False
-    pbone.lock_scale = (False, False, False)
-    pbone.rotation_mode = 'QUATERNION'
 
-    bpy.ops.object.mode_set(mode='EDIT')
-    for bone in arm.edit_bones:
-        bone.select = False
-        bone.select_head = False
-        bone.select_tail = False
-    for b in bones:
-        bone = arm.edit_bones[bones[b]]
-        bone.select = True
-        bone.select_head = True
-        bone.select_tail = True
-        arm.edit_bones.active = bone
+        ik_ctrl_string = ", ".join(["'" + x + "'" for x in ik_ctrl])
+
+        code = script_template % (
+            controls_string,
+            ik_ctrl_string,
+            bones['fk']['ctrl'][0],
+            bones['fk']['ctrl'][0]
+        )
+
+        if self.allow_ik_stretch or self.root_bone:
+            code += """
+if is_selected( ik_ctrl ):
+"""
+            if self.allow_ik_stretch:
+                code += """
+    # IK Stretch on IK Control bone
+    layout.prop( pose_bones[ parent ], '["IK Stretch"]', text = 'IK Stretch (%s)', slider = True )
+""" % bones['fk']['ctrl'][0]
+            if self.root_bone:
+                code += """
+    # IK Follow on IK Control bone
+    layout.prop( pose_bones[ parent ], '["IK Follow"]', text = 'IK Follow (%s)', slider = True )
+""" % bones['fk']['ctrl'][0]
+        return code
+
+
+    @staticmethod
+    def add_parameters( params ):
+        """ Add the parameters of this rig type to the
+            GameRigParameters PropertyGroup
+        """
+        params.rotation_axis = bpy.props.EnumProperty(
+            items   = [
+                ('x', 'X', 'X Positive Direction'),
+                ('y', 'Y', 'Y Positive Direction'),
+                ('z', 'Z', 'Z Positive Direction')
+            ],
+            name    = "Rotation Axis",
+            default = 'x'
+        )
+
+        params.allow_ik_stretch = bpy.props.BoolProperty(
+            name        = "Allow IK Stretch",
+            default     = True,
+            description = "Allow IK Stretch"
+        )
+
+        # Setting up extra layers for the FK
+        params.fk_extra_layers = bpy.props.BoolProperty(
+            name        = "FK Extra Layers",
+            default     = True,
+            description = "FK Extra Layers"
+        )
+
+        params.fk_layers = bpy.props.BoolVectorProperty(
+            size        = 32,
+            description = "Layers for the FK controls to be on",
+            default     = tuple( [ i == 1 for i in range(0, 32) ] )
+        )
+
+
+    @staticmethod
+    def parameters_ui(layout, params):
+        """ Create the ui for the rig parameters."""
+        r = layout.row()
+        r.prop(params, "rotation_axis")
+
+        r = layout.row()
+        r.prop(params, "allow_ik_stretch")
+
+        r = layout.row()
+        r.prop(params, "fk_extra_layers")
+        r.active = params.fk_extra_layers
+
+        col = r.column(align=True)
+        row = col.row(align=True)
+
+        for i in range(8):
+            row.prop(params, "fk_layers", index=i, toggle=True, text="")
+
+        row = col.row(align=True)
+
+        for i in range(16,24):
+            row.prop(params, "fk_layers", index=i, toggle=True, text="")
+
+        col = r.column(align=True)
+        row = col.row(align=True)
+
+        for i in range(8,16):
+            row.prop(params, "fk_layers", index=i, toggle=True, text="")
+
+        row = col.row(align=True)
+
+        for i in range(24,32):
+            row.prop(params, "fk_layers", index=i, toggle=True, text="")
+
+
+def get_bone_name( name, btype, suffix = '' ):
+    if btype == 'mch':
+        name = mch( basename( name ) )
+    elif btype == 'ctrl':
+        name = basename( name )
+
+    if suffix:
+        # RE pattern match right or left parts
+        # match the letter "L" (or "R"), followed by an optional dot (".")
+        # and 0 or more digits at the end of the the string
+        results = re.match( r'^(\S+)(\.\S+)$',  name )
+        if results:
+            bname, addition = results.groups()
+            name = bname + "_" + suffix + addition
+        else:
+            name = name  + "_" + suffix
+
+    return name

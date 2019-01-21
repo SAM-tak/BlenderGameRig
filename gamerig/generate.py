@@ -419,6 +419,14 @@ def generate_rig(context, metarig):
             child.parent_bone = sub_parent
             child.matrix_world = mat
 
+    # set location generated rig to metarig location
+    obj.location            = metarig.location
+    obj.rotation_mode       = metarig.rotation_mode
+    obj.rotation_euler      = metarig.rotation_euler
+    obj.rotation_quaternion = metarig.rotation_quaternion
+    obj.rotation_axis_angle = metarig.rotation_axis_angle
+    obj.scale               = metarig.scale
+
     t.tick("The rest: ")
 
 
