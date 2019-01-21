@@ -407,9 +407,6 @@ def fk2ik_paw(obj, fk, ik):
     match_pose_rotation(toe, toei)
     match_pose_scale(toe, toei)
 
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
-
 
 def ik2fk_paw(obj, fk, ik):
     """ Matches the ik bones in a leg rig to the fk bones.

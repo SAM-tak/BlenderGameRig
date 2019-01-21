@@ -53,7 +53,7 @@ if is_selected( controls ):
     props.thigh_ik = controls[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
-    props.toe_ik   = ik_ctrl[0]
+    props.toe_ik   = controls[6]
     props = layout.operator("pose.gamerig_paw_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
@@ -63,8 +63,8 @@ if is_selected( controls ):
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = controls[5]
     props.mfoot_ik = ik_ctrl[2]
-    props.toe_ik   = controls[6]
-    props.mtoe_ik  = ik_ctrl[0]
+    props.toe_ik   = ik_ctrl[0]
+    props.mtoe_ik  = controls[6]
 
 # FK limb follow
 if is_selected( fk_ctrl ):
@@ -200,7 +200,7 @@ if is_selected( fk_ctrl ):
             drv_modifier.coefficients[0] = 1.0
             drv_modifier.coefficients[1] = -1.0
 
-        bones['ik']['ctrl']['terminal'] += [ heel, ctrl, toes_mch ]
+        bones['ik']['ctrl']['terminal'] += [ heel, toes_mch, ctrl ]
 
         return bones
 
