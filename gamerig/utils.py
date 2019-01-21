@@ -616,7 +616,7 @@ def get_layers(layers):
             return [x in layers for x in range(0, 32)]
 
 
-def write_metarig(obj, layers=False, func_name="create", groups=False):
+def write_metarig(obj, func_name="create", layers=False, groups=False, template=False):
     """
     Write a metarig as a python script, this rig is to have all info needed for
     generating the real rig with gamerig.
@@ -634,10 +634,11 @@ def write_metarig(obj, layers=False, func_name="create", groups=False):
 
     arm = obj.data
 
-    if arm.gamerig_rig_ui_template:
-        code.append("\n    arm.gamerig_rig_ui_template = '%s'\n" % arm.gamerig_rig_ui_template)
-    else:
-        code.append("\n    arm.gamerig_rig_ui_template = 'ui_template'\n")
+    if template:
+        if arm.gamerig_rig_ui_template:
+            code.append("\n    arm.gamerig_rig_ui_template = '%s'" % arm.gamerig_rig_ui_template)
+        else:
+            code.append("\n    arm.gamerig_rig_ui_template = 'ui_template'")
 
     # GameRig bone group colors info
     if groups and len(arm.gamerig_colors) > 0:

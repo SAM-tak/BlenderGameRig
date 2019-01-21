@@ -25,169 +25,313 @@ from ...utils import (
     MetarigError
 )
 from ..widgets import create_paw_widget, create_ballsocket_widget, create_toe_widget
-from .limb_utils import *
+from .limb import *
 
-def create_paw( cls, bones ):
-    org_bones = list(
-        [cls.org_bones[0]] + connected_children_names(cls.obj, cls.org_bones[0])
-    )
+class Rig(Limb):
 
-    bones['ik']['ctrl']['terminal'] = []
+    def __init__(self, obj, bone_name, params):
+        super().__init__(obj, bone_name, params)
+        self.footprint_bone = org(params.footprint_bone)
+        self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:4]
 
-    bpy.ops.object.mode_set(mode='EDIT')
-    eb = cls.obj.data.edit_bones
 
-    # Create IK paw control
-    ctrl = get_bone_name( org_bones[2], 'ctrl', 'ik' )
-    ctrl = copy_bone( cls.obj, org_bones[2], ctrl )
+    def generate(self):
+        return super().generate(self.create_paw, """
+controls = [%s]
+ik_ctrl  = [%s]
+fk_ctrl  = '%s'
+parent   = '%s'
 
-    # clear parent (so that gamerig will parent to root)
-    eb[ ctrl ].parent      = None
-    eb[ ctrl ].use_connect = False
+# IK/FK Switch on all Control Bones
+if is_selected( controls ):
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
+    props = layout.operator("pose.gamerig_paw_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props.thigh_fk = controls[1]
+    props.shin_fk  = controls[2]
+    props.foot_fk  = controls[3]
+    props.toe_fk   = controls[4]
+    props.thigh_ik = controls[0]
+    props.shin_ik  = ik_ctrl[1]
+    props.foot_ik  = ik_ctrl[2]
+    props.toe_ik   = controls[6]
+    props = layout.operator("pose.gamerig_paw_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props.thigh_fk = controls[1]
+    props.shin_fk  = controls[2]
+    props.foot_fk  = controls[3]
+    props.toe_fk   = controls[4]
+    props.thigh_ik = controls[0]
+    props.shin_ik  = ik_ctrl[1]
+    props.foot_ik  = controls[5]
+    props.mfoot_ik = ik_ctrl[2]
+    props.toe_ik   = ik_ctrl[0]
+    props.mtoe_ik  = controls[6]
 
-    # Create heel control bone
-    heel = get_bone_name( org_bones[2], 'ctrl', 'heel_ik' )
-    heel = copy_bone( cls.obj, org_bones[2], heel )
+# FK limb follow
+if is_selected( fk_ctrl ):
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
+""")
 
-    # clear parent
-    eb[ heel ].parent      = None
-    eb[ heel ].use_connect = False
 
-    # Parent
-    eb[ heel ].parent      = eb[ ctrl ]
-    eb[ heel ].use_connect = False
+    def create_paw(self, bones):
+        org_bones = list(
+            [self.org_bones[0]] + connected_children_names(self.obj, self.org_bones[0])
+        )
 
-    flip_bone( cls.obj, heel )
+        bones['ik']['ctrl']['terminal'] = []
 
-    eb[ bones['ik']['mch_target'] ].parent      = eb[ heel ]
-    eb[ bones['ik']['mch_target'] ].use_connect = False
+        bpy.ops.object.mode_set(mode='EDIT')
+        eb = self.obj.data.edit_bones
 
-    # Reset control position and orientation
-    l = eb[ org_bones[3] ].length if len( org_bones ) > 3 else eb[ ctrl ].length
-    orient_bone( cls, eb[ ctrl ], 'y', reverse = True )
-    eb[ ctrl ].length = l
+        # Create IK paw control
+        ctrl = get_bone_name( org_bones[3], 'ctrl', 'ik' )
+        ctrl = copy_bone( self.obj, org_bones[3], ctrl )
 
-    # add IK Follow feature
-    mch_ik_socket = make_ik_follow_bone( cls, eb, ctrl )
+        # clear parent (so that gamerig will parent to root)
+        eb[ ctrl ].parent      = None
+        eb[ ctrl ].use_connect = False
 
-    # Set up constraints
-    # Constrain mch target bone to the ik control and mch stretch
+        # Create heel control bone
+        heel = get_bone_name( org_bones[2], 'ctrl', 'heel_ik' )
+        heel = copy_bone( self.obj, org_bones[2], heel )
 
-    make_constraint( cls, bones['ik']['mch_target'], {
-        'constraint'  : 'COPY_LOCATION',
-        'subtarget'   : bones['ik']['mch_str'],
-        'head_tail'   : 1.0
-    })
+        # clear parent
+        eb[ heel ].parent      = None
+        eb[ heel ].use_connect = False
 
-    # Constrain mch ik stretch bone to the ik control
-    make_constraint( cls, bones['ik']['mch_str'], {
-        'constraint'  : 'DAMPED_TRACK',
-        'subtarget'   : heel,
-        'head_tail'   : 1.0
-    })
-    make_constraint( cls, bones['ik']['mch_str'], {
-        'constraint'  : 'STRETCH_TO',
-        'subtarget'   : heel,
-        'head_tail'   : 1.0
-    })
-    make_constraint( cls, bones['ik']['mch_str'], {
-        'constraint'  : 'LIMIT_SCALE',
-        'use_min_y'   : True,
-        'use_max_y'   : True,
-        'max_y'       : 1.0,
-        'owner_space' : 'LOCAL'
-    })
+        # Parent
+        eb[ heel ].parent      = eb[ ctrl ]
+        eb[ heel ].use_connect = False
 
-    pb = cls.obj.pose.bones
+        flip_bone( self.obj, heel )
 
-    # Modify rotation mode for ik and tweak controls
-    pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZXY'
+        eb[ bones['ik']['mch_target'] ].parent      = eb[ heel ]
+        eb[ bones['ik']['mch_target'] ].use_connect = False
 
-    #for b in bones['tweak']['ctrl']:
-    #    pb[b].rotation_mode = 'ZXY'
+        # Reset control position and orientation
+        l = eb[ ctrl ].length
+        self.orient_bone(eb[ ctrl ], 'y', reverse = True)
+        eb[ ctrl ].length = l
 
-    pb_master = pb[ bones['fk']['ctrl'][0] ]
+        # align ctrl's height to roll2_mch
+        eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ self.footprint_bone ].center.z
 
-    if cls.allow_ik_stretch:
-        # Create ik stretch property
+        # add IK Follow feature
+        mch_ik_socket = self.make_ik_follow_bone( eb, ctrl )
 
-        pb_master['IK Stretch'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb_master, 'IK Stretch', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'IK Stretch'
+        # Set up constraints
+        # Constrain mch target bone to the ik control and mch stretch
 
-        # Add driver to limit scale constraint influence
-        b        = bones['ik']['mch_str']
-        drv      = pb[b].constraints[-1].driver_add("influence").driver
-        drv.type = 'AVERAGE'
-
-        var = drv.variables.new()
-        var.name = 'ik_stretch'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = cls.obj
-        var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
-
-        drv_modifier = cls.obj.animation_data.drivers[-1].modifiers[0]
-
-        drv_modifier.mode            = 'POLYNOMIAL'
-        drv_modifier.poly_order      = 1
-        drv_modifier.coefficients[0] = 1.0
-        drv_modifier.coefficients[1] = -1.0
-    
-    # Add IK Follow property and driver
-    setup_ik_follow(cls, pb, pb_master, mch_ik_socket)
-
-    # Create paw widget
-    create_paw_widget(cls.obj, ctrl)
-
-    # Create heel ctrl locks
-    pb[ heel ].lock_location = True, True, True
-
-    # Add ballsocket widget to heel
-    create_ballsocket_widget(cls.obj, heel)
-
-    bpy.ops.object.mode_set(mode='EDIT')
-    eb = cls.obj.data.edit_bones
-
-    if len( org_bones ) >= 4:
-        # Create toes mch bone
-        toes_mch = get_bone_name( org_bones[3], 'mch' )
-        toes_mch = copy_bone( cls.obj, org_bones[3], toes_mch )
-
-        eb[ toes_mch ].use_connect = False
-        eb[ toes_mch ].parent      = eb[ ctrl ]
-
-        # Constrain toe bone to toes_mch
-        make_constraint( cls, org_bones[3], {
-            'constraint'  : 'COPY_TRANSFORMS',
-            'subtarget'   : toes_mch
+        self.make_constraint(bones['ik']['mch_target'], {
+            'constraint'  : 'COPY_LOCATION',
+            'subtarget'   : bones['ik']['mch_str'],
+            'head_tail'   : 1.0
         })
 
-        # Find IK/FK switch property
-        pb   = cls.obj.pose.bones
-        prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
+        # Constrain mch ik stretch bone to the ik control
+        self.make_constraint( bones['ik']['mch_str'], {
+            'constraint'  : 'DAMPED_TRACK',
+            'subtarget'   : heel,
+            'head_tail'   : 1.0
+        })
+        self.make_constraint( bones['ik']['mch_str'], {
+            'constraint'  : 'STRETCH_TO',
+            'subtarget'   : heel,
+            'head_tail'   : 1.0
+        })
 
-        # Add driver to limit scale constraint influence
-        b        = org_bones[3]
-        drv      = pb[b].constraints[-1].driver_add("influence").driver
-        drv.type = 'AVERAGE'
+        pb = self.obj.pose.bones
 
-        var = drv.variables.new()
-        var.name = 'ik_fk_switch'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = cls.obj
-        var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+        # Modify rotation mode for ik and tweak controls
+        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZXY'
 
-        drv_modifier = cls.obj.animation_data.drivers[-1].modifiers[0]
+        pb_master = pb[ bones['fk']['ctrl'][0] ]
 
-        drv_modifier.mode            = 'POLYNOMIAL'
-        drv_modifier.poly_order      = 1
-        drv_modifier.coefficients[0] = 1.0
-        drv_modifier.coefficients[1] = -1.0
+        # Add IK Stretch property and driver
+        self.setup_ik_stretch(bones, pb, pb_master)
+        
+        # Add IK Follow property and driver
+        self.setup_ik_follow(pb, pb_master, mch_ik_socket)
 
-    bones['ik']['ctrl']['terminal'] += [ heel, ctrl ]
+        # Create paw widget
+        create_paw_widget(self.obj, ctrl)
 
-    return bones
+        # Create heel ctrl locks
+        pb[ heel ].lock_location = True, True, True
+
+        # Add ballsocket widget to heel
+        create_ballsocket_widget(self.obj, heel)
+
+        bpy.ops.object.mode_set(mode='EDIT')
+        eb = self.obj.data.edit_bones
+
+        if len( org_bones ) >= 4:
+            # Create toes mch bone
+            toes_mch = get_bone_name( org_bones[3], 'mch' )
+            toes_mch = copy_bone( self.obj, org_bones[3], toes_mch )
+
+            eb[ toes_mch ].use_connect = False
+            eb[ toes_mch ].parent      = eb[ ctrl ]
+
+            # Constrain toe bone to toes_mch
+            self.make_constraint(org_bones[3], {
+                'constraint'  : 'COPY_TRANSFORMS',
+                'subtarget'   : toes_mch
+            })
+
+            # Find IK/FK switch property
+            pb   = self.obj.pose.bones
+            prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
+
+            # Add driver to limit scale constraint influence
+            b        = org_bones[3]
+            drv      = pb[b].constraints[-1].driver_add("influence").driver
+            drv.type = 'AVERAGE'
+
+            var = drv.variables.new()
+            var.name = 'ik_fk_switch'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+
+            drv_modifier.mode            = 'POLYNOMIAL'
+            drv_modifier.poly_order      = 1
+            drv_modifier.coefficients[0] = 1.0
+            drv_modifier.coefficients[1] = -1.0
+
+        bones['ik']['ctrl']['terminal'] += [ heel, toes_mch, ctrl ]
+
+        return bones
+
+
+def add_parameters( params ):
+    """ Add the parameters of this rig type to the
+        GameRigParameters PropertyGroup
+    """
+    params.footprint_bone = bpy.props.StringProperty(
+        name="Footprint Bone Name",
+        description="Specify footprint bone name",
+        default="JIG-heel.L"
+    )
+    Limb.add_parameters(params)
+
+
+def parameters_ui(layout, params):
+    """ Create the ui for the rig parameters."""
+    r = layout.row()
+    r.prop(params, "footprint_bone")
+    Limb.parameters_ui(layout, params)
+
+
+def create_sample(obj):
+    # generated by gamerig.utils.write_metarig
+    bpy.ops.object.mode_set(mode='EDIT')
+    arm = obj.data
+
+    bones = {}
+
+    bone = arm.edit_bones.new('ORG-forelimb.01.L')
+    bone.head[:] = 0.0000, 0.0000, 0.6649
+    bone.tail[:] = -0.0000, 0.0572, 0.3784
+    bone.roll = 0.0000
+    bone.use_connect = False
+    bone.use_deform = True
+    bones['ORG-forelimb.01.L'] = bone.name
+    bone = arm.edit_bones.new('ORG-forelimb.02.L')
+    bone.head[:] = -0.0000, 0.0572, 0.3784
+    bone.tail[:] = -0.0000, 0.0000, 0.1024
+    bone.roll = 0.0000
+    bone.use_connect = True
+    bone.use_deform = True
+    bone.parent = arm.edit_bones[bones['ORG-forelimb.01.L']]
+    bones['ORG-forelimb.02.L'] = bone.name
+    bone = arm.edit_bones.new('ORG-forelimb.03.L')
+    bone.head[:] = -0.0000, 0.0000, 0.1024
+    bone.tail[:] = -0.0000, -0.0507, 0.0492
+    bone.roll = 0.0000
+    bone.use_connect = True
+    bone.use_deform = True
+    bone.parent = arm.edit_bones[bones['ORG-forelimb.02.L']]
+    bones['ORG-forelimb.03.L'] = bone.name
+    bone = arm.edit_bones.new('ORG-forepaw.L')
+    bone.head[:] = -0.0000, -0.0507, 0.0492
+    bone.tail[:] = 0.0000, -0.1405, 0.0227
+    bone.roll = 0.0000
+    bone.use_connect = True
+    bone.use_deform = True
+    bone.parent = arm.edit_bones[bones['ORG-forelimb.03.L']]
+    bones['ORG-forepaw.L'] = bone.name
+    bone = arm.edit_bones.new('JIG-forepawstamp.L')
+    bone.head[:] = -0.0400, -0.0526, 0.0000
+    bone.tail[:] = 0.0400, -0.0526, 0.0000
+    bone.roll = 0.0000
+    bone.use_connect = False
+    bone.use_deform = True
+    bone.parent = arm.edit_bones[bones['ORG-forelimb.03.L']]
+    bones['JIG-forepawstamp.L'] = bone.name
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    pbone = obj.pose.bones[bones['ORG-forelimb.01.L']]
+    pbone.gamerig_type = 'limbs.paw'
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+    try:
+        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    except AttributeError:
+        pass
+    try:
+        pbone.gamerig_parameters.tweak_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+    except AttributeError:
+        pass
+    try:
+        pbone.gamerig_parameters.allow_ik_stretch = True
+    except AttributeError:
+        pass
+    try:
+        pbone.gamerig_parameters.footprint_bone = "JIG-forepawstamp.L"
+    except AttributeError:
+        pass
+    pbone = obj.pose.bones[bones['ORG-forelimb.02.L']]
+    pbone.gamerig_type = ''
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+    pbone = obj.pose.bones[bones['ORG-forelimb.03.L']]
+    pbone.gamerig_type = ''
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+    pbone = obj.pose.bones[bones['ORG-forepaw.L']]
+    pbone.gamerig_type = ''
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+    pbone = obj.pose.bones[bones['JIG-forepawstamp.L']]
+    pbone.gamerig_type = ''
+    pbone.lock_location = (False, False, False)
+    pbone.lock_rotation = (False, False, False)
+    pbone.lock_rotation_w = False
+    pbone.lock_scale = (False, False, False)
+    pbone.rotation_mode = 'QUATERNION'
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    for bone in arm.edit_bones:
+        bone.select = False
+        bone.select_head = False
+        bone.select_tail = False
+    for b in bones:
+        bone = arm.edit_bones[bones[b]]
+        bone.select = True
+        bone.select_head = True
+        bone.select_tail = True
+        arm.edit_bones.active = bone

@@ -272,6 +272,7 @@ def fk2ik_arm(obj, fk, ik):
     match_pose_rotation(hand, handi)
     match_pose_scale(hand, handi)
 
+
 def ik2fk_arm(obj, fk, ik):
     """ Matches the ik bones in an arm rig to the fk bones.
         obj: armature object
@@ -295,6 +296,7 @@ def ik2fk_arm(obj, fk, ik):
 
     # Rotation Correction
     correct_rotation(uarmi, uarm)
+
 
 def fk2ik_leg(obj, fk, ik):
     """ Matches the fk bones in a leg rig to the ik bones.
@@ -363,6 +365,84 @@ def ik2fk_leg(obj, fk, ik):
     match_pose_translation(toei, toe)
     match_pose_rotation(toei, toe)
     match_pose_scale(toei, toe)
+
+    # Thigh position
+    match_pose_translation(thighi, thigh)
+    match_pose_rotation(thighi, thigh)
+    match_pose_scale(thighi, thigh)
+
+    # Rotation Correction
+    correct_rotation(thighi,thigh)
+
+
+def fk2ik_paw(obj, fk, ik):
+    """ Matches the fk bones in a paw rig to the ik bones.
+        obj: armature object
+        fk:  list of fk bone names
+        ik:  list of ik bone names
+    """
+    thigh  = obj.pose.bones[fk[0]]
+    shin   = obj.pose.bones[fk[1]]
+    foot   = obj.pose.bones[fk[2]]
+    toe    = obj.pose.bones[fk[3]]
+    thighi = obj.pose.bones[ik[0]]
+    shini  = obj.pose.bones[ik[1]]
+    footi  = obj.pose.bones[ik[2]]
+    toei   = obj.pose.bones[ik[3]]
+
+    # Thigh position
+    match_pose_translation(thigh, thighi)
+    match_pose_rotation(thigh, thighi)
+    match_pose_scale(thigh, thighi)
+
+    # Shin position
+    match_pose_rotation(shin, shini)
+    match_pose_scale(shin, shini)
+
+    # Foot position
+    match_pose_rotation(foot, footi)
+    match_pose_scale(foot, footi)
+
+    # Toe position
+    match_pose_rotation(toe, toei)
+    match_pose_scale(toe, toei)
+
+
+def ik2fk_paw(obj, fk, ik):
+    """ Matches the ik bones in a leg rig to the fk bones.
+        obj: armature object
+        fk:  list of fk bone names
+        ik:  list of ik bone names
+    """
+    thigh    = obj.pose.bones[fk[0]]
+    shin     = obj.pose.bones[fk[1]]
+    foot     = obj.pose.bones[fk[2]]
+    toe      = obj.pose.bones[fk[3]]
+
+    thighi   = obj.pose.bones[ik[0]]
+    shini    = obj.pose.bones[ik[1]]
+    footi    = obj.pose.bones[ik[2]]
+    mfooti   = obj.pose.bones[ik[3]]
+    toei     = obj.pose.bones[ik[4]]
+    mtoei    = obj.pose.bones[ik[5]]
+
+    # Toe position
+    mat = mtoei.bone.matrix_local.inverted() * toei.bone.matrix_local
+    toemat = get_pose_matrix_in_other_space(toe.matrix, toei) * mat
+    set_pose_translation(toei, toemat)
+    set_pose_rotation(toei, toemat)
+    set_pose_scale(toei, toemat)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
+
+    # Foot position
+    mat = mfooti.bone.matrix_local.inverted() * footi.bone.matrix_local
+    footmat = get_pose_matrix_in_other_space(foot.matrix, footi) * mat
+    set_pose_translation(footi, footmat)
+    set_pose_rotation(footi, footmat)
+    set_pose_scale(footi, footmat)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
 
     # Thigh position
     match_pose_translation(thighi, thigh)
@@ -499,6 +579,70 @@ class Leg_IK2FK(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
+class Paw_FK2IK(bpy.types.Operator):
+    """ Snaps an FK leg to an IK leg.
+    """
+    bl_idname = "pose.gamerig_paw_fk2ik_{rig_id}"
+    bl_label = "Snap FK leg to IK"
+    bl_options = {{'UNDO'}}
+
+    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
+
+    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
+    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            fk2ik_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.toe_ik])
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+class Paw_IK2FK(bpy.types.Operator):
+    """ Snaps an IK paw to an FK leg.
+    """
+    bl_idname = "pose.gamerig_paw_ik2fk_{rig_id}"
+    bl_label = "Snap IK leg to FK"
+    bl_options = {{'UNDO'}}
+
+    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
+
+    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
+    mfoot_ik: bpy.props.StringProperty(name="MFoot IK Name")
+    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
+    mtoe_ik:  bpy.props.StringProperty(name="MToe IK Name")
+    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            ik2fk_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.mfoot_ik, self.toe_ik, self.mtoe_ik])
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
 ###################
 ## Rig UI Panels ##
 ###################
@@ -538,8 +682,7 @@ class PropertiesPanel(bpy.types.Panel):
                         return True
             elif names in selected_bones:
                 return True
-            return False        
-
+            return False
 {properties}
 
 
@@ -562,6 +705,6 @@ class LayersPanel(bpy.types.Panel):
         col = layout.column()
 {layers}
 
-for cl in (Arm_FK2IK, Arm_IK2FK, Leg_FK2IK, Leg_IK2FK, PropertiesPanel, LayersPanel):
+for cl in (Arm_FK2IK, Arm_IK2FK, Leg_FK2IK, Leg_IK2FK, Paw_FK2IK, Paw_IK2FK, PropertiesPanel, LayersPanel):
     register_class(cl)
 '''

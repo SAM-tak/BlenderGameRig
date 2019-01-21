@@ -637,7 +637,7 @@ def add_parameters( params ):
     """
     params.neck_pos = bpy.props.IntProperty(
         name        = 'Neck Position',
-        default     = 4,
+        default     = 5,
         min         = 0,
         description = 'Neck start position'
     )
@@ -787,7 +787,7 @@ def create_sample(obj):
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.neck_pos = 4
+        pbone.gamerig_parameters.neck_pos = 5
     except AttributeError:
         pass
     try:
