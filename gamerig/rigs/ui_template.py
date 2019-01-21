@@ -537,8 +537,7 @@ class PropertiesPanel(bpy.types.Panel):
                         return True
             elif names in selected_bones:
                 return True
-            return False        
-
+            return False
 {properties}
 
 
