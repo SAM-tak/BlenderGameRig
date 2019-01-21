@@ -11,7 +11,6 @@ def create(obj):
 
     arm.gamerig_rig_ui_template = 'ui_template'
 
-
     for i in range(6):
         arm.gamerig_colors.add()
 
@@ -678,17 +677,13 @@ def create(obj):
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-thigh.L']]
-    pbone.gamerig_type = 'limbs.limb'
+    pbone.gamerig_type = 'limbs.leg'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-    try:
-        pbone.gamerig_parameters.limb_type = "leg"
-    except AttributeError:
-        pass
     try:
         pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
@@ -702,7 +697,7 @@ def create(obj):
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-thigh.R']]
-    pbone.gamerig_type = 'limbs.limb'
+    pbone.gamerig_type = 'limbs.leg'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
@@ -718,11 +713,11 @@ def create(obj):
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.limb_type = "leg"
+        pbone.gamerig_parameters.allow_ik_stretch = False
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.allow_ik_stretch = False
+        pbone.gamerig_parameters.footprint_bone = "JIG-heel.R"
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-chest']]
@@ -830,7 +825,7 @@ def create(obj):
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-upper_arm.L']]
-    pbone.gamerig_type = 'limbs.limb'
+    pbone.gamerig_type = 'limbs.arm'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
@@ -850,7 +845,7 @@ def create(obj):
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-upper_arm.R']]
-    pbone.gamerig_type = 'limbs.limb'
+    pbone.gamerig_type = 'limbs.arm'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
