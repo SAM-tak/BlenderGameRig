@@ -389,7 +389,7 @@ def generate_rig(context, metarig):
     ctrls = obj.game.controllers
 
     for c in ctrls:
-        if 'Python' in c.name and c.text.name == script.name:
+        if 'Python' in c.name and c.text and c.text.name == script.name:
             skip = True
             break
     if not skip:
