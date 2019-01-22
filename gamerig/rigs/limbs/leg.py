@@ -325,6 +325,147 @@ if is_selected( fk_ctrl ):
         return bones
 
 
+def extra_ui_script(rig_id):
+    return '''
+class Leg_FK2IK(bpy.types.Operator):
+    """ Snaps an FK leg to an IK leg.
+    """
+    bl_idname = "pose.gamerig_leg_fk2ik_{rig_id}"
+    bl_label = "Snap FK leg to IK"
+    bl_options = {{'UNDO'}}
+
+    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
+
+    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
+    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            """ Matches the fk bones in a leg rig to the ik bones.
+            """
+            obj = context.active_object
+
+            thigh  = obj.pose.bones[self.thigh_fk]
+            shin   = obj.pose.bones[self.shin_fk]
+            foot   = obj.pose.bones[self.foot_fk]
+            toe    = obj.pose.bones[self.toe_fk]
+            
+            thighi = obj.pose.bones[self.thigh_ik]
+            shini  = obj.pose.bones[self.shin_ik]
+            footi  = obj.pose.bones[self.foot_ik]
+            toei   = obj.pose.bones[self.toe_ik]
+
+            # Thigh position
+            match_pose_translation(thigh, thighi)
+            match_pose_rotation(thigh, thighi)
+            match_pose_scale(thigh, thighi)
+
+            # Shin position
+            match_pose_rotation(shin, shini)
+            match_pose_scale(shin, shini)
+
+            # Foot position
+            match_pose_rotation(foot, footi)
+            match_pose_scale(foot, footi)
+
+            # Toe position
+            match_pose_rotation(toe, toei)
+            match_pose_scale(toe, toei)
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+class Leg_IK2FK(bpy.types.Operator):
+    """ Snaps an IK leg to an FK leg.
+    """
+    bl_idname = "pose.gamerig_leg_ik2fk_{rig_id}"
+    bl_label = "Snap IK leg to FK"
+    bl_options = {{'UNDO'}}
+
+    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
+
+    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
+    footroll: bpy.props.StringProperty(name="Foot Roll Name")
+    mfoot_ik: bpy.props.StringProperty(name="MFoot IK Name")
+    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            """ Matches the ik bones in a leg rig to the fk bones.
+            """
+            obj = context.active_object
+
+            thigh    = obj.pose.bones[self.thigh_fk]
+            shin     = obj.pose.bones[self.shin_fk]
+            foot     = obj.pose.bones[self.foot_fk]
+            toe      = obj.pose.bones[self.toe_fk]
+
+            thighi   = obj.pose.bones[self.thigh_ik]
+            shini    = obj.pose.bones[self.shin_ik]
+            footi    = obj.pose.bones[self.foot_ik]
+            footroll = obj.pose.bones[self.footroll]
+            mfooti   = obj.pose.bones[self.mfoot_ik]
+            toei     = obj.pose.bones[self.toe_ik]
+            
+            # Clear footroll
+            set_pose_rotation(footroll, Matrix())
+
+            # Foot position
+            mat = mfooti.bone.matrix_local.inverted() * footi.bone.matrix_local
+            footmat = get_pose_matrix_in_other_space(foot.matrix, footi) * mat
+            set_pose_translation(footi, footmat)
+            set_pose_rotation(footi, footmat)
+            set_pose_scale(footi, footmat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+
+            # Toe position
+            match_pose_translation(toei, toe)
+            match_pose_rotation(toei, toe)
+            match_pose_scale(toei, toe)
+
+            # Thigh position
+            match_pose_translation(thighi, thigh)
+            match_pose_rotation(thighi, thigh)
+            match_pose_scale(thighi, thigh)
+
+            # Rotation Correction
+            correct_rotation(thighi,thigh)
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+for cl in (Leg_FK2IK, Leg_IK2FK):
+    register_class(cl)
+
+
+'''.format(rig_id=rig_id)
+
+
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
         GameRigParameters PropertyGroup
