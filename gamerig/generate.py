@@ -77,7 +77,7 @@ def generate_rig(context, metarig):
     # regenerate in the same object.  If not, create a new
     # object to generate the rig in.
     print("Fetch rig (id : %s)." % rig_id)
-    obj = next((i for i in scene.objects if i != metarig and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None)
+    obj = next((i for i in scene.objects if i != metarig and i.data and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None)
 
     toggledArmatureModifiers = []
     if obj is not None:
@@ -278,9 +278,10 @@ def generate_rig(context, metarig):
     try:
         # Collect/initialize all the rigs.
         rigs = []
+        rigtypes = set()
         for bone in bones_sorted:
             bpy.ops.object.mode_set(mode='EDIT')
-            rigs += get_bone_rigs(obj, bone)
+            rigs += get_bone_rigs(obj, bone, rigtypes)
         t.tick("Initialize rigs: ")
 
         # Generate all the rigs.
@@ -370,9 +371,25 @@ def generate_rig(context, metarig):
     else:
         script = bpy.data.texts.new(rig_ui_name)
 
+    extra_ui_scripts = ''
+    for rigt in rigtypes:
+        try:
+            rigt.extra_ui_script
+        except AttributeError:
+            pass
+        else:
+            extra_ui_scripts += rigt.extra_ui_script(rig_id)
+
     uitemplate = rig_lists.riguitemplate_dic[metarig.data.gamerig_rig_ui_template]
 
-    script.write(uitemplate[0].format(rig_id=rig_id, properties=properties_ui(ui_scripts), layers=layers_ui(vis_layers, layer_layout)))
+    script.write(
+        uitemplate[0].format(
+            rig_id=rig_id,
+            rigextras=extra_ui_scripts,
+            properties=properties_ui(ui_scripts),
+            layers=layers_ui(vis_layers, layer_layout)
+        )
+    )
     script.use_module = True
 
     # Run UI script
@@ -499,7 +516,7 @@ def create_bone_groups(obj, metarig):
             b.bone_group = obj.pose.bone_groups[name]
 
 
-def get_bone_rigs(obj, bone_name, halt_on_missing=False):
+def get_bone_rigs(obj, bone_name, rigtypes, halt_on_missing=False):
     """ Fetch all the rigs specified on a bone.
     """
     rigs = []
@@ -514,7 +531,8 @@ def get_bone_rigs(obj, bone_name, halt_on_missing=False):
 
         # Get the rig
         try:
-            rig = get_rig_type(rig_type).Rig(obj, bone_name, params)
+            rigt = get_rig_type(rig_type)
+            rig = rigt.Rig(obj, bone_name, params)
         except ImportError:
             message = "Rig Type Missing: python module for type '%s' not found (bone: %s)" % (rig_type, bone_name)
             if halt_on_missing:
@@ -525,6 +543,7 @@ def get_bone_rigs(obj, bone_name, halt_on_missing=False):
                 traceback.print_exc(file=sys.stdout)
         else:
             rigs.append(rig)
+            rigtypes.add(rigt)
     return rigs
 
 

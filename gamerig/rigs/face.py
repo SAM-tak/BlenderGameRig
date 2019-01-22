@@ -1149,7 +1149,7 @@ def add_parameters(params):
     params.secondary_layers = bpy.props.BoolVectorProperty(
         size        = 32,
         description = "Layers for the 2nd tweak controls to be on",
-        default     = tuple( [ i == 1 for i in range(0, 32) ] )
+        default     = tuple( [ i == 2 for i in range(0, 32) ] )
     )
 
 

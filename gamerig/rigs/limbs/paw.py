@@ -205,6 +205,79 @@ if is_selected( fk_ctrl ):
         return bones
 
 
+def extra_ui_script(rig_id):
+    return '''
+class Paw_FK2IK(bpy.types.Operator):
+    """ Snaps an FK leg to an IK leg.
+    """
+    bl_idname = "pose.gamerig_paw_fk2ik_{rig_id}"
+    bl_label = "Snap FK leg to IK"
+    bl_options = {{'UNDO'}}
+
+    thigh_fk = bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk  = bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk  = bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk   = bpy.props.StringProperty(name="Toe FK Name")
+
+    thigh_ik = bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik  = bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik  = bpy.props.StringProperty(name="Foot IK Name")
+    toe_ik   = bpy.props.StringProperty(name="Toe IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            fk2ik_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.toe_ik])
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+class Paw_IK2FK(bpy.types.Operator):
+    """ Snaps an IK paw to an FK leg.
+    """
+    bl_idname = "pose.gamerig_paw_ik2fk_{rig_id}"
+    bl_label = "Snap IK leg to FK"
+    bl_options = {{'UNDO'}}
+
+    thigh_fk = bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk  = bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk  = bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk   = bpy.props.StringProperty(name="Toe FK Name")
+
+    thigh_ik = bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik  = bpy.props.StringProperty(name="Shin IK Name")
+    mfoot_ik = bpy.props.StringProperty(name="MFoot IK Name")
+    foot_ik  = bpy.props.StringProperty(name="Foot IK Name")
+    mtoe_ik  = bpy.props.StringProperty(name="MToe IK Name")
+    toe_ik   = bpy.props.StringProperty(name="Toe IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            ik2fk_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.mfoot_ik, self.toe_ik, self.mtoe_ik])
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+for cl in (Paw_FK2IK, Paw_IK2FK):
+    register_class(cl)
+
+
+'''.format(rig_id=rig_id)
+
+
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
         GameRigParameters PropertyGroup

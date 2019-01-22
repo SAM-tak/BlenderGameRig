@@ -140,7 +140,7 @@ class DATA_PT_gamerig(bpy.types.Panel):
         ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
             rig_id = obj.data.get('gamerig_id')
-            target = next((i for i in context.scene.objects if i != obj and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
+            target = next((i for i in context.scene.objects if i != obj and i.data and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
             if target:
                 layout.row().operator("pose.gamerig_generate", text="Regenerate Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Overwrite to '%s'" % target.name, icon='INFO')

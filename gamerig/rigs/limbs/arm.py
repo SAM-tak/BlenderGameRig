@@ -124,6 +124,117 @@ if is_selected( fk_ctrl ):
         return bones
 
 
+def extra_ui_script(rig_id):
+    return '''
+class Arm_FK2IK(bpy.types.Operator):
+    """ Snaps an FK arm to an IK arm.
+    """
+    bl_idname = "pose.gamerig_arm_fk2ik_{rig_id}"
+    bl_label = "Snap FK arm to IK"
+    bl_options = {{'UNDO'}}
+
+    uarm_fk = bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk = bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk = bpy.props.StringProperty(name="Hand FK Name")
+
+    uarm_ik = bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik = bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik = bpy.props.StringProperty(name="Hand IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            """ Matches the fk bones in an arm rig to the ik bones.
+            """
+            obj = context.active_object
+
+            uarm  = obj.pose.bones[self.uarm_fk]
+            farm  = obj.pose.bones[self.farm_fk]
+            hand  = obj.pose.bones[self.hand_fk]
+            uarmi = obj.pose.bones[self.uarm_ik]
+            farmi = obj.pose.bones[self.farm_ik]
+            handi = obj.pose.bones[self.hand_ik]
+
+            # Upper arm position
+            match_pose_translation(uarm, uarmi)
+            match_pose_rotation(uarm, uarmi)
+            match_pose_scale(uarm, uarmi)
+
+            # Forearm position
+            match_pose_translation(hand, handi)
+            match_pose_rotation(farm, farmi)
+            match_pose_scale(farm, farmi)
+
+            # Hand position
+            match_pose_translation(hand, handi)
+            match_pose_rotation(hand, handi)
+            match_pose_scale(hand, handi)
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+class Arm_IK2FK(bpy.types.Operator):
+    """ Snaps an IK arm to an FK arm.
+    """
+    bl_idname = "pose.gamerig_arm_ik2fk_{rig_id}"
+    bl_label = "Snap IK arm to FK"
+    bl_options = {{'UNDO'}}
+
+    uarm_fk = bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk = bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk = bpy.props.StringProperty(name="Hand FK Name")
+
+    uarm_ik = bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik = bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik = bpy.props.StringProperty(name="Hand IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            """ Matches the ik bones in an arm rig to the fk bones.
+            """
+            obj = context.active_object
+
+            uarm  = obj.pose.bones[self.uarm_fk]
+            hand  = obj.pose.bones[self.hand_fk]
+            uarmi = obj.pose.bones[self.uarm_ik]
+            handi = obj.pose.bones[self.hand_ik]
+
+            # Hand position
+            match_pose_translation(handi, hand)
+            match_pose_rotation(handi, hand)
+            match_pose_scale(handi, hand)
+
+            # Upper Arm position
+            match_pose_translation(uarmi, uarm)
+            match_pose_rotation(uarmi, uarm)
+            match_pose_scale(uarmi, uarm)
+
+            # Rotation Correction
+            correct_rotation(uarmi, uarm)
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+for cl in (Arm_FK2IK, Arm_IK2FK):
+    register_class(cl)
+
+
+'''.format(rig_id=rig_id)
+
+
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
         GameRigParameters PropertyGroup
