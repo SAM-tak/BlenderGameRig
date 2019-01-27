@@ -214,10 +214,9 @@ def correct_rotation(bone_ik, bone_fk):
 
 
 ###########################
-## Rig specify operators ##
+## Rig special operators ##
 ###########################
-
-{rigextras}
+{operators}
 ###################
 ## Rig UI Panels ##
 ###################
@@ -233,7 +232,7 @@ class PropertiesPanel(bpy.types.Panel):
         if context.mode != 'POSE':
             return False
         try:
-            return 'gamerig_layers' not in context.active_object.data and context.active_object.data.get("gamerig_id") == "{rig_id}"
+            return context.active_object.data.get("gamerig_id") == "{rig_id}"
         except (AttributeError, KeyError, TypeError):
             return False
 
@@ -259,7 +258,6 @@ class PropertiesPanel(bpy.types.Panel):
             return False
 {properties}
 
-
 class LayersPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -269,7 +267,7 @@ class LayersPanel(bpy.types.Panel):
     @classmethod
     def poll(self, context):
         try:
-            return 'gamerig_layers' not in context.active_object.data and context.active_object.data.get("gamerig_id") == "{rig_id}"
+            return context.active_object.data.get("gamerig_id") == "{rig_id}"
         except (AttributeError, KeyError, TypeError):
             return False
 
