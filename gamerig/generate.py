@@ -57,10 +57,14 @@ def generate_rig(context, metarig):
     # clear created widget list
     create_widget.created_widgets = None
 
+    # Find overwrite target rig if exists
+    rig_name = metarig.data.gamerig_rig_name
+    print("Fetch rig (%s)." % rig_name)
+    obj = next((i for i in context.collection.objects if i != metarig and i.type == 'ARMATURE' and i.name == rig_name), None)
+
     # Random string with time appended so that
     # different rigs don't collide id's
-    rig_id = metarig.data.get("gamerig_id") or random_id()
-    metarig.data["gamerig_id"] = rig_id
+    rig_id = (obj.data.get("gamerig_id") if obj else None) or random_id()
 
     # Initial configuration
     rest_backup = metarig.data.pose_position
@@ -79,9 +83,7 @@ def generate_rig(context, metarig):
     # Check if the generated rig already exists, so we can
     # regenerate in the same object.  If not, create a new
     # object to generate the rig in.
-    print("Fetch rig (id : %s)." % rig_id)
-    obj = next((i for i in collection.objects if i != metarig and i.data and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None)
-
+    
     toggledArmatureModifiers = []
     if obj is not None:
         print("Overwrite existing rig.")
@@ -371,21 +373,21 @@ def generate_rig(context, metarig):
     else:
         script = bpy.data.texts.new(rig_ui_name)
 
-    extra_ui_scripts = ''
+    operator_scripts = ''
     for rigt in rigtypes:
         try:
-            rigt.extra_ui_script
+            rigt.operator_script
         except AttributeError:
             pass
         else:
-            extra_ui_scripts += rigt.extra_ui_script(rig_id)
+            operator_scripts += rigt.operator_script(rig_id)
 
     uitemplate = rig_lists.riguitemplate_dic[metarig.data.gamerig_rig_ui_template]
 
     script.write(
         uitemplate[0].format(
             rig_id=rig_id,
-            rigextras=extra_ui_scripts,
+            operators=operator_scripts,
             properties=properties_ui(ui_scripts),
             layers=layers_ui(vis_layers, layer_layout)
         )

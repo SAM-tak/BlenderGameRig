@@ -205,7 +205,7 @@ if is_selected( fk_ctrl ):
         return bones
 
 
-def extra_ui_script(rig_id):
+def operator_script(rig_id):
     return '''
 class Paw_FK2IK(bpy.types.Operator):
     """ Snaps an FK leg to an IK leg.

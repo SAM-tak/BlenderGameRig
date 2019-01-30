@@ -124,7 +124,7 @@ if is_selected( fk_ctrl ):
         return bones
 
 
-def extra_ui_script(rig_id):
+def operator_script(rig_id):
     return '''
 class Arm_FK2IK(bpy.types.Operator):
     """ Snaps an FK arm to an IK arm.

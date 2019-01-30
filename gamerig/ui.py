@@ -139,14 +139,14 @@ class DATA_PT_gamerig(bpy.types.Panel):
 
         ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
-            rig_id = obj.data.get('gamerig_id')
-            target = next((i for i in context.scene.objects if i != obj and i.data and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None) if rig_id else None
+            layout.row().prop(obj.data, "gamerig_rig_name", text="Rig Name")
+            rig_name = obj.data.gamerig_rig_name
+            target = next((i for i in context.scene.objects if i != obj and i.type == 'ARMATURE' and i.name == rig_name), None)
             if target:
                 layout.row().operator("pose.gamerig_generate", text="Regenerate Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Overwrite to '%s'" % target.name, icon='INFO')
             else:
-                layout.row().operator("pose.gamerig_generate", text="Generate Rig", icon='POSE_HLT')
-                layout.row().prop(obj.data, "gamerig_rig_name", text="Rig Name")
+                layout.row().operator("pose.gamerig_generate", text="Generate New Rig", icon='POSE_HLT')
 
         elif obj.mode == 'EDIT':
             # Build types list
