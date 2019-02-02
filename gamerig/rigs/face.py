@@ -416,7 +416,7 @@ class Rig:
             eb[ rbn(mch_name) ].tail[:] = eb[ rbn(mch_name) ].head + Vector( ( 0, 0, 0.005 ) )
 
         # Create the eyes' parent mch
-        face = [ bone for bone in org_bones if 'face' in bone ].pop()
+        face = next((bone for bone in org_bones if 'face' in bone), None)
 
         if eyes and len(eyes) > 0:
             mch_name = self.copy_bone( self.obj, face, mch('eyes_parent') )
@@ -481,6 +481,16 @@ class Rig:
                 eb[ rbn(mch_name) ].parent      = None
 
                 mch_bones['tongue'].append( mch_name )
+
+        # Create the tongue parent mch
+        if jaw_ctrl in self.bone_name_map:
+            mch_name = self.copy_bone( self.obj, jaw_ctrl, mch('tongue_parent') )
+            eb[ rbn(mch_name) ].use_connect = False
+            eb[ rbn(mch_name) ].parent      = None
+
+            eb[ rbn(mch_name) ].length /= 4
+
+            mch_bones['tongue_parent'] = [ mch_name ]
 
         return mch_bones
 
@@ -576,6 +586,12 @@ class Rig:
         if 'tongue' in all_bones['mch']:
             for bone in all_bones['mch']['tongue']:
                 eb[ rbn( bone ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
+
+        # parent tongue master to the tongue root mch bone
+        if 'tongue_parent' in all_bones['mch']:
+            eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['mch']['tongue_parent'][0] ) ]
+        elif 'jaw' in all_bones['ctrls']:
+            eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
 
         ## Parenting the control bones
 
@@ -769,6 +785,12 @@ class Rig:
             const.target    = self.obj
             const.subtarget = rbn(subtarget)
             const.influence = influence
+        
+        elif constraint_type == 'mch_tongue_parent':
+
+            const = owner_pb.constraints.new( 'COPY_TRANSFORMS' )
+            const.target    = self.obj
+            const.subtarget = rbn(subtarget)
 
         elif constraint_type == 'teeth':
 
@@ -989,6 +1011,10 @@ class Rig:
             for owner in all_bones['mch']['tongue']:
                 self.make_constraits( 'mch_tongue_copy_trans', owner, 'tongue_master', ( 1 / divider ) * factor )
                 factor -= 1
+        
+        # MCH tongue parent constraints
+        if 'tongue_parent' in all_bones['mch']:
+            self.make_constraits('mch_tongue_parent', mch('tongue_parent'), mch('jaw_master') )
 
         # org bones constraints
         for bone in self.org_bones:
@@ -1000,30 +1026,21 @@ class Rig:
         bpy.ops.object.mode_set(mode ='OBJECT')
         pb = self.obj.pose.bones
 
-        jaw_ctrl  = all_bones['ctrls']['jaw'][0] if 'jaw' in all_bones['ctrls'] else None
-        eyes_ctrl = all_bones['ctrls']['eyes'][2] if 'eyes' in all_bones['ctrls'] else None
-
-        jaw_prop  = 'Mouth Lock'
-        eyes_prop = 'Eyes Follow'
-
-        for bone, prop_name in zip( [ jaw_ctrl, eyes_ctrl ], [ jaw_prop, eyes_prop ] ):
-            if bone in self.bone_name_map and prop_name:
-                if bone == jaw_ctrl:
-                    pb[ rbn(bone) ][ prop_name ] = 0.0
-                else:
-                    pb[ rbn(bone) ][ prop_name ] = 1.0
-
-                prop = rna_idprop_ui_prop_get( pb[ rbn(bone) ], prop_name )
-                prop["min"]         = 0.0
-                prop["max"]         = 1.0
-                prop["soft_min"]    = 0.0
-                prop["soft_max"]    = 1.0
-                prop["description"] = prop_name
-
-        # Jaw drivers
-        if 'jaw' in all_bones['mch']:
+        # Mouse Lock
+        ctrl  = all_bones['ctrls']['jaw'][0] if 'jaw' in all_bones['ctrls'] else None
+        if ctrl and 'jaw' in all_bones['mch']:
+            ctrl_bone = rbn(ctrl)
+            prop_name = 'Mouth Lock'
+            pb[ ctrl_bone ][ prop_name ] = 0.0
+            prop = rna_idprop_ui_prop_get( pb[ ctrl_bone ], prop_name )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = "Mouth bones don't move if jaw moves"
             mch_jaws = all_bones['mch']['jaw'][1:-1]
 
+            # Jaw drivers
             for bone in mch_jaws:
                 drv = pb[ rbn(bone) ].constraints[1].driver_add("influence").driver
                 drv.type='SUM'
@@ -1032,11 +1049,22 @@ class Rig:
                 var.name = 'mouth_lock'
                 var.type = "SINGLE_PROP"
                 var.targets[0].id = self.obj
-                var.targets[0].data_path = pb[ rbn(jaw_ctrl) ].path_from_id() + '['+ '"' + jaw_prop + '"' + ']'
+                var.targets[0].data_path = pb[ ctrl_bone ].path_from_id() + '['+ '"' + prop_name + '"' + ']'
 
+        # Eyes Follow
+        ctrl = all_bones['ctrls']['eyes'][2] if 'eyes' in all_bones['ctrls'] else None
+        if ctrl and 'eyes_parent' in all_bones['mch']:
+            ctrl_bone = rbn(ctrl)
+            prop_name = 'Eyes Follow'
+            pb[ ctrl_bone ][ prop_name ] = 1.0
+            prop = rna_idprop_ui_prop_get( pb[ ctrl_bone ], prop_name )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = 'Switch eyes follow to face'
 
-        # Eyes driver
-        if 'eyes_parent' in all_bones['mch']:
+            # Eyes driver
             mch_eyes_parent = all_bones['mch']['eyes_parent'][0]
 
             drv = pb[ rbn(mch_eyes_parent) ].constraints[0].driver_add("influence").driver
@@ -1046,7 +1074,33 @@ class Rig:
             var.name = 'eyes_follow'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
-            var.targets[0].data_path = pb[ rbn(eyes_ctrl) ].path_from_id() + '['+ '"' + eyes_prop + '"' + ']'
+            var.targets[0].data_path = pb[ ctrl_bone ].path_from_id() + '['+ '"' + prop_name + '"' + ']'
+
+        # Tongue Follow
+        ctrl = all_bones['ctrls']['tongue'][0] if 'tongue' in all_bones['ctrls'] else None
+        if ctrl and 'tongue_parent' in all_bones['mch']:
+            ctrl_bone = rbn(ctrl)
+            prop_name = 'Tongue Follow'
+            pb[ ctrl_bone ][ 'Tongue Follow' ] = 1.0
+            prop = rna_idprop_ui_prop_get( pb[ ctrl_bone ], 'Tongue Follow' )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = 'Switch tongue follow to jaw or face'
+
+            # Tongue driver
+            mch_tongue_parent = all_bones['mch']['tongue_parent'][0]
+
+            drv = pb[ rbn(mch_tongue_parent) ].constraints[0].driver_add("influence").driver
+            drv.type='SUM'
+
+            var = drv.variables.new()
+            var.name = 'tongue_follow'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb[ ctrl_bone ].path_from_id() + '['+ '"' + prop_name + '"' + ']'
+
 
     def create_bones(self):
         rbn = self.rbn
@@ -1097,32 +1151,19 @@ class Rig:
         controls_string = ", ".join(["'" + x + "'" for x in all_ctrls])
         jaw_ctrl = all_bones['ctrls']['jaw'][0] if 'jaw' in all_bones['ctrls'] else None
         eyes_ctrl = all_bones['ctrls']['eyes'][2] if 'eyes' in all_bones['ctrls'] else None
-        if jaw_ctrl and eyes_ctrl:
-            return [ """
-all_controls   = [%s]
-jaw_ctrl_name  = '%s'
-eyes_ctrl_name = '%s'
+        tongue_ctrl = all_bones['ctrls']['tongue'][0] if 'tongue' in all_bones['ctrls'] else None
 
-if is_selected(all_controls):
-    layout.prop(pose_bones[jaw_ctrl_name],  '["Mouth Lock"]', text='Mouth Lock (' + jaw_ctrl_name + ')', slider=True)
-    layout.prop(pose_bones[eyes_ctrl_name], '["Eyes Follow"]', text='Eyes Follow (' + eyes_ctrl_name + ')', slider=True)
-""" % (controls_string, jaw_ctrl, eyes_ctrl)]
-        elif jaw_ctrl:
-            return [ """
-all_controls   = [%s]
-jaw_ctrl_name  = '%s'
-
-if is_selected(all_controls):
-    layout.prop(pose_bones[jaw_ctrl_name],  '["Mouth Lock"]', text='Mouth Lock (' + jaw_ctrl_name + ')', slider=True)
-""" % (controls_string, jaw_ctrl)]
-        elif eyes_ctrl:
-            return [ """
-all_controls   = [%s]
-eyes_ctrl_name = '%s'
-
-if is_selected(all_controls):
-    layout.prop(pose_bones[eyes_ctrl_name], '["Eyes Follow"]', text='Eyes Follow (' + eyes_ctrl_name + ')', slider=True)
-""" % (controls_string, eyes_ctrl)]
+        return ["""
+# Face properties
+controls   = [%s]
+if is_selected(controls):
+""" % controls_string + 
+("""    layout.prop(pose_bones['%s'],  '["Mouth Lock"]', text='Mouth Lock (%s)', slider=True)
+""" % (jaw_ctrl, jaw_ctrl) if jaw_ctrl else "") +
+("""    layout.prop(pose_bones['%s'],  '["Eyes Follow"]', text='Eyes Follow (%s)', slider=True)
+""" % (eyes_ctrl, eyes_ctrl) if eyes_ctrl else "") + 
+("""    layout.prop(pose_bones['%s'], '["Tongue Follow"]', text='Tongue Follow (%s)', slider=True)
+""" % (tongue_ctrl, tongue_ctrl) if tongue_ctrl else "")]
 
 
 def add_parameters(params):
