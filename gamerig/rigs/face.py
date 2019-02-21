@@ -588,10 +588,11 @@ class Rig:
                 eb[ rbn( bone ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
 
         # parent tongue master to the tongue root mch bone
-        if 'tongue_parent' in all_bones['mch']:
-            eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['mch']['tongue_parent'][0] ) ]
-        elif 'jaw' in all_bones['ctrls']:
-            eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
+        if 'tongue' in all_bones['ctrls']:
+            if 'tongue_parent' in all_bones['mch']:
+                eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['mch']['tongue_parent'][0] ) ]
+            elif 'jaw' in all_bones['ctrls']:
+                eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
 
         ## Parenting the control bones
 
