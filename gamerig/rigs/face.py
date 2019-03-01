@@ -388,7 +388,8 @@ class Rig:
 
         return { 'ctrls' : ctrls, 'tweaks' : tweaks }, tweak_unique
 
-    def create_mch( self, jaw_ctrl, tongue_ctrl ):
+
+    def create_mch( self, jaw_ctrl, tongue_ctrl, chin_ctrl ):
         org_bones = self.org_bones
         rbn = self.rbn
         bpy.ops.object.mode_set(mode ='EDIT')
@@ -482,15 +483,31 @@ class Rig:
 
                 mch_bones['tongue'].append( mch_name )
 
-        # Create the tongue parent mch
-        if jaw_ctrl in self.bone_name_map:
-            mch_name = self.copy_bone( self.obj, jaw_ctrl, mch('tongue_parent') )
+            # Create the tongue parent mch
+            if jaw_ctrl in self.bone_name_map:
+                mch_name = self.copy_bone( self.obj, jaw_ctrl, mch('tongue_parent') )
+                eb[ rbn(mch_name) ].use_connect = False
+                eb[ rbn(mch_name) ].parent      = None
+
+                eb[ rbn(mch_name) ].length /= 4
+
+                mch_bones['tongue_parent'] = [ mch_name ]
+
+        # Create the chin parent mch
+        if chin_ctrl in self.bone_name_map and jaw_ctrl in self.bone_name_map:
+            mch_name = self.copy_bone( self.obj, jaw_ctrl, mch('chin_parent') )
             eb[ rbn(mch_name) ].use_connect = False
             eb[ rbn(mch_name) ].parent      = None
 
             eb[ rbn(mch_name) ].length /= 4
 
-            mch_bones['tongue_parent'] = [ mch_name ]
+            mch_bones['chin_parent'] = [ mch_name ]
+
+            mch_name = self.copy_bone( self.obj, chin_ctrl, mch('chin') )
+            eb[ rbn(mch_name) ].use_connect = False
+            eb[ rbn(mch_name) ].parent      = None
+
+            mch_bones['chin'] = [ mch_name ]
 
         return mch_bones
 
@@ -588,10 +605,11 @@ class Rig:
                 eb[ rbn( bone ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
 
         # parent tongue master to the tongue root mch bone
-        if 'tongue_parent' in all_bones['mch']:
-            eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['mch']['tongue_parent'][0] ) ]
-        elif 'jaw' in all_bones['ctrls']:
-            eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
+        if 'tongue' in all_bones['ctrls']:
+            if 'tongue_parent' in all_bones['mch']:
+                eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['mch']['tongue_parent'][0] ) ]
+            elif 'jaw' in all_bones['ctrls']:
+                eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
 
         ## Parenting the control bones
 
@@ -645,6 +663,7 @@ class Rig:
                 'chin.L',
                 'chin.R',
                 'chin',
+                mch('chin'),
                 'tongue.003'
             ],
             mch('jaw_master'): [
@@ -685,6 +704,15 @@ class Rig:
         # if MCH-target_jaw has no parent, parent to jaw_master.
         if mch('target_jaw') in self.bone_name_map and 'jaw_master' in self.bone_name_map and eb[ rbn( mch('target_jaw') ) ].parent is None:
             eb[ rbn( mch('target_jaw') ) ].parent = eb[ rbn( 'jaw_master' ) ]
+
+        # if chin_parent is exist, parent chin to chin_parent
+        if 'chin_parent' in all_bones['mch']:
+            if 'chin' in self.bone_name_map:
+                eb[ rbn( 'chin' ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
+            if 'chin.L' in self.bone_name_map:
+                eb[ rbn( 'chin.L' ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
+            if 'chin.R' in self.bone_name_map:
+                eb[ rbn( 'chin.R' ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
 
         # Remaining arbitrary relatioships for tweak bone parenting
         if 'chin.001' in self.bone_name_map and 'chin' in self.bone_name_map:
@@ -792,6 +820,12 @@ class Rig:
             const.target    = self.obj
             const.subtarget = rbn(subtarget)
 
+        elif constraint_type == 'mch_chin_parent':
+
+            const = owner_pb.constraints.new( 'COPY_TRANSFORMS' )
+            const.target    = self.obj
+            const.subtarget = rbn(subtarget)
+
         elif constraint_type == 'teeth':
 
             const = owner_pb.constraints.new( 'COPY_TRANSFORMS' )
@@ -851,7 +885,7 @@ class Rig:
 
         def_specials = {
             # 'bone'             : 'target'
-            mch_target('jaw')               : 'chin',
+            mch_target('jaw')               : mch('chin'),
             mch_target('chin.L')            : 'lips.L',
             mch_target('jaw.L.001')         : 'chin.L',
             mch_target('chin.R')            : 'lips.R',
@@ -1015,6 +1049,10 @@ class Rig:
         # MCH tongue parent constraints
         if 'tongue_parent' in all_bones['mch']:
             self.make_constraits('mch_tongue_parent', mch('tongue_parent'), mch('jaw_master') )
+        
+        # MCH chin parent constraints
+        if 'chin_parent' in all_bones['mch']:
+            self.make_constraits('mch_chin_parent', mch('chin_parent'), mch('jaw_master') )
 
         # org bones constraints
         for bone in self.org_bones:
@@ -1101,6 +1139,31 @@ class Rig:
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb[ ctrl_bone ].path_from_id() + '['+ '"' + prop_name + '"' + ']'
 
+        # Chin Follow
+        ctrl = 'chin' if 'chin' in all_bones['tweaks']['all'] else None
+        if ctrl and 'chin_parent' in all_bones['mch']:
+            ctrl_bone = rbn(ctrl)
+            prop_name = 'Chin Follow'
+            pb[ ctrl_bone ][ 'Chin Follow' ] = 1.0
+            prop = rna_idprop_ui_prop_get( pb[ ctrl_bone ], 'Chin Follow' )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = 'Switch chin follow to jaw or face'
+
+            # Tongue driver
+            mch_chin_parent = all_bones['mch']['chin_parent'][0]
+
+            drv = pb[ rbn(mch_chin_parent) ].constraints[0].driver_add("influence").driver
+            drv.type='SUM'
+
+            var = drv.variables.new()
+            var.name = 'chin_follow'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb[ ctrl_bone ].path_from_id() + '['+ '"' + prop_name + '"' + ']'
+
 
     def create_bones(self):
         rbn = self.rbn
@@ -1120,9 +1183,12 @@ class Rig:
         all_bones = {}
 
         ctrls, tweak_unique = self.all_controls()
+        print('ctrls', ctrls)
+        print('tweak_unique', tweak_unique)
         mchs = self.create_mch(
             ctrls['ctrls']['jaw'][0] if 'jaw' in ctrls['ctrls'] else None,
-            ctrls['ctrls']['tongue'][0] if 'tongue' in ctrls['ctrls'] else None
+            ctrls['ctrls']['tongue'][0] if 'tongue' in ctrls['ctrls'] else None,
+            rbn('chin') if 'chin' in ctrls['tweaks']['all'] else None
         )
 
         return {
@@ -1152,6 +1218,7 @@ class Rig:
         jaw_ctrl = all_bones['ctrls']['jaw'][0] if 'jaw' in all_bones['ctrls'] else None
         eyes_ctrl = all_bones['ctrls']['eyes'][2] if 'eyes' in all_bones['ctrls'] else None
         tongue_ctrl = all_bones['ctrls']['tongue'][0] if 'tongue' in all_bones['ctrls'] else None
+        chin_ctrl = self.rbn('chin') if 'chin' in all_bones['tweaks']['all'] else None
 
         return ["""
 # Face properties
@@ -1163,7 +1230,9 @@ if is_selected(controls):
 ("""    layout.prop(pose_bones['%s'],  '["Eyes Follow"]', text='Eyes Follow (%s)', slider=True)
 """ % (eyes_ctrl, eyes_ctrl) if eyes_ctrl else "") + 
 ("""    layout.prop(pose_bones['%s'], '["Tongue Follow"]', text='Tongue Follow (%s)', slider=True)
-""" % (tongue_ctrl, tongue_ctrl) if tongue_ctrl else "")]
+""" % (tongue_ctrl, tongue_ctrl) if tongue_ctrl else "") + 
+("""    layout.prop(pose_bones['%s'], '["Chin Follow"]', text='Chin Follow (%s)', slider=True)
+""" % (chin_ctrl, chin_ctrl) if chin_ctrl else "")]
 
 
 def add_parameters(params):
