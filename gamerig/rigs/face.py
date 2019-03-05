@@ -707,6 +707,8 @@ class Rig:
 
         # if chin_parent is exist, parent chin to chin_parent
         if 'chin_parent' in all_bones['mch']:
+            if org('chin') in self.bone_name_map:
+                eb[ rbn( org('chin') ) ].use_connect = False
             if 'chin' in self.bone_name_map:
                 eb[ rbn( 'chin' ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
             if 'chin.L' in self.bone_name_map:
