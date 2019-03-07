@@ -319,11 +319,12 @@ def generate_rig(context, metarig):
 
     # Get a list of all the bones in the armature
     bones = [bone.name for bone in obj.data.bones]
+    metabones = [bone.name for bone in metarig.data.bones]
 
     # All the others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
     for bone in bones:
-        b = obj.data.bones[bone]
-        if not is_org(b.name) or not b.name in metarig.data.bones:
+        if not (is_org(bone) or bone in metabones):
+            b = obj.data.bones[bone]
             b.use_deform = False
 
     # Alter marked driver targets
