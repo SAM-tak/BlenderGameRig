@@ -208,7 +208,7 @@ def create_sample(obj):
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'YXZ'
     pbone = obj.pose.bones[bones['f_pinky.01.L']]
-    pbone.gamerig_type = 'gamerig.finger'
+    pbone.gamerig_type = 'finger'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

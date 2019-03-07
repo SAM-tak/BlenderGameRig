@@ -1185,8 +1185,8 @@ class Rig:
         all_bones = {}
 
         ctrls, tweak_unique = self.all_controls()
-        print('ctrls', ctrls)
-        print('tweak_unique', tweak_unique)
+        # print('ctrls', ctrls)
+        # print('tweak_unique', tweak_unique)
         mchs = self.create_mch(
             ctrls['ctrls']['jaw'][0] if 'jaw' in ctrls['ctrls'] else None,
             ctrls['ctrls']['tongue'][0] if 'tongue' in ctrls['ctrls'] else None,
@@ -1870,7 +1870,7 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['ORG-head']]
-    pbone.gamerig_type = 'gamerig.face'
+    pbone.gamerig_type = 'face'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

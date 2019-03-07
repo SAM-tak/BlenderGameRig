@@ -741,7 +741,7 @@ def create_sample(obj):
     bone = arm.edit_bones.new('waist')
     bone.head[:] = 0.0000, -0.0037, 0.2256
     bone.tail[:] = -0.0000, -0.0099, 0.3598
-    bone.roll = -0.0000
+    bone.roll = 0.0000
     bone.use_connect = True
     bone.parent = arm.edit_bones[bones['hips']]
     bones['waist'] = bone.name
@@ -776,7 +776,7 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['hips']]
-    pbone.gamerig_type = 'gamerig.torso'
+    pbone.gamerig_type = 'torso'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
