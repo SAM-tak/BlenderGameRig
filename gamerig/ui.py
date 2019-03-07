@@ -231,8 +231,8 @@ class DATA_OT_gamerig_use_standard_colors(bpy.types.Operator):
         if not hasattr(armature, 'gamerig_colors'):
             return {'FINISHED'}
 
-        current_theme = bpy.context.user_preferences.themes.items()[0][0]
-        theme = bpy.context.user_preferences.themes[current_theme]
+        current_theme = bpy.context.preferences.themes.items()[0][0]
+        theme = bpy.context.preferences.themes[current_theme]
 
         armature.gamerig_selection_colors.select = theme.view_3d.bone_pose
         armature.gamerig_selection_colors.active = theme.view_3d.bone_pose_active
@@ -258,8 +258,8 @@ class DATA_OT_gamerig_apply_selection_colors(bpy.types.Operator):
         if not hasattr(armature, 'gamerig_colors'):
             return {'FINISHED'}
 
-        #current_theme = bpy.context.user_preferences.themes.items()[0][0]
-        #theme = bpy.context.user_preferences.themes[current_theme]
+        #current_theme = bpy.context.preferences.themes.items()[0][0]
+        #theme = bpy.context.preferences.themes[current_theme]
 
         for col in armature.gamerig_colors:
             col.select = armature.gamerig_selection_colors.select
@@ -284,8 +284,8 @@ class DATA_OT_gamerig_bone_group_add(bpy.types.Operator):
             armature.gamerig_colors.add()
             armature.gamerig_colors[-1].name = unique_name(armature.gamerig_colors, 'Group')
 
-            current_theme = bpy.context.user_preferences.themes.items()[0][0]
-            theme = bpy.context.user_preferences.themes[current_theme]
+            current_theme = bpy.context.preferences.themes.items()[0][0]
+            theme = bpy.context.preferences.themes[current_theme]
 
             armature.gamerig_colors[-1].normal = theme.view_3d.wire
             armature.gamerig_colors[-1].normal.hsv = theme.view_3d.wire.hsv
@@ -345,7 +345,7 @@ class DATA_OT_gamerig_bone_group_add_theme(bpy.types.Operator):
 
             id = int(self.theme[-2:]) - 1
 
-            theme_color_set = bpy.context.user_preferences.themes[0].bone_color_sets[id]
+            theme_color_set = bpy.context.preferences.themes[0].bone_color_sets[id]
 
             armature.gamerig_colors[-1].normal = theme_color_set.normal
             armature.gamerig_colors[-1].select = theme_color_set.select
@@ -660,8 +660,8 @@ class Sample(bpy.types.Operator):
 
     def execute(self, context):
         if context.mode == 'EDIT_ARMATURE' and self.metarig_type != "":
-            use_global_undo = context.user_preferences.edit.use_global_undo
-            context.user_preferences.edit.use_global_undo = False
+            use_global_undo = context.preferences.edit.use_global_undo
+            context.preferences.edit.use_global_undo = False
             try:
                 rig = get_rig_type(self.metarig_type)
                 create_sample = rig.create_sample
@@ -670,7 +670,7 @@ class Sample(bpy.types.Operator):
             else:
                 create_sample(context.active_object)
             finally:
-                context.user_preferences.edit.use_global_undo = use_global_undo
+                context.preferences.edit.use_global_undo = use_global_undo
                 bpy.ops.object.mode_set(mode='EDIT')
 
         return {'FINISHED'}

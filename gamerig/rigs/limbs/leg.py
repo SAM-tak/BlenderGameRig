@@ -349,8 +349,8 @@ class Leg_FK2IK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             """ Matches the fk bones in a leg rig to the ik bones.
             """
@@ -383,7 +383,7 @@ class Leg_FK2IK(bpy.types.Operator):
             match_pose_rotation(toe, toei)
             match_pose_scale(toe, toei)
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 
@@ -411,8 +411,8 @@ class Leg_IK2FK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             """ Matches the ik bones in a leg rig to the fk bones.
             """
@@ -455,7 +455,7 @@ class Leg_IK2FK(bpy.types.Operator):
             # Rotation Correction
             correct_rotation(thighi,thigh)
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 

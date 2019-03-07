@@ -204,8 +204,8 @@ class Tentacle_FK2IK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             """ Matches the fk bones in an arm rig to the ik bones.
             """
@@ -221,7 +221,7 @@ class Tentacle_FK2IK(bpy.types.Operator):
                 match_pose_rotation(fkb, orgb)
                 match_pose_scale(fkb, orgb)
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 register_class(Tentacle_FK2IK)

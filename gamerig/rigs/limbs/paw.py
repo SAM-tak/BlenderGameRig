@@ -229,12 +229,12 @@ class Paw_FK2IK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             fk2ik_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.toe_ik])
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 
@@ -262,12 +262,12 @@ class Paw_IK2FK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             ik2fk_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.mfoot_ik, self.toe_ik, self.mtoe_ik])
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 

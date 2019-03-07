@@ -146,8 +146,8 @@ class Arm_FK2IK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             """ Matches the fk bones in an arm rig to the ik bones.
             """
@@ -175,7 +175,7 @@ class Arm_FK2IK(bpy.types.Operator):
             match_pose_rotation(hand, handi)
             match_pose_scale(hand, handi)
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 
@@ -199,8 +199,8 @@ class Arm_IK2FK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             """ Matches the ik bones in an arm rig to the fk bones.
             """
@@ -224,7 +224,7 @@ class Arm_IK2FK(bpy.types.Operator):
             # Rotation Correction
             correct_rotation(uarmi, uarm)
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 
