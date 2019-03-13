@@ -196,8 +196,8 @@ class Tentacle_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK controller to IK"
     bl_options = {{'UNDO'}}
 
-    fk_ctrls = bpy.props.StringProperty(name="FK Bone names")
-    org_bones = bpy.props.StringProperty(name="Original Bone names")
+    fk_ctrls : bpy.props.StringProperty(name="FK Bone names")
+    org_bones : bpy.props.StringProperty(name="Original Bone names")
 
     @classmethod
     def poll(cls, context):
