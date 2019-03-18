@@ -31,7 +31,7 @@ class Rig(Limb):
         self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:4]
 
 
-    def generate(self):
+    def generate(self, context):
         return super().generate(self.create_leg, """
 controls = [%s]
 ik_ctrl  = [%s]

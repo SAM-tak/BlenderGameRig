@@ -299,7 +299,7 @@ def generate_rig(context, metarig):
             context.scene.objects.active = obj
             obj.select = True
             bpy.ops.object.mode_set(mode='EDIT')
-            scripts = rig.generate()
+            scripts = rig.generate(context)
             if scripts is not None:
                 ui_scripts.append(scripts[0])
             tt.tick("Generate rig : %s: " % rig)

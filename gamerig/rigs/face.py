@@ -1200,7 +1200,7 @@ class Rig:
         }, tweak_unique, mch_targets
 
 
-    def generate(self):
+    def generate(self, context):
 
         all_bones, tweak_unique, mchts = self.create_bones()
         self.parent_bones( all_bones, tweak_unique, mchts )

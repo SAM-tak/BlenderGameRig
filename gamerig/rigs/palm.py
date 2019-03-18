@@ -81,7 +81,7 @@ class Rig:
         # Get rig parameters
         self.palm_rotation_axis = params.palm_rotation_axis
 
-    def generate(self):
+    def generate(self, context):
         """ Generate the rig.
             Do NOT modify any of the original bones, except for adding constraints.
             The main armature should be selected and active before this is called.

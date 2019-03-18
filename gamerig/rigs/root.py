@@ -34,7 +34,7 @@ class Rig:
         self.basename            = basename(bone)
         self.params              = params
 
-    def generate(self):
+    def generate(self, context):
         """ Generate the rig.
             Do NOT modify any of the original bones, except for adding constraints.
             The main armature should be selected and active before this is called.

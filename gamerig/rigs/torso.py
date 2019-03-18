@@ -567,7 +567,7 @@ class Rig:
                 pb[bone].bone.layers = self.tweak_layers
 
 
-    def generate( self ):
+    def generate(self, context):
 
         # Torso Rig Anatomy:
         # Neck: all bones above neck point, last bone is head
