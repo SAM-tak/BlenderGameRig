@@ -1,11 +1,30 @@
-import bpy
+import bpy, re
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
-    copy_bone, flip_bone, org, basename, connected_children_names,
+    copy_bone, flip_bone, org, mch, basename, children_names,
     create_widget,
     MetarigError
 )
-from .widgets import create_sphere_widget, create_circle_widget
+from .widgets import create_sphere_widget, create_cube_widget
+
+def get_bone_name( name, btype, suffix = '' ):
+    if btype == 'mch':
+        name = mch( basename( name ) )
+    elif btype == 'ctrl':
+        name = basename( name )
+
+    if suffix:
+        # RE pattern match right or left parts
+        # match the letter "L" (or "R"), followed by an optional dot (".")
+        # and 0 or more digits at the end of the the string
+        results = re.match( r'^(\S+)(\.\S+)$',  name )
+        if results:
+            bname, addition = results.groups()
+            name = bname + "_" + suffix + addition
+        else:
+            name = name  + "_" + suffix
+
+    return name
 
 class Rig:
 
@@ -27,7 +46,7 @@ class Rig:
                 "GAMERIG ERROR: invalid chain length : rig '%s'" % basename(bone_name)
             )
         
-        self.org_bones = [bone_name] + connected_children_names(obj, bone_name)[:self.chain_length-1]
+        self.org_bones = [bone_name] + children_names(obj, bone_name, self.chain_length)
 
         if len(self.org_bones) <= 1:
             raise MetarigError(
@@ -38,121 +57,253 @@ class Rig:
     def make_controls( self ):
 
         bpy.ops.object.mode_set(mode ='EDIT')
-        org_bones = self.org_bones
         eb = self.obj.data.edit_bones
 
-        ctrl_chain = []
-        for i in range( len( org_bones ) ):
-            name = org_bones[i]
-
-            ctrl_bone = copy_bone(self.obj, name, basename(name))
+        fk_ctrl_chain = []
+        for name in self.org_bones:
+            ctrl_bone = copy_bone(self.obj, name, get_bone_name(name, 'ctrl', 'fk'))
             eb[ctrl_bone].use_connect = False
             flip_bone(self.obj, ctrl_bone)
             eb[ctrl_bone].length /= 4
-            eb[ctrl_bone].parent = None
+            eb[ctrl_bone].parent = eb[self.org_bones[0]].parent
 
-            ctrl_chain.append( ctrl_bone )
+            fk_ctrl_chain.append( ctrl_bone )
+
+        ik_ctrl_chain = []
+        for name in [self.org_bones[0], self.org_bones[-1]]:
+            ctrl_bone = copy_bone(self.obj, name, get_bone_name(name, 'ctrl', 'ik'))
+            eb[ctrl_bone].use_connect = False
+            flip_bone(self.obj, ctrl_bone)
+            eb[ctrl_bone].length /= 4
+            eb[ctrl_bone].parent = eb[name].parent if name == self.org_bones[0] else None
+
+            ik_ctrl_chain.append( ctrl_bone )
 
         # Make widgets
         bpy.ops.object.mode_set(mode ='OBJECT')
 
-        for ctrl in ctrl_chain[:-1]:
-            create_circle_widget(self.obj, ctrl)
-        create_sphere_widget(self.obj, ctrl_chain[-1])
+        for ctrl in fk_ctrl_chain:
+            create_sphere_widget(self.obj, ctrl)
+        for ctrl in ik_ctrl_chain:
+            create_cube_widget(self.obj, ctrl)
 
-        return ctrl_chain
+        return (fk_ctrl_chain, ik_ctrl_chain)
 
 
-    def make_constraints( self, all_bones ):
+    def make_mchs( self ):
+
+        bpy.ops.object.mode_set(mode ='EDIT')
+        eb = self.obj.data.edit_bones
+
+        fk_chain = []
+        for name in self.org_bones:
+            mch_bone = copy_bone(self.obj, name, get_bone_name(name, 'mch', 'fk'))
+            eb[mch_bone].parent = None
+            fk_chain.append( mch_bone )
+
+        mch_bone = copy_bone(self.obj, self.org_bones[-1], get_bone_name(self.org_bones[-1], 'mch', 'fk_term'))
+        eb[mch_bone].parent = None
+        flip_bone(self.obj, mch_bone)
+        eb[mch_bone].length /= 4
+        fk_chain.append( mch_bone )
+
+        ik_chain = []
+        for name in self.org_bones:
+            mch_bone = copy_bone(self.obj, name, get_bone_name(name, 'mch', 'ik'))
+            eb[mch_bone].parent = None
+            ik_chain.append( mch_bone )
+
+        mch_bone = copy_bone(self.obj, self.org_bones[-1], get_bone_name(self.org_bones[-1], 'mch', 'ik_term'))
+        eb[mch_bone].parent = None
+        flip_bone(self.obj, mch_bone)
+        eb[mch_bone].length /= 4
+        ik_chain.append( mch_bone )
+
+        for i, name in enumerate(fk_chain):
+            if i > 0:
+                eb[name].parent = eb[fk_chain[i - 1]]
+            else:
+                eb[name].parent = eb[self.org_bones[0]].parent
+
+        for i, name in enumerate(ik_chain):
+            if i > 0:
+                eb[name].parent = eb[ik_chain[i - 1]]
+            else:
+                eb[name].parent = eb[self.org_bones[0]].parent
+
+        return (fk_chain, ik_chain)
+
+
+    def make_constraints( self, context, all_bones ):
 
         bpy.ops.object.mode_set(mode ='OBJECT')
         org_bones = self.org_bones
         pb        = self.obj.pose.bones
 
         # org bones' constraints
-        ctrls = all_bones['control']
+        fk_ctrls = all_bones['fk_ctrls']
+        ik_ctrls = all_bones['ik_ctrls']
+        fk_chain = all_bones['fk_chain']
+        ik_chain = all_bones['ik_chain']
 
         # Create IK/FK switch property
-        pb[ctrls[0]]['IK/FK'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb[ctrls[0]], 'IK/FK', create=True )
+        pb[fk_ctrls[0]]['IK/FK'] = 1.0
+        prop = rna_idprop_ui_prop_get( pb[fk_ctrls[0]], 'IK/FK', create=True )
         prop["min"]         = 0.0
         prop["max"]         = 1.0
         prop["soft_min"]    = 0.0
         prop["soft_max"]    = 1.0
         prop["description"] = 'IK/FK Switch'
 
-        for org, ctrl in zip( org_bones, ctrls ):
-            self.make_constraint( org, {
+        # fk chain
+        for mchb, ctrl in zip( fk_chain, fk_ctrls ):
+            self.make_constraint( mchb, {
                 'constraint'  : 'DAMPED_TRACK',
                 'subtarget'   : ctrl,
             })
 
-            if ctrl != ctrls[0]:
-                drv = pb[org].constraints[-1].driver_add("influence").driver
-                drv.type = 'AVERAGE'
-
-                var = drv.variables.new()
-                var.name = 'ik_fk_switch'
-                var.type = "SINGLE_PROP"
-                var.targets[0].id = self.obj
-                var.targets[0].data_path = pb[ctrls[0]].path_from_id() + '['+ '"' + prop.name + '"' + ']'
-
             if self.stretchable:
-                self.make_constraint( org, {
+                self.make_constraint( mchb, {
                     'constraint'  : 'STRETCH_TO',
                     'subtarget'   : ctrl,
                 })
 
+                self.make_constraint( mchb, {
+                    'constraint'  : 'MAINTAIN_VOLUME'
+                })
+                pb[ mchb ].ik_stretch = 0.01
+
+        # ik chain
+        self.make_constraint( ik_chain[0], {
+            'constraint'  : 'DAMPED_TRACK',
+            'subtarget'   : ik_ctrls[0],
+        })
+
+        if self.stretchable:
+            self.make_constraint( ik_chain[0], {
+                'constraint'  : 'STRETCH_TO',
+                'subtarget'   : ik_ctrls[0],
+            })
+
+            self.make_constraint( ik_chain[0], {
+                'constraint'  : 'MAINTAIN_VOLUME'
+            })
+            pb[ ik_chain[0] ].ik_stretch = 0.01
+        
+        self.make_constraint( ik_chain[-2], {
+            'constraint'  : 'IK',
+            'subtarget'   : ik_ctrls[-1],
+            'chain_count' : self.chain_length,
+            'use_stretch' : self.stretchable,
+        })
+
+        # bind original bone
+        for org, fkmch, ikmch in zip( org_bones, fk_chain, ik_chain ):
+            stashed = self.stash_constraint(org)
+
+            self.make_constraint( org, {
+                'constraint'  : 'COPY_TRANSFORMS',
+                'subtarget'   : fkmch
+            })
+            self.make_constraint( org, {
+                'constraint'  : 'COPY_TRANSFORMS',
+                'subtarget'   : ikmch
+            })
+
+            # Add driver to relevant constraint
+            drv = pb[org].constraints[-1].driver_add("influence").driver
+            drv.type = 'AVERAGE'
+
+            var = drv.variables.new()
+            var.name = 'ik_fk_switch'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["IK/FK"]'
+
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+
+            drv_modifier.mode            = 'POLYNOMIAL'
+            drv_modifier.poly_order      = 1
+            drv_modifier.coefficients[0] = 1.0
+            drv_modifier.coefficients[1] = -1.0
+
+            self.unstash_constraint( org, stashed )
+
+            if len(pb[org].constraints) > 2:
+                if not 'Rig/Phy' in pb[fk_ctrls[0]]:
+                    # Create Rig/Physics switch property
+                    pb[fk_ctrls[0]]['Rig/Phy'] = 0.0
+                    prop = rna_idprop_ui_prop_get( pb[fk_ctrls[0]], 'Rig/Phy', create=True )
+                    prop["min"]         = 0.0
+                    prop["max"]         = 1.0
+                    prop["soft_min"]    = 0.0
+                    prop["soft_max"]    = 1.0
+                    prop["description"] = 'Rig/Phy Switch'
+                
                 # Add driver to relevant constraint
                 drv = pb[org].constraints[-1].driver_add("influence").driver
                 drv.type = 'AVERAGE'
 
                 var = drv.variables.new()
-                var.name = 'ik_fk_switch'
+                var.name = 'rig_phy_switch'
                 var.type = "SINGLE_PROP"
                 var.targets[0].id = self.obj
-                var.targets[0].data_path = pb[ctrls[0]].path_from_id() + '['+ '"' + prop.name + '"' + ']'
+                var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["Rig/Phy"]'
 
-                self.make_constraint( org, {
-                    'constraint'  : 'MAINTAIN_VOLUME'
-                })
-                pb[ org ].ik_stretch = 0.01
+                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
 
-        self.make_constraint( org_bones[-1], {
-            'constraint'  : 'IK',
-            'subtarget'   : ctrls[-1],
-            'chain_count' : self.chain_length,
-            'use_stretch' : self.stretchable,
-        })
-        # Add driver to relevant constraint
-        drv = pb[org_bones[-1]].constraints[-1].driver_add("influence").driver
-        drv.type = 'AVERAGE'
+                drv_modifier.mode            = 'POLYNOMIAL'
+                drv_modifier.poly_order      = 1
+                drv_modifier.coefficients[0] = 0.0
+                drv_modifier.coefficients[1] = 1.0
 
-        var = drv.variables.new()
-        var.name = 'ik_fk_switch'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ctrls[0]].path_from_id() + '['+ '"' + prop.name + '"' + ']'
 
-        drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+    def stash_constraint( self, bone ):
+        pb = self.obj.pose.bones[bone]
+        stashed = []
+        for i in pb.constraints:
+            d = {}
+            keys = dir(i)
+            for key in keys:
+                if not key.startswith("_") \
+                and not key.startswith("error_") \
+                and key != "group" \
+                and key != "is_valid" \
+                and key != "rna_type" \
+                and key != "bl_rna":
+                    try:
+                        d[key] = getattr(i, key)
+                    except AttributeError:
+                        pass
+            stashed.append(d)
+        
+        for i in pb.constraints:
+            pb.constraints.remove(i)
 
-        drv_modifier.mode            = 'POLYNOMIAL'
-        drv_modifier.poly_order      = 1
-        drv_modifier.coefficients[0] = 1.0
-        drv_modifier.coefficients[1] = -1.0
+        return stashed
 
-        if self.stretchable:
-            self.make_constraint( org_bones[-1], {
-                'constraint'  : 'MAINTAIN_VOLUME'
-            })
+
+    def unstash_constraint( self, bone, stash ):
+        pb = self.obj.pose.bones
+
+        owner_pb = pb[bone]
+
+        for i in stash:
+            const    = owner_pb.constraints.new( i['type'] )
+            for k, v in i.items():
+                if k != "type":
+                    try:
+                        setattr(const, k, v)
+                    except AttributeError:
+                        pass
 
 
     def make_constraint( self, bone, constraint ):
         bpy.ops.object.mode_set(mode = 'OBJECT')
         pb = self.obj.pose.bones
 
-        owner_pb     = pb[bone]
-        const        = owner_pb.constraints.new( constraint['constraint'] )
+        owner_pb = pb[bone]
+        const    = owner_pb.constraints.new( constraint['constraint'] )
 
         constraint['target'] = self.obj
 
@@ -162,18 +313,22 @@ class Rig:
             setattr( const, p, constraint[p] )
 
 
-    def generate(self):
+    def generate(self, context):
         bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         # Creating all bones
-        ctrl_chain  = self.make_controls()
+        ctrls  = self.make_controls()
+        mchs  = self.make_mchs()
 
         all_bones = {
-            'control' : ctrl_chain,
+            'fk_ctrls' : ctrls[0],
+            'ik_ctrls' : ctrls[1],
+            'fk_chain' : mchs[0],
+            'ik_chain' : mchs[1],
         }
 
-        self.make_constraints( all_bones )
+        self.make_constraints(context, all_bones)
 
         return ["""
 controls = %s
@@ -182,10 +337,15 @@ orgs = %s
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
+    if 'Rig/Phy' in pose_bones[ controls[0] ]:
+        layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
     props = layout.operator("pose.gamerig_tentacle_fk2ik_" + rig_id, text="Snap FK->IK (" + controls[0] + ")")
-    props.fk_ctrls = '%%s' %% controls[:-1]
-    props.org_bones = '%%s' %% orgs
-""" % (ctrl_chain, self.org_bones[1:])]
+    props.fk_ctrls = "%s"
+    props.ik_chain = "%s"
+    props = layout.operator("pose.gamerig_tentacle_ik2fk_" + rig_id, text="Snap IK->FK (" + controls[0] + ")")
+    props.ik_ctrls = "%s"
+    props.fk_chain = "%s"
+""" % (ctrls[0] + ctrls[1], self.org_bones[1:], '%s' % ctrls[0], '%s' % mchs[1][1:], '%s' % ctrls[1], '%s' % [mchs[0][1], mchs[0][-1]])]
 
 def operator_script(rig_id):
     return '''
@@ -196,8 +356,8 @@ class Tentacle_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK controller to IK"
     bl_options = {{'UNDO'}}
 
-    fk_ctrls : bpy.props.StringProperty(name="FK Bone names")
-    org_bones : bpy.props.StringProperty(name="Original Bone names")
+    fk_ctrls : bpy.props.StringProperty(name="FK Ctrl Bone names")
+    ik_chain : bpy.props.StringProperty(name="IK Bone names")
 
     @classmethod
     def poll(cls, context):
@@ -212,19 +372,55 @@ class Tentacle_FK2IK(bpy.types.Operator):
             obj = context.active_object
 
             fks  = eval(self.fk_ctrls)
-            orgs = eval(self.org_bones)
+            iks  = eval(self.ik_chain)
 
-            for fk, org in zip(fks, orgs):
+            for fk, ik in zip(fks, iks):
                 fkb = obj.pose.bones[fk]
-                orgb = obj.pose.bones[org]
-                match_pose_translation(fkb, orgb)
-                match_pose_rotation(fkb, orgb)
-                match_pose_scale(fkb, orgb)
+                ikb = obj.pose.bones[ik]
+                match_pose_translation(fkb, ikb)
+                match_pose_rotation(fkb, ikb)
+                match_pose_scale(fkb, ikb)
+        finally:
+            context.user_preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+class Tentacle_IK2FK(bpy.types.Operator):
+    """ Snaps an IK to FK.
+    """
+    bl_idname = "pose.gamerig_tentacle_ik2fk_{rig_id}"
+    bl_label = "Snap IK controller to FK"
+    bl_options = {{'UNDO'}}
+
+    ik_ctrls : bpy.props.StringProperty(name="IK Ctrl Bone names")
+    fk_chain : bpy.props.StringProperty(name="FK Bone names")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.user_preferences.edit.use_global_undo
+        context.user_preferences.edit.use_global_undo = False
+        try:
+            """ Matches the fk bones in an arm rig to the ik bones.
+            """
+            obj = context.active_object
+
+            iks = eval(self.ik_ctrls)
+            fks = eval(self.fk_chain)
+
+            for ik, fk in zip(iks, fks):
+                ikb = obj.pose.bones[ik]
+                fkb = obj.pose.bones[fk]
+                match_pose_translation(ikb, fkb)
+                match_pose_rotation(ikb, fkb)
+                match_pose_scale(ikb, fkb)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 register_class(Tentacle_FK2IK)
+register_class(Tentacle_IK2FK)
 
 
 '''.format(rig_id=rig_id)

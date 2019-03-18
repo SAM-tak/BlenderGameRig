@@ -568,6 +568,22 @@ def connected_children_names(obj, bone_name):
 
     return names
 
+def children_names(obj, bone_name, depth):
+    bone = obj.data.bones[bone_name]
+    names = []
+
+    for i in range(depth):
+        connects = 0
+        con_name = ""
+
+        if len(bone.children) > 0:
+            names.append(bone.children[0].name)
+            bone = bone.children[0]
+        else:
+            break
+
+    return names
+
 def find_root_bone(obj, bone_name):
     """ Find root rig original bone from all parent.
         This works while initializing (inner rig's __init__ function) only.

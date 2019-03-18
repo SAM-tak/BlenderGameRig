@@ -19,7 +19,7 @@
 # <pep8 compliant>
 
 import bpy
-
+from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import copy_bone, basename
 from .widgets import create_bone_widget, create_circle_widget
 
@@ -38,7 +38,7 @@ class Rig:
         self.params              = params
         self.control_widget_type = params.control_widget_type
 
-    def generate(self):
+    def generate(self, context):
         """ Generate the rig.
             Do NOT modify any of the original bones, except for adding constraints.
             The main armature should be selected and active before this is called.
@@ -57,17 +57,97 @@ class Rig:
         pb = self.obj.pose.bones
 
         if self.control_widget_type != 'None':
+            stashed = self.stash_constraint()
+
             # Constrain the original bone.
             con = pb[self.org_bone].constraints.new('COPY_TRANSFORMS')
             con.name = "copy_transforms"
             con.target = self.obj
             con.subtarget = bone
 
+            self.unstash_constraint(stashed)
+
+            if len(pb[self.org_bone].constraints) > 1:
+                if not 'Rig/Phy' in pb[bone]:
+                    # Create Rig/Physics switch property
+                    pb[bone]['Rig/Phy'] = 0.0
+                    prop = rna_idprop_ui_prop_get( pb[bone], 'Rig/Phy', create=True )
+                    prop["min"]         = 0.0
+                    prop["max"]         = 1.0
+                    prop["soft_min"]    = 0.0
+                    prop["soft_max"]    = 1.0
+                    prop["description"] = 'Rig/Phy Switch'
+                
+                # Add driver to relevant constraint
+                drv = pb[self.org_bone].constraints[-1].driver_add("influence").driver
+                drv.type = 'AVERAGE'
+
+                var = drv.variables.new()
+                var.name = 'rig_phy_switch'
+                var.type = "SINGLE_PROP"
+                var.targets[0].id = self.obj
+                var.targets[0].data_path = pb[bone].path_from_id() + '["Rig/Phy"]'
+
+                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+
+                drv_modifier.mode            = 'POLYNOMIAL'
+                drv_modifier.poly_order      = 1
+                drv_modifier.coefficients[0] = 0.0
+                drv_modifier.coefficients[1] = 1.0
+
             # Create control widget
             if self.control_widget_type == 'Circle':
                 create_circle_widget(self.obj, bone, radius = 0.5)
             else:
                 create_bone_widget(self.obj, bone)
+        
+        if self.control_widget_type != 'None' and 'Rig/Phy' in pb[bone]:
+            return ["""
+control = '%s'
+
+# Rig/Phy Switch on all Control Bones
+if is_selected( control ):
+    layout.prop( pose_bones[ control ], '["Rig/Phy"]', text='Rig/Phy (' + control + ')', slider = True )
+""" % bone]
+    
+
+    def stash_constraint( self ):
+        pb = self.obj.pose.bones[self.org_bone]
+        stashed = []
+        for i in pb.constraints:
+            d = {}
+            keys = dir(i)
+            for key in keys:
+                if not key.startswith("_") \
+                and not key.startswith("error_") \
+                and key != "group" \
+                and key != "is_valid" \
+                and key != "rna_type" \
+                and key != "bl_rna":
+                    try:
+                        d[key] = getattr(i, key)
+                    except AttributeError:
+                        pass
+            stashed.append(d)
+        
+        for i in pb.constraints:
+            pb.constraints.remove(i)
+
+        return stashed
+
+
+    def unstash_constraint( self, stash ):
+        pb = self.obj.pose.bones
+
+        owner_pb = pb[self.org_bone]
+        for i in stash:
+            const    = owner_pb.constraints.new( i['type'] )
+            for k, v in i.items():
+                if k != "type":
+                    try:
+                        setattr(const, k, v)
+                    except AttributeError:
+                        pass
 
 
 def add_parameters(params):

@@ -95,7 +95,7 @@ class Limb:
         mch_str = copy_bone(
             self.obj,
             org_bones[0],
-            get_bone_name( org_bones[0], 'mch', 'IK Stretch' )
+            get_bone_name( org_bones[0], 'mch', 'ik_stretch' )
         )
 
         if self.limb_type == 'arm':

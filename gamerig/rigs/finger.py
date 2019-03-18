@@ -20,7 +20,7 @@ class Rig:
             raise MetarigError("GAMERIG ERROR: Bone '%s': listen bro, that finger rig jusaint put tugetha rite. A little hint, use more than one bone!!" % (basename(bone_name)))
 
 
-    def generate(self):
+    def generate(self, context):
         org_bones = self.org_bones
 
         bpy.ops.object.mode_set(mode ='EDIT')
