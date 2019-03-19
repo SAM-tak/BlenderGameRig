@@ -124,14 +124,14 @@ def create(obj):
     arm.gamerig_layers[18].row = 12
     arm.gamerig_layers[18].selset = False
     arm.gamerig_layers[18].group = 4
-    arm.gamerig_layers[19].name = "Tail"
+    arm.gamerig_layers[19].name = "Tail (IK)"
     arm.gamerig_layers[19].row = 13
     arm.gamerig_layers[19].selset = False
-    arm.gamerig_layers[19].group = 3
-    arm.gamerig_layers[20].name = ""
-    arm.gamerig_layers[20].row = 1
+    arm.gamerig_layers[19].group = 2
+    arm.gamerig_layers[20].name = "Tail (FK)"
+    arm.gamerig_layers[20].row = 13
     arm.gamerig_layers[20].selset = False
-    arm.gamerig_layers[20].group = 0
+    arm.gamerig_layers[20].group = 5
     arm.gamerig_layers[21].name = ""
     arm.gamerig_layers[21].row = 1
     arm.gamerig_layers[21].selset = False
@@ -1586,6 +1586,10 @@ def create(obj):
         pass
     try:
         pbone.gamerig_parameters.mid_ik_lens = [3, 0, 0, 0]
+    except AttributeError:
+        pass
+    try:
+        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-waist']]
