@@ -51,6 +51,21 @@ class MetarigError(Exception):
     def __str__(self):
         return repr(self.message)
 
+#=======================================================================
+# Rig name generation
+#=======================================================================
+
+def get_rig_name(metarig):
+    rig_name = metarig.data.gamerig_rig_name
+    if not rig_name:
+        rig_name = metarig.name
+        if 'metarig' in rig_name:
+            rig_name = rig_name.replace('metarig', 'rig')
+        else:
+            rig_name = rig_name + 'rig'
+        rig_name = unique_name(bpy.data.objects.keys(), rig_name)
+    return rig_name
+
 
 #=======================================================================
 # Rig id generation
@@ -76,7 +91,7 @@ def unique_name(collection, base_name):
     count = 1
     name = base_name
 
-    while collection.get(name):
+    while name in collection:
         name = "%s.%03d" % (base_name, count)
         count += 1
     return name

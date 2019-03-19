@@ -24,7 +24,7 @@ from mathutils import Color
 
 from .utils import (
     get_rig_type, MetarigError, write_metarig, write_widget, unique_name, get_keyed_frames,
-    bones_in_frame, overwrite_prop_animation
+    bones_in_frame, overwrite_prop_animation, get_rig_name
 )
 from . import rig_lists, generate
 
@@ -140,13 +140,14 @@ class DATA_PT_gamerig(bpy.types.Panel):
         ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
             layout.row().prop(obj.data, "gamerig_rig_name", text="Rig Name")
-            rig_name = obj.data.gamerig_rig_name
+            rig_name = get_rig_name(obj)
             target = next((i for i in context.scene.objects if i != obj and i.type == 'ARMATURE' and i.name == rig_name), None)
             if target:
                 layout.row().operator("pose.gamerig_generate", text="Regenerate Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Overwrite to '%s'" % target.name, icon='INFO')
             else:
                 layout.row().operator("pose.gamerig_generate", text="Generate New Rig", icon='POSE_HLT')
+                layout.row().box().label(text="Create new armature '%s'" % rig_name, icon='INFO')
 
         elif obj.mode == 'EDIT':
             # Build types list
