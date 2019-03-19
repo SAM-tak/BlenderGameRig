@@ -27,7 +27,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
     get_rig_type, create_widget, assign_and_unlink_all_widgets,
     is_org, is_mch,is_jig,  org, get_wgt_name, random_id,
-    copy_attributes, gamma_correct,
+    copy_attributes, gamma_correct, get_rig_name,
     MetarigError
 )
 from . import rig_lists
@@ -58,7 +58,12 @@ def generate_rig(context, metarig):
     create_widget.created_widgets = None
 
     # Find overwrite target rig if exists
-    rig_name = metarig.data.gamerig_rig_name
+    rig_name = get_rig_name(metarig)
+
+    # store rig name to property if rig name already not stored.
+    if not metarig.data.gamerig_rig_name:
+        metarig.data.gamerig_rig_name = rig_name
+
     print("Fetch rig (%s)." % rig_name)
     obj = next((i for i in context.collection.objects if i != metarig and i.type == 'ARMATURE' and i.name == rig_name), None)
 

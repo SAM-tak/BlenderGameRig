@@ -179,8 +179,7 @@ def register():
     )
     bpy.types.Armature.gamerig_rig_name = StringProperty(
         name="GameRig Rig Name",
-        description="Defines the name of the Rig.",
-        default="rig"
+        description="Defines the name of the Rig."
     )
 
     bpy.types.Armature.gamerig_layers = CollectionProperty(type=GameRigArmatureLayer)
