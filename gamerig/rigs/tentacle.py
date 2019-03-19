@@ -60,6 +60,12 @@ class Rig:
                 "GAMERIG ERROR: invalid mid ik chain length : rig '%s'" % basename(bone_name)
             )
 
+        # Assign values to FK layers props if opted by user
+        if params.fk_extra_layers:
+            self.fk_layers = list(params.fk_layers)
+        else:
+            self.fk_layers = None
+
 
     def make_controls( self ):
 
@@ -106,6 +112,8 @@ class Rig:
         bpy.ops.object.mode_set(mode ='OBJECT')
 
         for ctrl in fk_ctrl_chain:
+            if self.fk_layers:
+                self.obj.pose.bones[ctrl].bone.layers = self.fk_layers
             create_sphere_widget(self.obj, ctrl)
         for ctrl in ik_ctrl_chain:
             create_cube_widget(self.obj, ctrl)
@@ -509,6 +517,19 @@ def add_parameters(params):
         description = "Allow stretch to controllers"
     )
 
+    # Setting up extra layers for the FK
+    params.fk_extra_layers = bpy.props.BoolProperty(
+        name        = "FK Extra Layers",
+        default     = True,
+        description = "FK Extra Layers"
+    )
+
+    params.fk_layers = bpy.props.BoolVectorProperty(
+        size        = 32,
+        description = "Layers for the FK controls to be on",
+        default     = tuple( [ i == 1 for i in range(0, 32) ] )
+    )
+
 
 def parameters_ui(layout, params):
     """ Create the ui for the rig parameters.
@@ -521,6 +542,32 @@ def parameters_ui(layout, params):
     
     r = layout.row()
     r.prop(params, "stretchable")
+
+    r = layout.row()
+    r.prop(params, "fk_extra_layers")
+    r.active = params.fk_extra_layers
+
+    col = r.column(align=True)
+    row = col.row(align=True)
+
+    for i in range(8):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
+
+    row = col.row(align=True)
+
+    for i in range(16,24):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
+
+    col = r.column(align=True)
+    row = col.row(align=True)
+
+    for i in range(8,16):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
+
+    row = col.row(align=True)
+
+    for i in range(24,32):
+        row.prop(params, "fk_layers", index=i, toggle=True, text="")
 
 
 def create_sample(obj):
