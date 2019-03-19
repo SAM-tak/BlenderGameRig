@@ -1,9 +1,9 @@
-import bpy, re, itertools
+import bpy, itertools
 from rna_prop_ui import rna_idprop_ui_prop_get
 from math import trunc
 from mathutils import Vector
 from ...utils import (
-    copy_bone, org, mch, basename,
+    copy_bone, org, mch, basename, insert_before_first_period,
     connected_children_names, find_root_bone,
     create_widget,
     MetarigError
@@ -540,14 +540,6 @@ def get_bone_name( name, btype, suffix = '' ):
         name = basename( name )
 
     if suffix:
-        # RE pattern match right or left parts
-        # match the letter "L" (or "R"), followed by an optional dot (".")
-        # and 0 or more digits at the end of the the string
-        results = re.match( r'^(\S+)(\.\S+)$',  name )
-        if results:
-            bname, addition = results.groups()
-            name = bname + "_" + suffix + addition
-        else:
-            name = name  + "_" + suffix
+        name = insert_before_first_period(name, '_' + suffix)
 
     return name

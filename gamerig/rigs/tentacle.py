@@ -1,30 +1,12 @@
-import bpy, re
+import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     copy_bone, flip_bone, org, mch, basename, children_names,
+    insert_before_first_period,
     create_widget,
     MetarigError
 )
 from .widgets import create_sphere_widget, create_cube_widget
-
-def get_bone_name( name, btype, suffix = '' ):
-    if btype == 'mch':
-        name = mch( basename( name ) )
-    elif btype == 'ctrl':
-        name = basename( name )
-
-    if suffix:
-        # RE pattern match right or left parts
-        # match the letter "L" (or "R"), followed by an optional dot (".")
-        # and 0 or more digits at the end of the the string
-        results = re.match( r'^(\S+)(\.\S+)$',  name )
-        if results:
-            bname, addition = results.groups()
-            name = bname + "_" + suffix + addition
-        else:
-            name = name  + "_" + suffix
-
-    return name
 
 
 class Rig:
@@ -74,7 +56,7 @@ class Rig:
 
         fk_ctrl_chain = []
         for name in self.org_bones:
-            ctrl_bone = copy_bone(self.obj, name, get_bone_name(name, 'ctrl', 'fk'))
+            ctrl_bone = copy_bone(self.obj, name, insert_before_first_period(basename(name), '_fk'))
             eb[ctrl_bone].use_connect = False
             flip_bone(self.obj, ctrl_bone)
             eb[ctrl_bone].length /= 4
@@ -100,7 +82,7 @@ class Rig:
             ik_org_chain = [self.org_bones[0], self.org_bones[-1]]
 
         for i, name in enumerate(ik_org_chain):
-            ctrl_bone = copy_bone(self.obj, name, get_bone_name(name, 'ctrl', 'ik'))
+            ctrl_bone = copy_bone(self.obj, name, insert_before_first_period(basename(name), '_ik'))
             eb[ctrl_bone].use_connect = False
             flip_bone(self.obj, ctrl_bone)
             eb[ctrl_bone].length /= 4
@@ -128,11 +110,11 @@ class Rig:
 
         fk_chain = []
         for name in self.org_bones:
-            mch_bone = copy_bone(self.obj, name, get_bone_name(name, 'mch', 'fk'))
+            mch_bone = copy_bone(self.obj, name, insert_before_first_period(mch(basename(name)), '_fk'))
             eb[mch_bone].parent = None
             fk_chain.append( mch_bone )
 
-        mch_bone = copy_bone(self.obj, self.org_bones[-1], get_bone_name(self.org_bones[-1], 'mch', 'fk_term'))
+        mch_bone = copy_bone(self.obj, self.org_bones[-1], insert_before_first_period(mch(basename(name)), '_fk_term'))
         eb[mch_bone].parent = None
         flip_bone(self.obj, mch_bone)
         eb[mch_bone].length /= 4
@@ -140,11 +122,11 @@ class Rig:
 
         ik_chain = []
         for name in self.org_bones:
-            mch_bone = copy_bone(self.obj, name, get_bone_name(name, 'mch', 'ik'))
+            mch_bone = copy_bone(self.obj, name, insert_before_first_period(mch(basename(name)), '_ik'))
             eb[mch_bone].parent = None
             ik_chain.append( mch_bone )
 
-        mch_bone = copy_bone(self.obj, self.org_bones[-1], get_bone_name(self.org_bones[-1], 'mch', 'ik_term'))
+        mch_bone = copy_bone(self.obj, self.org_bones[-1], insert_before_first_period(mch(basename(name)), '_ik_term'))
         eb[mch_bone].parent = None
         flip_bone(self.obj, mch_bone)
         eb[mch_bone].length /= 4
