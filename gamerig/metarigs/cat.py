@@ -1577,11 +1577,15 @@ def create(obj):
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False]
     try:
-        pbone.gamerig_parameters.chain_length = 3
+        pbone.gamerig_parameters.chain_length = 6
     except AttributeError:
         pass
     try:
         pbone.gamerig_parameters.stretchable = False
+    except AttributeError:
+        pass
+    try:
+        pbone.gamerig_parameters.mid_ik_lens = [3, 0, 0, 0]
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-waist']]
@@ -1689,7 +1693,7 @@ def create(obj):
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     pbone = obj.pose.bones[bones['ORG-tail.004']]
-    pbone.gamerig_type = 'tentacle'
+    pbone.gamerig_type = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

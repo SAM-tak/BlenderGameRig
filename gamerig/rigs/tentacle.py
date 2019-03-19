@@ -26,6 +26,7 @@ def get_bone_name( name, btype, suffix = '' ):
 
     return name
 
+
 class Rig:
 
     def __init__(self, obj, bone_name, params):
@@ -33,6 +34,7 @@ class Rig:
         self.params = params
 
         self.chain_length = params.chain_length
+        self.mid_ik_lens = params.mid_ik_lens
         self.stretchable = params.stretchable
 
         # Assign values to tweak layers props if opted by user
@@ -46,11 +48,16 @@ class Rig:
                 "GAMERIG ERROR: invalid chain length : rig '%s'" % basename(bone_name)
             )
         
-        self.org_bones = [bone_name] + children_names(obj, bone_name, self.chain_length)
+        self.org_bones = [bone_name] + children_names(obj, bone_name, self.chain_length - 1)
 
         if len(self.org_bones) <= 1:
             raise MetarigError(
                 "GAMERIG ERROR: invalid rig structure : rig '%s'" % basename(bone_name)
+            )
+
+        if any([x > 0 and x < 2 for x in self.mid_ik_lens]):
+            raise MetarigError(
+                "GAMERIG ERROR: invalid mid ik chain length : rig '%s'" % basename(bone_name)
             )
 
 
@@ -70,12 +77,28 @@ class Rig:
             fk_ctrl_chain.append( ctrl_bone )
 
         ik_ctrl_chain = []
-        for name in [self.org_bones[0], self.org_bones[-1]]:
+        ik_org_chain = []
+        cur_ik_len = 0
+        for i in self.mid_ik_lens:
+            if i > 0:
+                ik_org_chain.append(self.org_bones[cur_ik_len])
+                ik_org_chain.append(self.org_bones[cur_ik_len + i - 1])
+                if cur_ik_len + i >= len(self.org_bones) - 2:
+                    break
+                cur_ik_len += i
+        
+        if len(ik_org_chain) > 0:
+            ik_org_chain.append(self.org_bones[cur_ik_len])
+            ik_org_chain.append(self.org_bones[-1])
+        else:
+            ik_org_chain = [self.org_bones[0], self.org_bones[-1]]
+
+        for i, name in enumerate(ik_org_chain):
             ctrl_bone = copy_bone(self.obj, name, get_bone_name(name, 'ctrl', 'ik'))
             eb[ctrl_bone].use_connect = False
             flip_bone(self.obj, ctrl_bone)
             eb[ctrl_bone].length /= 4
-            eb[ctrl_bone].parent = eb[name].parent if name == self.org_bones[0] else None
+            eb[ctrl_bone].parent = eb[name].parent if i == 0 else eb[ik_ctrl_chain[-1]] if i % 2 == 0 else None
 
             ik_ctrl_chain.append( ctrl_bone )
 
@@ -120,16 +143,16 @@ class Rig:
         ik_chain.append( mch_bone )
 
         for i, name in enumerate(fk_chain):
-            if i > 0:
-                eb[name].parent = eb[fk_chain[i - 1]]
-            else:
+            if i == 0:
                 eb[name].parent = eb[self.org_bones[0]].parent
+            else:
+                eb[name].parent = eb[fk_chain[i - 1]]
 
         for i, name in enumerate(ik_chain):
-            if i > 0:
-                eb[name].parent = eb[ik_chain[i - 1]]
-            else:
+            if i == 0:
                 eb[name].parent = eb[self.org_bones[0]].parent
+            else:
+                eb[name].parent = eb[ik_chain[i - 1]]
 
         return (fk_chain, ik_chain)
 
@@ -174,28 +197,49 @@ class Rig:
                 pb[ mchb ].ik_stretch = 0.01
 
         # ik chain
-        self.make_constraint( ik_chain[0], {
-            'constraint'  : 'DAMPED_TRACK',
-            'subtarget'   : ik_ctrls[0],
-        })
-
-        if self.stretchable:
-            self.make_constraint( ik_chain[0], {
-                'constraint'  : 'STRETCH_TO',
-                'subtarget'   : ik_ctrls[0],
-            })
-
-            self.make_constraint( ik_chain[0], {
-                'constraint'  : 'MAINTAIN_VOLUME'
-            })
-            pb[ ik_chain[0] ].ik_stretch = 0.01
+        ik_chain_target = []
+        ik_lens = []
+        cur_ik_len = 0
+        for i in self.mid_ik_lens:
+            if i > 0:
+                if cur_ik_len + i >= len(self.org_bones) - 2:
+                    break
+                ik_chain_target.append(ik_chain[cur_ik_len])
+                ik_chain_target.append(ik_chain[cur_ik_len + i - 1])
+                ik_lens.append(i)
+                cur_ik_len += i
         
-        self.make_constraint( ik_chain[-2], {
-            'constraint'  : 'IK',
-            'subtarget'   : ik_ctrls[-1],
-            'chain_count' : self.chain_length,
-            'use_stretch' : self.stretchable,
-        })
+        if len(ik_chain_target) > 0:
+            ik_chain_target.append(ik_chain[cur_ik_len])
+            ik_chain_target.append(ik_chain[-2])
+            ik_lens.append(len(self.org_bones) - cur_ik_len)
+        else:
+            ik_chain_target = [ik_chain[0], ik_chain[-2]]
+        
+        for mchb, ctrl in zip( ik_chain_target[0::2], ik_ctrls[0::2] ):
+            self.make_constraint( mchb, {
+                'constraint'  : 'DAMPED_TRACK',
+                'subtarget'   : ctrl,
+            })
+
+            if self.stretchable:
+                self.make_constraint( mchb, {
+                    'constraint'  : 'STRETCH_TO',
+                    'subtarget'   : ctrl,
+                })
+
+                self.make_constraint( mchb, {
+                    'constraint'  : 'MAINTAIN_VOLUME'
+                })
+                pb[ mchb ].ik_stretch = 0.01
+
+        for l, mchb, ctrl in zip( ik_lens, ik_chain_target[1::2], ik_ctrls[1::2] ):
+            self.make_constraint( mchb, {
+                'constraint'  : 'IK',
+                'subtarget'   : ctrl,
+                'chain_count' : l,
+                'use_stretch' : self.stretchable,
+            })
 
         # bind original bone
         for org, fkmch, ikmch in zip( org_bones, fk_chain, ik_chain ):
@@ -328,6 +372,22 @@ class Rig:
             'ik_chain' : mchs[1],
         }
 
+        ik_fk_snap_target = []
+        cur_ik_len = 0
+        for i in self.mid_ik_lens:
+            if i > 0:
+                if cur_ik_len + i >= len(self.org_bones) - 2:
+                    break
+                ik_fk_snap_target.append(mchs[0][cur_ik_len + 1])
+                ik_fk_snap_target.append(mchs[0][cur_ik_len + i])
+                cur_ik_len += i
+        
+        if len(ik_fk_snap_target) > 0:
+            ik_fk_snap_target.append(mchs[0][cur_ik_len + 1])
+            ik_fk_snap_target.append(mchs[0][-1])
+        else:
+            ik_fk_snap_target = [mchs[0][1], mchs[0][-1]]
+
         self.make_constraints(context, all_bones)
 
         return ["""
@@ -345,7 +405,7 @@ if is_selected( controls ):
     props = layout.operator("pose.gamerig_tentacle_ik2fk_" + rig_id, text="Snap IK->FK (" + controls[0] + ")")
     props.ik_ctrls = "%s"
     props.fk_chain = "%s"
-""" % (ctrls[0] + ctrls[1], self.org_bones[1:], '%s' % ctrls[0], '%s' % mchs[1][1:], '%s' % ctrls[1], '%s' % [mchs[0][1], mchs[0][-1]])]
+""" % (ctrls[0] + ctrls[1], self.org_bones[1:], ctrls[0], mchs[1][1:], ctrls[1], ik_fk_snap_target)]
 
 def operator_script(rig_id):
     return '''
@@ -434,7 +494,13 @@ def add_parameters(params):
         name         = 'Chain Length',
         default      = 2,
         min          = 2,
-        description  = 'Position of the torso control and pivot point'
+        description  = 'Length of Tentacle Rig Chain'
+    )
+
+    params.mid_ik_lens = bpy.props.IntVectorProperty(
+        name         = 'Mid IK Chain Length',
+        size         = 4,
+        description  = 'Lengths of Intermediate IK chain'
     )
 
     params.stretchable = bpy.props.BoolProperty(
@@ -449,6 +515,9 @@ def parameters_ui(layout, params):
     """
     r = layout.row()
     r.prop(params, "chain_length")
+
+    r = layout.row()
+    r.prop(params, "mid_ik_lens")
     
     r = layout.row()
     r.prop(params, "stretchable")
