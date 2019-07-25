@@ -152,7 +152,8 @@ for submenu_name in sorted(list(metarigs_dict.keys())):
     # Create menu functions
     armature_submenu = type('Class_GameRig_' + submenu_name + '_submenu', (ArmatureSubMenu,), {})
     armature_submenu.bl_label = submenu_name
-    armature_submenu.bl_idname = 'ARMATURE_MT_GameRig_%s_class' % submenu_name
+    idname = '_D_'.join(submenu_name.split('.')[2:]).replace(' ', '_')
+    armature_submenu.bl_idname = 'ARMATURE_MT_GameRig_%s_class' % idname
     armature_submenu.operators = [(mop.bl_idname, name, text) for mop, name, text in metarig_ops[submenu_name]]
     ArmatureMainMenu.submenus.append(armature_submenu)
 
