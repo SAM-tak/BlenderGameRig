@@ -224,9 +224,9 @@ def correct_rotation(bone_ik, bone_fk):
 class PropertiesPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
+    bl_category = 'Item'
     bl_label = "GameRig Properties"
-    bl_idname = "PT_gamerig_properties_{rig_id}"
-    bl_category = 'View'
+    bl_idname = "POSE_PT_gamerig_properties_{rig_id}"
 
     @classmethod
     def poll(self, context):
@@ -262,9 +262,9 @@ class PropertiesPanel(bpy.types.Panel):
 class LayersPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = "GameRig Layers"
-    bl_idname = "PT_gamerig_layers_{rig_id}"
     bl_category = 'View'
+    bl_label = "GameRig Layers"
+    bl_idname = "POSE_PT_gamerig_layers_{rig_id}"
 
     @classmethod
     def poll(self, context):
