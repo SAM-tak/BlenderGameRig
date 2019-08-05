@@ -500,7 +500,6 @@ class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
     bl_label       = "GameRig Dev Tools"
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category    = 'View'
 
     @classmethod
     def poll(cls, context):
