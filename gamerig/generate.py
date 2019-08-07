@@ -259,16 +259,6 @@ def generate_rig(context, metarig):
                 k1 = d1.keyframe_points[i]
                 k2 = d2.keyframe_points[i]
                 copy_attributes(k1, k2)
-
-    # set location generated rig to metarig location
-    obj.location            = metarig.location
-    obj.rotation_mode       = metarig.rotation_mode
-    obj.rotation_euler      = metarig.rotation_euler
-    obj.rotation_quaternion = metarig.rotation_quaternion
-    obj.rotation_axis_angle = metarig.rotation_axis_angle
-    obj.scale               = metarig.scale
-
-    bpy.context.view_layer.update()
     
     t.tick("Duplicate rig: ")
     #----------------------------------
@@ -445,6 +435,14 @@ def generate_rig(context, metarig):
             child.matrix_world = mat
     # Restore active collection
     view_layer.active_layer_collection = layer_collection
+
+    # set location generated rig to metarig location
+    obj.location            = metarig.location
+    obj.rotation_mode       = metarig.rotation_mode
+    obj.rotation_euler      = metarig.rotation_euler
+    obj.rotation_quaternion = metarig.rotation_quaternion
+    obj.rotation_axis_angle = metarig.rotation_axis_angle
+    obj.scale               = metarig.scale
 
     t.tick("The rest: ")
 
