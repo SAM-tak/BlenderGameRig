@@ -29,7 +29,7 @@ from .utils import (
 from . import rig_lists, generate
 
 
-class DATA_PT_gamerig(bpy.types.Panel):
+class GAMERIG_PT_panel(bpy.types.Panel):
     bl_label = "GameRig"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -50,7 +50,7 @@ class DATA_PT_gamerig(bpy.types.Panel):
         # Ensure that the layers exist
         # Can't add while drawing, just use button
         if len(armature.gamerig_layers) < 30:
-            layout.operator("pose.gamerig_layer_init")
+            layout.operator("gamerig.layer_init")
         else:
             box = layout.box()
             show = id_store.gamerig_show_layer_names_pane
@@ -115,68 +115,70 @@ class DATA_PT_gamerig(bpy.types.Panel):
             idx = obj.data.gamerig_colors_index
 
             row = box.row()
-            row.operator("armature.gamerig_use_standard_colors", icon='FILE_REFRESH', text='')
+            row.operator("gamerig.use_standard_colors", icon='FILE_REFRESH', text='')
             row = row.row(align=True)
             row.prop(armature.gamerig_selection_colors, 'select', text='')
             row.prop(armature.gamerig_selection_colors, 'active', text='')
             row = box.row(align=True)
             icon = 'LOCKED' if armature.gamerig_colors_lock else 'UNLOCKED'
             row.prop(armature, 'gamerig_colors_lock', text = 'Unified select/active colors', icon=icon)
-            row.operator("armature.gamerig_apply_selection_colors", icon='FILE_REFRESH', text='Apply')
+            row.operator("gamerig.apply_selection_colors", icon='FILE_REFRESH', text='Apply')
             row = box.row()
             row.template_list("DATA_UL_gamerig_bone_groups", "", obj.data, "gamerig_colors", obj.data, "gamerig_colors_index")
 
             col = row.column(align=True)
-            col.operator("armature.gamerig_bone_group_add", icon='ZOOM_IN', text="")
-            col.operator("armature.gamerig_bone_group_remove", icon='ZOOM_OUT', text="").idx = obj.data.gamerig_colors_index
+            col.operator("gamerig.bone_group_add", icon='ZOOM_IN', text="")
+            col.operator("gamerig.bone_group_remove", icon='ZOOM_OUT', text="").idx = obj.data.gamerig_colors_index
             col.menu("DATA_MT_gamerig_bone_groups_specials", icon='DOWNARROW_HLT', text="")
             row = box.row()
             row.prop(armature, 'gamerig_theme_to_add', text = 'Theme')
-            op = row.operator("armature.gamerig_bone_group_add_theme", text="Add From Theme")
+            op = row.operator("gamerig.bone_group_add_theme", text="Add From Theme")
             op.theme = armature.gamerig_theme_to_add
             row = box.row()
-            row.operator("armature.gamerig_add_bone_groups", text="Add Standard")
+            row.operator("gamerig.add_bone_groups", text="Add Standard")
 
         ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
             layout.row().prop(obj.data, "gamerig_rig_name", text="Rig Name")
             rig_name = get_rig_name(obj)
-            target = next((i for i in context.scene.objects if i != obj and i.type == 'ARMATURE' and i.name == rig_name), None)
+            target = next((i for i in context.collection.objects if i != obj and i.type == 'ARMATURE' and i.name == rig_name), None)
             if target:
-                layout.row().operator("pose.gamerig_generate", text="Regenerate Rig", icon='POSE_HLT')
+                layout.row().operator("gamerig.generate", text="Regenerate Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Overwrite to '%s'" % target.name, icon='INFO')
+                if obj.mode == 'OBJECT':
+                    layout.row().operator("gamerig.toggle_armature", text="Toggle armature metarig/generated", icon='POSE_HLT')
             else:
-                layout.row().operator("pose.gamerig_generate", text="Generate New Rig", icon='POSE_HLT')
+                layout.row().operator("gamerig.generate", text="Generate New Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Create new armature '%s'" % rig_name, icon='INFO')
 
         elif obj.mode == 'EDIT':
             # Build types list
-            collection_name = str(id_store.gamerig_collection).replace(" ", "")
+            category_name = str(id_store.gamerig_category).replace(" ", "")
 
             for i in range(0, len(id_store.gamerig_types)):
                 id_store.gamerig_types.remove(0)
 
             for r in rig_lists.rig_list:
 
-                if collection_name == "All":
+                if category_name == "All":
                     a = id_store.gamerig_types.add()
                     a.name = r
-                elif r.startswith(collection_name + '.'):
+                elif r.startswith(category_name + '.'):
                     a = id_store.gamerig_types.add()
                     a.name = r
-                elif (collection_name == "None") and ("." not in r):
+                elif (category_name == "None") and ("." not in r):
                     a = id_store.gamerig_types.add()
                     a.name = r
 
             # Rig type list
             layout.row().template_list("UI_UL_list", "gamerig_types", id_store, "gamerig_types", id_store, 'gamerig_active_type')
 
-            props = layout.operator("armature.gamerig_metarig_sample_add", text="Add sample")
+            props = layout.operator("gamerig.metarig_sample_add", text="Add sample")
             props.metarig_type = id_store.gamerig_types[id_store.gamerig_active_type].name
 
 
-class DATA_OT_gamerig_add_bone_groups(bpy.types.Operator):
-    bl_idname = "armature.gamerig_add_bone_groups"
+class GAMERIG_OT_add_bone_groups(bpy.types.Operator):
+    bl_idname = "gamerig.add_bone_groups"
     bl_label  = "GameRig Add Standard Bone Groups"
 
     @classmethod
@@ -218,8 +220,8 @@ class DATA_OT_gamerig_add_bone_groups(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DATA_OT_gamerig_use_standard_colors(bpy.types.Operator):
-    bl_idname = "armature.gamerig_use_standard_colors"
+class GAMERIG_OT_use_standard_colors(bpy.types.Operator):
+    bl_idname = "gamerig.use_standard_colors"
     bl_label  = "GameRig Get active/select colors from current theme"
 
     @classmethod
@@ -245,8 +247,8 @@ class DATA_OT_gamerig_use_standard_colors(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DATA_OT_gamerig_apply_selection_colors(bpy.types.Operator):
-    bl_idname = "armature.gamerig_apply_selection_colors"
+class GAMERIG_OT_apply_selection_colors(bpy.types.Operator):
+    bl_idname = "gamerig.apply_selection_colors"
     bl_label  = "GameRig Apply user defined active/select colors"
 
     @classmethod
@@ -269,8 +271,8 @@ class DATA_OT_gamerig_apply_selection_colors(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DATA_OT_gamerig_bone_group_add(bpy.types.Operator):
-    bl_idname = "armature.gamerig_bone_group_add"
+class GAMERIG_OT_bone_group_add(bpy.types.Operator):
+    bl_idname = "gamerig.bone_group_add"
     bl_label  = "GameRig Add Bone Group color set"
 
     @classmethod
@@ -298,8 +300,8 @@ class DATA_OT_gamerig_bone_group_add(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DATA_OT_gamerig_bone_group_add_theme(bpy.types.Operator):
-    bl_idname  = "armature.gamerig_bone_group_add_theme"
+class GAMERIG_OT_bone_group_add_theme(bpy.types.Operator):
+    bl_idname  = "gamerig.bone_group_add_theme"
     bl_label   = "GameRig Add Bone Group color set from Theme"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -355,8 +357,8 @@ class DATA_OT_gamerig_bone_group_add_theme(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DATA_OT_gamerig_bone_group_remove(bpy.types.Operator):
-    bl_idname = "armature.gamerig_bone_group_remove"
+class GAMERIG_OT_bone_group_remove(bpy.types.Operator):
+    bl_idname = "gamerig.bone_group_remove"
     bl_label  = "GameRig Remove Bone Group color set"
 
     idx: IntProperty()
@@ -379,8 +381,8 @@ class DATA_OT_gamerig_bone_group_remove(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DATA_OT_gamerig_bone_group_remove_all(bpy.types.Operator):
-    bl_idname = "armature.gamerig_bone_group_remove_all"
+class GAMERIG_OT_bone_group_remove_all(bpy.types.Operator):
+    bl_idname = "gamerig.bone_group_remove_all"
     bl_label  = "GameRig Remove All Bone Groups"
 
     @classmethod
@@ -400,7 +402,7 @@ class DATA_OT_gamerig_bone_group_remove_all(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DATA_UL_gamerig_bone_groups(bpy.types.UIList):
+class GAMERIG_UL_bone_groups(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row(align=True)
         row = row.split(factor=0.1)
@@ -418,7 +420,7 @@ class DATA_UL_gamerig_bone_groups(bpy.types.UIList):
         row2.enabled = not bpy.context.object.data.gamerig_colors_lock
 
 
-class DATA_MT_gamerig_bone_groups_specials(bpy.types.Menu):
+class GAMERIG_MT_bone_groups_specials(bpy.types.Menu):
     bl_label = 'GameRig Bone Groups Specials'
 
     def draw(self, context):
@@ -427,8 +429,8 @@ class DATA_MT_gamerig_bone_groups_specials(bpy.types.Menu):
         layout.operator('armature.gamerig_bone_group_remove_all')
 
 
-class BONE_PT_gamerig_type(bpy.types.Panel):
-    bl_label       = "GameRig Type"
+class GAMERIG_PT_rig_type(bpy.types.Panel):
+    bl_label       = "GameRig Rig Type"
     bl_space_type  = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context     = "bone"
@@ -443,7 +445,7 @@ class BONE_PT_gamerig_type(bpy.types.Panel):
         C = context
         id_store = C.window_manager
         bone = context.active_pose_bone
-        collection_name = str(id_store.gamerig_collection).replace(" ", "")
+        category_name = str(id_store.gamerig_category).replace(" ", "")
         rig_name = str(context.active_pose_bone.gamerig_type).replace(" ", "")
 
         layout = self.layout
@@ -456,19 +458,19 @@ class BONE_PT_gamerig_type(bpy.types.Panel):
             if r in rig_lists.implementation_rigs:
                 continue
             # collection = r.split('.')[0]  # UNUSED
-            if collection_name == "All":
+            if category_name == "All":
                 a = id_store.gamerig_types.add()
                 a.name = r
-            elif r.startswith(collection_name + '.'):
+            elif r.startswith(category_name + '.'):
                 a = id_store.gamerig_types.add()
                 a.name = r
-            elif collection_name == "None" and len(r.split('.')) == 1:
+            elif category_name == "None" and len(r.split('.')) == 1:
                 a = id_store.gamerig_types.add()
                 a.name = r
         
-        # Rig collection field
+        # Rig category field
         row = layout.row()
-        row.prop(id_store, 'gamerig_collection', text="Category")
+        row.prop(id_store, 'gamerig_category', text="Category")
 
         # Rig type field
         row = layout.row()
@@ -496,10 +498,10 @@ class BONE_PT_gamerig_type(bpy.types.Panel):
                     rig.parameters_ui(box, bone.gamerig_parameters)
 
 
-class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
-    bl_label       = "GameRig Dev Tools"
+class GAMERIG_PT_dev_tools(bpy.types.Panel):
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
+    bl_label       = "GameRig Dev Tools"
 
     @classmethod
     def poll(cls, context):
@@ -511,20 +513,20 @@ class VIEW3D_PT_gamerig_dev_tools(bpy.types.Panel):
         if obj is not None:
             if context.mode == 'EDIT_ARMATURE':
                 r = self.layout.row()
-                r.operator("armature.gamerig_encode_metarig", text="Encode Metarig to Python")
+                r.operator("gamerig.encode_metarig", text="Encode Metarig to Python")
                 r = self.layout.row()
-                r.operator("armature.gamerig_encode_metarig_sample", text="Encode Sample to Python")
+                r.operator("gamerig.encode_metarig_sample", text="Encode Sample to Python")
 
             if context.mode == 'EDIT_MESH':
                 r = self.layout.row()
-                r.operator("mesh.gamerig_encode_mesh_widget", text="Encode Mesh Widget to Python")
+                r.operator("gamerig.encode_mesh_widget", text="Encode Mesh Widget to Python")
 
 
-class BONE_PT_gamerig_utility(bpy.types.Panel):
-    bl_label       = "GameRig Utility"
+class GAMERIG_PT_utility(bpy.types.Panel):
     bl_space_type  = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context     = "bone"
+    bl_label       = "GameRig Utility"
 
     @classmethod
     def poll(cls, context):
@@ -534,7 +536,7 @@ class BONE_PT_gamerig_utility(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("pose.gamerig_reveal_unlinked_widget")
+        layout.operator("gamerig.reveal_unlinked_widget")
 
 
 def gamerig_report_exception(operator, exception):
@@ -562,7 +564,7 @@ def gamerig_report_exception(operator, exception):
 class LayerInit(bpy.types.Operator):
     """Initialize armature gamerig layers"""
 
-    bl_idname  = "pose.gamerig_layer_init"
+    bl_idname  = "gamerig.layer_init"
     bl_label   = "Add GameRig Layers"
     bl_options = {'UNDO'}
 
@@ -577,7 +579,7 @@ class LayerInit(bpy.types.Operator):
 class RevealUnlinkedWidget(bpy.types.Operator):
     """Reveal unlinked widget in current scene.
     """
-    bl_idname  = "pose.gamerig_reveal_unlinked_widget"
+    bl_idname  = "gamerig.reveal_unlinked_widget"
     bl_label   = "Reveal unlinked widget to current scene"
     bl_options = {'UNDO'}
 
@@ -585,7 +587,7 @@ class RevealUnlinkedWidget(bpy.types.Operator):
     def poll(cls, context):
         return context.scene and context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
          and context.active_pose_bone.custom_shape is not None\
-         and not (context.active_pose_bone.custom_shape.name in context.scene.objects)
+         and not (context.active_pose_bone.custom_shape.name in context.view_layer.objects)
 
     def execute(self, context):
         context.collection.objects.link(context.active_pose_bone.custom_shape)
@@ -595,10 +597,10 @@ class RevealUnlinkedWidget(bpy.types.Operator):
 class Generate(bpy.types.Operator):
     """Generates a rig from the active metarig armature"""
 
-    bl_idname      = "pose.gamerig_generate"
+    bl_idname      = "gamerig.generate"
     bl_label       = "GameRig Generate Rig"
-    bl_options     = {'UNDO'}
     bl_description = 'Generates a rig from the active metarig armature'
+    bl_options     = {'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -623,17 +625,17 @@ class Generate(bpy.types.Operator):
 class ToggleArmatureReference(bpy.types.Operator):
     """Toggle armature reference between metarig and generated rig."""
 
-    bl_idname  = "pose.gamerig_toggle_armature"
+    bl_idname  = "gamerig.toggle_armature"
     bl_label   = "GameRig Toggle Rig"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         metarig = context.object
-        if 'gamerig_id' in metarig.data:
-            rig_id = metarig.data['gamerig_id']
-            genrig = next((i for i in context.scene.objects if i and i != metarig and i.data and 'gamerig_id' in i.data and i.data['gamerig_id'] == rig_id), None)
+        if metarig.data.get("gamerig_rig_ui_template") is not None:
+            rig_name = get_rig_name(metarig)
+            genrig = next((i for i in context.collection.objects if i and i != metarig and i.type == 'ARMATURE' and i.name == rig_name), None)
             if genrig is not None:
-                for i in context.scene.objects:
+                for i in context.collection.objects:
                     for j in i.modifiers:
                         if j.type == 'ARMATURE':
                             if j.object == genrig:
@@ -648,7 +650,7 @@ class Sample(bpy.types.Operator):
     """Create a sample metarig to be modified before generating """ \
     """the final rig"""
 
-    bl_idname  = "armature.gamerig_metarig_sample_add"
+    bl_idname  = "gamerig.metarig_sample_add"
     bl_label   = "Add a sample metarig for a rig type"
     bl_options = {'UNDO'}
 
@@ -679,7 +681,7 @@ class Sample(bpy.types.Operator):
 class EncodeMetarig(bpy.types.Operator):
     """ Creates Python code that will generate the selected metarig.
     """
-    bl_idname  = "armature.gamerig_encode_metarig"
+    bl_idname  = "gamerig.encode_metarig"
     bl_label   = "GameRig Encode Metarig"
     bl_options = {'UNDO'}
 
@@ -707,7 +709,7 @@ class EncodeMetarigSample(bpy.types.Operator):
     """ Creates Python code that will generate the selected metarig
         as a sample.
     """
-    bl_idname  = "armature.gamerig_encode_metarig_sample"
+    bl_idname  = "gamerig.encode_metarig_sample"
     bl_label   = "GameRig Encode Metarig Sample"
     bl_options = {'UNDO'}
 
@@ -734,7 +736,7 @@ class EncodeMetarigSample(bpy.types.Operator):
 class EncodeWidget(bpy.types.Operator):
     """ Creates Python code that will generate the selected metarig.
     """
-    bl_idname  = "mesh.gamerig_encode_mesh_widget"
+    bl_idname  = "gamerig.encode_mesh_widget"
     bl_label   = "GameRig Encode Widget"
     bl_options = {'UNDO'}
 
@@ -760,23 +762,24 @@ class EncodeWidget(bpy.types.Operator):
 ### Registering ###
 
 classes = (
-    DATA_OT_gamerig_add_bone_groups,
-    DATA_OT_gamerig_use_standard_colors,
-    DATA_OT_gamerig_apply_selection_colors,
-    DATA_OT_gamerig_bone_group_add,
-    DATA_OT_gamerig_bone_group_add_theme,
-    DATA_OT_gamerig_bone_group_remove,
-    DATA_OT_gamerig_bone_group_remove_all,
-    DATA_UL_gamerig_bone_groups,
-    DATA_MT_gamerig_bone_groups_specials,
-    DATA_PT_gamerig,
-    BONE_PT_gamerig_type,
-    BONE_PT_gamerig_utility,
-    VIEW3D_PT_gamerig_dev_tools,
+    GAMERIG_OT_add_bone_groups,
+    GAMERIG_OT_use_standard_colors,
+    GAMERIG_OT_apply_selection_colors,
+    GAMERIG_OT_bone_group_add,
+    GAMERIG_OT_bone_group_add_theme,
+    GAMERIG_OT_bone_group_remove,
+    GAMERIG_OT_bone_group_remove_all,
+    GAMERIG_UL_bone_groups,
+    GAMERIG_MT_bone_groups_specials,
+    GAMERIG_PT_panel,
+    GAMERIG_PT_rig_type,
+    GAMERIG_PT_utility,
+    GAMERIG_PT_dev_tools,
     LayerInit,
     RevealUnlinkedWidget,
     Generate,
     Sample,
+    ToggleArmatureReference,
     EncodeMetarig,
     EncodeMetarigSample,
     EncodeWidget,

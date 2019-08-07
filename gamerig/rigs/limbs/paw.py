@@ -45,7 +45,7 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator("pose.gamerig_paw_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props = layout.operator("gamerig.paw_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -54,7 +54,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
     props.toe_ik   = controls[6]
-    props = layout.operator("pose.gamerig_paw_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props = layout.operator("gamerig.paw_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -210,9 +210,9 @@ def operator_script(rig_id):
 class Paw_FK2IK(bpy.types.Operator):
     """ Snaps an FK leg to an IK leg.
     """
-    bl_idname = "pose.gamerig_paw_fk2ik_{rig_id}"
+    bl_idname = "gamerig.paw_fk2ik_{rig_id}"
     bl_label = "Snap FK leg to IK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
     shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
@@ -241,9 +241,9 @@ class Paw_FK2IK(bpy.types.Operator):
 class Paw_IK2FK(bpy.types.Operator):
     """ Snaps an IK paw to an FK leg.
     """
-    bl_idname = "pose.gamerig_paw_ik2fk_{rig_id}"
+    bl_idname = "gamerig.paw_ik2fk_{rig_id}"
     bl_label = "Snap IK leg to FK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
     shin_fk:  bpy.props.StringProperty(name="Shin FK Name")

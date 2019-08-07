@@ -77,7 +77,6 @@ def generate_rig(context, metarig):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    scene = context.scene
     view_layer = context.view_layer
     collection = context.collection
     layer_collection = context.layer_collection
@@ -103,6 +102,7 @@ def generate_rig(context, metarig):
             # Get rid of anim data in case the rig already existed
             print("Clear rig animation data.")
             obj.animation_data_clear()
+            obj.data.animation_data_clear()
         except KeyError:
             print("Overwrite failed.")
             obj = None
@@ -159,7 +159,7 @@ def generate_rig(context, metarig):
     bpy.ops.object.delete()
 
     # Select the generated rig
-    for objt in scene.objects:
+    for objt in view_layer.objects:
         objt.select_set(False)  # deselect all objects
     obj.select_set(True)
     view_layer.objects.active = obj
@@ -260,6 +260,16 @@ def generate_rig(context, metarig):
                 k2 = d2.keyframe_points[i]
                 copy_attributes(k1, k2)
 
+    # set location generated rig to metarig location
+    obj.location            = metarig.location
+    obj.rotation_mode       = metarig.rotation_mode
+    obj.rotation_euler      = metarig.rotation_euler
+    obj.rotation_quaternion = metarig.rotation_quaternion
+    obj.rotation_axis_angle = metarig.rotation_axis_angle
+    obj.scale               = metarig.scale
+
+    bpy.context.view_layer.update()
+    
     t.tick("Duplicate rig: ")
     #----------------------------------
     # Make a list of the original bones so we can keep track of them.
@@ -435,17 +445,6 @@ def generate_rig(context, metarig):
             child.matrix_world = mat
     # Restore active collection
     view_layer.active_layer_collection = layer_collection
-
-    t.tick("The rest: ")
-
-
-    # set location generated rig to metarig location
-    obj.location            = metarig.location
-    obj.rotation_mode       = metarig.rotation_mode
-    obj.rotation_euler      = metarig.rotation_euler
-    obj.rotation_quaternion = metarig.rotation_quaternion
-    obj.rotation_axis_angle = metarig.rotation_axis_angle
-    obj.scale               = metarig.scale
 
     t.tick("The rest: ")
 

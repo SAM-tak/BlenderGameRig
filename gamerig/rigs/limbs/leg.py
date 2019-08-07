@@ -41,7 +41,7 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator("pose.gamerig_leg_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props = layout.operator("gamerig.leg_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -50,7 +50,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
     props.toe_ik   = controls[5]
-    props = layout.operator("pose.gamerig_leg_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props = layout.operator("gamerig.leg_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -330,9 +330,9 @@ def operator_script(rig_id):
 class Leg_FK2IK(bpy.types.Operator):
     """ Snaps an FK leg to an IK leg.
     """
-    bl_idname = "pose.gamerig_leg_fk2ik_{rig_id}"
+    bl_idname = "gamerig.leg_fk2ik_{rig_id}"
     bl_label = "Snap FK leg to IK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
     shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
@@ -390,9 +390,9 @@ class Leg_FK2IK(bpy.types.Operator):
 class Leg_IK2FK(bpy.types.Operator):
     """ Snaps an IK leg to an FK leg.
     """
-    bl_idname = "pose.gamerig_leg_ik2fk_{rig_id}"
+    bl_idname = "gamerig.leg_ik2fk_{rig_id}"
     bl_label = "Snap IK leg to FK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
     shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
@@ -434,8 +434,8 @@ class Leg_IK2FK(bpy.types.Operator):
             set_pose_rotation(footroll, Matrix())
 
             # Foot position
-            mat = mfooti.bone.matrix_local.inverted() * footi.bone.matrix_local
-            footmat = get_pose_matrix_in_other_space(foot.matrix, footi) * mat
+            mat = mfooti.bone.matrix_local.inverted() @ footi.bone.matrix_local
+            footmat = get_pose_matrix_in_other_space(foot.matrix, footi) @ mat
             set_pose_translation(footi, footmat)
             set_pose_rotation(footi, footmat)
             set_pose_scale(footi, footmat)

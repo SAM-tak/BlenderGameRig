@@ -41,14 +41,14 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator("pose.gamerig_arm_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props = layout.operator("gamerig.arm_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
     props.uarm_fk = controls[1]
     props.farm_fk = controls[2]
     props.hand_fk = controls[3]
     props.uarm_ik = controls[0]
     props.farm_ik = ik_ctrl[1]
     props.hand_ik = controls[4]
-    props = layout.operator("pose.gamerig_arm_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props = layout.operator("gamerig.arm_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
     props.uarm_fk = controls[1]
     props.farm_fk = controls[2]
     props.hand_fk = controls[3]
@@ -129,9 +129,9 @@ def operator_script(rig_id):
 class Arm_FK2IK(bpy.types.Operator):
     """ Snaps an FK arm to an IK arm.
     """
-    bl_idname = "pose.gamerig_arm_fk2ik_{rig_id}"
+    bl_idname = "gamerig.arm_fk2ik_{rig_id}"
     bl_label = "Snap FK arm to IK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     uarm_fk: bpy.props.StringProperty(name="Upper Arm FK Name")
     farm_fk: bpy.props.StringProperty(name="Forerm FK Name")
@@ -182,9 +182,9 @@ class Arm_FK2IK(bpy.types.Operator):
 class Arm_IK2FK(bpy.types.Operator):
     """ Snaps an IK arm to an FK arm.
     """
-    bl_idname = "pose.gamerig_arm_ik2fk_{rig_id}"
+    bl_idname = "gamerig.arm_ik2fk_{rig_id}"
     bl_label = "Snap IK arm to FK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     uarm_fk: bpy.props.StringProperty(name="Upper Arm FK Name")
     farm_fk: bpy.props.StringProperty(name="Forerm FK Name")

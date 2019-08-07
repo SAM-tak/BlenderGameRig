@@ -389,10 +389,10 @@ if is_selected( controls ):
     layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
     if 'Rig/Phy' in pose_bones[ controls[0] ]:
         layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
-    props = layout.operator("pose.gamerig_tentacle_fk2ik_" + rig_id, text="Snap FK->IK (" + controls[0] + ")")
+    props = layout.operator("gamerig.tentacle_fk2ik_" + rig_id, text="Snap FK->IK (" + controls[0] + ")")
     props.fk_ctrls = "%s"
     props.ik_chain = "%s"
-    props = layout.operator("pose.gamerig_tentacle_ik2fk_" + rig_id, text="Snap IK->FK (" + controls[0] + ")")
+    props = layout.operator("gamerig.tentacle_ik2fk_" + rig_id, text="Snap IK->FK (" + controls[0] + ")")
     props.ik_ctrls = "%s"
     props.fk_chain = "%s"
 """ % (ctrls[0] + ctrls[1], self.org_bones[1:], ctrls[0], mchs[1][1:], ctrls[1], ik_fk_snap_target)]
@@ -402,9 +402,9 @@ def operator_script(rig_id):
 class Tentacle_FK2IK(bpy.types.Operator):
     """ Snaps an FK to IK.
     """
-    bl_idname = "pose.gamerig_tentacle_fk2ik_{rig_id}"
+    bl_idname = "gamerig.tentacle_fk2ik_{rig_id}"
     bl_label = "Snap FK controller to IK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     fk_ctrls : bpy.props.StringProperty(name="FK Ctrl Bone names")
     ik_chain : bpy.props.StringProperty(name="IK Bone names")
@@ -437,9 +437,9 @@ class Tentacle_FK2IK(bpy.types.Operator):
 class Tentacle_IK2FK(bpy.types.Operator):
     """ Snaps an IK to FK.
     """
-    bl_idname = "pose.gamerig_tentacle_ik2fk_{rig_id}"
+    bl_idname = "gamerig.tentacle_ik2fk_{rig_id}"
     bl_label = "Snap IK controller to FK"
-    bl_options = {{'UNDO'}}
+    bl_options = {{'UNDO', 'INTERNAL'}}
 
     ik_ctrls : bpy.props.StringProperty(name="IK Ctrl Bone names")
     fk_chain : bpy.props.StringProperty(name="FK Bone names")

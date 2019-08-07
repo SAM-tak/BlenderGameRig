@@ -338,14 +338,14 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         bone_transform_name = bone_name
 
     obj_name = get_wgt_name(rig.name, bone_name)
-    scene = bpy.context.scene
+    view_layer = bpy.context.view_layer
     collection = bpy.context.collection
     id_store = bpy.context.window_manager
 
     # Check if it already exists in the scene
-    if obj_name in scene.objects:
+    if obj_name in view_layer.objects:
         # Move object to bone position, in case it changed
-        obj = scene.objects[obj_name]
+        obj = view_layer.objects[obj_name]
         obj_to_bone(obj, rig, bone_transform_name)
 
         return None

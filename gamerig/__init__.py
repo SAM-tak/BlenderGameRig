@@ -217,10 +217,10 @@ def register():
     bpy.types.PoseBone.gamerig_parameters = PointerProperty(type=GameRigParameters)
 
     IDStore = bpy.types.WindowManager
-    IDStore.gamerig_collection = EnumProperty(
+    IDStore.gamerig_category = EnumProperty(
         items=rig_lists.col_enum_list, default="All",
-        name="GameRig Active Collection",
-        description="The selected rig collection"
+        name="GameRig Active Category",
+        description="The selected rig category"
     )
 
     IDStore.gamerig_types = CollectionProperty(type=GameRigName)
@@ -254,7 +254,7 @@ def unregister():
     del bpy.types.PoseBone.gamerig_parameters
 
     IDStore = bpy.types.WindowManager
-    del IDStore.gamerig_collection
+    del IDStore.gamerig_category
     del IDStore.gamerig_types
     del IDStore.gamerig_active_type
     del IDStore.gamerig_rig_ui_template_list
