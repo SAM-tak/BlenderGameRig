@@ -206,6 +206,9 @@ class Rig:
         else:
             ik_chain_target = [ik_chain[0], ik_chain[-2]]
         
+        if len(ik_lens) == 0:
+            ik_lens.append(self.chain_length)
+        
         for mchb, ctrl in zip( ik_chain_target[0::2], ik_ctrls[0::2] ):
             self.make_constraint( mchb, {
                 'constraint'  : 'DAMPED_TRACK',
