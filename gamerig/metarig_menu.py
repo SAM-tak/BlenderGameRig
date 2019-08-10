@@ -25,8 +25,7 @@ import bpy
 
 from . import utils
 
-class ArmatureMainMenu(bpy.types.Menu):
-    bl_idname = 'ARMATURE_MT_GameRig_class'
+class GAMERIG_MT_Armature(bpy.types.Menu):
     bl_label = 'GameRig'
     submenus = []
     operators = []
@@ -41,7 +40,7 @@ class ArmatureMainMenu(bpy.types.Menu):
 
 
 def mainmenu_func(self, context):
-    self.layout.menu(ArmatureMainMenu.bl_idname, icon='OUTLINER_OB_ARMATURE')
+    self.layout.menu("GAMERIG_MT_Armature", icon='OUTLINER_OB_ARMATURE')
 
 
 class ArmatureSubMenu(bpy.types.Menu):
@@ -144,7 +143,7 @@ for metarig_class in metarigs_dict:
 
 
 for mop, name, text in metarig_ops[utils.METARIG_DIR]:
-    ArmatureMainMenu.operators.append((mop.bl_idname, name, text))
+    GAMERIG_MT_Armature.operators.append((mop.bl_idname, name, text))
 
 metarigs_dict.pop(utils.METARIG_DIR)
 
@@ -153,19 +152,19 @@ for submenu_name in sorted(list(metarigs_dict.keys())):
     armature_submenu = type('Class_GameRig_' + submenu_name + '_submenu', (ArmatureSubMenu,), {})
     armature_submenu.bl_label = submenu_name
     idname = '_D_'.join(submenu_name.split('.')[2:]).replace(' ', '_')
-    armature_submenu.bl_idname = 'ARMATURE_MT_GameRig_%s_class' % idname
+    armature_submenu.bl_idname = 'GAMERIG_MT_GameRig_%s_class' % idname
     armature_submenu.operators = [(mop.bl_idname, name, text) for mop, name, text in metarig_ops[submenu_name]]
-    ArmatureMainMenu.submenus.append(armature_submenu)
+    GAMERIG_MT_Armature.submenus.append(armature_submenu)
 
 def register():
     for op in metarig_ops:
         for cl, name, text in metarig_ops[op]:
             bpy.utils.register_class(cl)
 
-    for arm_sub in ArmatureMainMenu.submenus:
+    for arm_sub in GAMERIG_MT_Armature.submenus:
         bpy.utils.register_class(arm_sub)
 
-    bpy.utils.register_class(ArmatureMainMenu)
+    bpy.utils.register_class(GAMERIG_MT_Armature)
 
     bpy.types.VIEW3D_MT_armature_add.append(mainmenu_func)
 
@@ -175,9 +174,9 @@ def unregister():
         for cl, name, text in metarig_ops[op]:
             bpy.utils.unregister_class(cl)
 
-    for arm_sub in ArmatureMainMenu.submenus:
+    for arm_sub in GAMERIG_MT_Armature.submenus:
         bpy.utils.unregister_class(arm_sub)
 
-    bpy.utils.unregister_class(ArmatureMainMenu)
+    bpy.utils.unregister_class(GAMERIG_MT_Armature)
 
     bpy.types.VIEW3D_MT_armature_add.remove(mainmenu_func)

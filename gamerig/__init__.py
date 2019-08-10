@@ -126,7 +126,6 @@ class GameRigParameters(bpy.types.PropertyGroup):
 
 
 class GameRigArmatureLayer(bpy.types.PropertyGroup):
-
     def get_group(self):
         if 'group_prop' in self.keys():
             return self['group_prop']
@@ -147,6 +146,7 @@ class GameRigArmatureLayer(bpy.types.PropertyGroup):
         name="Bone Group", default=0, min=0, max=32,
         get=get_group, set=set_group, description='Assign Bone Group to this layer'
     )
+
 
 class GameRigRigUITemplateName(bpy.types.PropertyGroup):
     name : bpy.props.StringProperty()

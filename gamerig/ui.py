@@ -29,7 +29,7 @@ from .utils import (
 from . import rig_lists, generate
 
 
-class GAMERIG_PT_panel(bpy.types.Panel):
+class GAMERIG_PT_main(bpy.types.Panel):
     bl_label = "GameRig"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -124,12 +124,12 @@ class GAMERIG_PT_panel(bpy.types.Panel):
             row.prop(armature, 'gamerig_colors_lock', text = 'Unified select/active colors', icon=icon)
             row.operator("gamerig.apply_selection_colors", icon='FILE_REFRESH', text='Apply')
             row = box.row()
-            row.template_list("DATA_UL_gamerig_bone_groups", "", obj.data, "gamerig_colors", obj.data, "gamerig_colors_index")
+            row.template_list("GAMERIG_UL_bone_groups", "", obj.data, "gamerig_colors", obj.data, "gamerig_colors_index")
 
             col = row.column(align=True)
             col.operator("gamerig.bone_group_add", icon='ZOOM_IN', text="")
             col.operator("gamerig.bone_group_remove", icon='ZOOM_OUT', text="").idx = obj.data.gamerig_colors_index
-            col.menu("DATA_MT_gamerig_bone_groups_specials", icon='DOWNARROW_HLT', text="")
+            col.menu("GAMERIG_MT_bone_groups_specials", icon='DOWNARROW_HLT', text="")
             row = box.row()
             row.prop(armature, 'gamerig_theme_to_add', text = 'Theme')
             op = row.operator("gamerig.bone_group_add_theme", text="Add From Theme")
@@ -426,7 +426,7 @@ class GAMERIG_MT_bone_groups_specials(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
 
-        layout.operator('armature.gamerig_bone_group_remove_all')
+        layout.operator('gamerig.bone_group_remove_all')
 
 
 class GAMERIG_PT_rig_type(bpy.types.Panel):
@@ -771,7 +771,7 @@ classes = (
     GAMERIG_OT_bone_group_remove_all,
     GAMERIG_UL_bone_groups,
     GAMERIG_MT_bone_groups_specials,
-    GAMERIG_PT_panel,
+    GAMERIG_PT_main,
     GAMERIG_PT_rig_type,
     GAMERIG_PT_utility,
     GAMERIG_PT_dev_tools,
