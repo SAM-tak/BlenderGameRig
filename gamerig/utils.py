@@ -340,7 +340,7 @@ def create_widget(rig, bone_name, bone_transform_name=None):
     obj_name = get_wgt_name(rig.name, bone_name)
     view_layer = bpy.context.view_layer
     collection = bpy.context.collection
-    id_store = bpy.context.window_manager
+    gparam = bpy.context.window_manager.gamerig
 
     # Check if it already exists in the scene
     if obj_name in view_layer.objects:

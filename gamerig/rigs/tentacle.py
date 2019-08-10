@@ -392,10 +392,10 @@ if is_selected( controls ):
     layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
     if 'Rig/Phy' in pose_bones[ controls[0] ]:
         layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
-    props = layout.operator("gamerig.tentacle_fk2ik_" + rig_id, text="Snap FK->IK (" + controls[0] + ")")
+    props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK (" + controls[0] + ")")
     props.fk_ctrls = "%s"
     props.ik_chain = "%s"
-    props = layout.operator("gamerig.tentacle_ik2fk_" + rig_id, text="Snap IK->FK (" + controls[0] + ")")
+    props = layout.operator(Tentacle_IK2FK.bl_idname, text="Snap IK->FK (" + controls[0] + ")")
     props.ik_ctrls = "%s"
     props.fk_chain = "%s"
 """ % (ctrls[0] + ctrls[1], self.org_bones[1:], ctrls[0], mchs[1][1:], ctrls[1], ik_fk_snap_target)]
@@ -481,7 +481,7 @@ register_class(Tentacle_IK2FK)
 
 def add_parameters(params):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
     """
     params.chain_length = bpy.props.IntProperty(
         name         = 'Chain Length',

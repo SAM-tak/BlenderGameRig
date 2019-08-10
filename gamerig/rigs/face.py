@@ -1239,7 +1239,7 @@ if is_selected(controls):
 
 def add_parameters(params):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
     """
 
     #Setting up extra layers for the tweak bones

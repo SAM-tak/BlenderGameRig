@@ -152,7 +152,7 @@ if is_selected( control ):
 
 def add_parameters(params):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
     """
     params.control_widget_type = bpy.props.EnumProperty(
         name        = "Control Widget Type",

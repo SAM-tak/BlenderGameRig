@@ -80,7 +80,7 @@ def generate_rig(context, metarig):
     view_layer = context.view_layer
     collection = context.collection
     layer_collection = context.layer_collection
-    id_store = context.window_manager
+    gparam = context.window_manager.gamerig
     #------------------------------------------
     # Create/find the rig object and set it up
 

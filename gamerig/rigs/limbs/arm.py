@@ -41,14 +41,14 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator("gamerig.arm_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props = layout.operator(Arm_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")")
     props.uarm_fk = controls[1]
     props.farm_fk = controls[2]
     props.hand_fk = controls[3]
     props.uarm_ik = controls[0]
     props.farm_ik = ik_ctrl[1]
     props.hand_ik = controls[4]
-    props = layout.operator("gamerig.arm_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props = layout.operator(Arm_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")")
     props.uarm_fk = controls[1]
     props.farm_fk = controls[2]
     props.hand_fk = controls[3]
@@ -133,13 +133,13 @@ class Arm_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK arm to IK"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
-    uarm_fk: bpy.props.StringProperty(name="Upper Arm FK Name")
-    farm_fk: bpy.props.StringProperty(name="Forerm FK Name")
-    hand_fk: bpy.props.StringProperty(name="Hand FK Name")
+    uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk : bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk : bpy.props.StringProperty(name="Hand FK Name")
 
-    uarm_ik: bpy.props.StringProperty(name="Upper Arm IK Name")
-    farm_ik: bpy.props.StringProperty(name="Forearm IK Name")
-    hand_ik: bpy.props.StringProperty(name="Hand IK Name")
+    uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik : bpy.props.StringProperty(name="Hand IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -186,13 +186,13 @@ class Arm_IK2FK(bpy.types.Operator):
     bl_label = "Snap IK arm to FK"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
-    uarm_fk: bpy.props.StringProperty(name="Upper Arm FK Name")
-    farm_fk: bpy.props.StringProperty(name="Forerm FK Name")
-    hand_fk: bpy.props.StringProperty(name="Hand FK Name")
+    uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
+    farm_fk : bpy.props.StringProperty(name="Forerm FK Name")
+    hand_fk : bpy.props.StringProperty(name="Hand FK Name")
 
-    uarm_ik: bpy.props.StringProperty(name="Upper Arm IK Name")
-    farm_ik: bpy.props.StringProperty(name="Forearm IK Name")
-    hand_ik: bpy.props.StringProperty(name="Hand IK Name")
+    uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
+    farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
+    hand_ik : bpy.props.StringProperty(name="Hand IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -237,7 +237,7 @@ for cl in (Arm_FK2IK, Arm_IK2FK):
 
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
     """
     Limb.add_parameters(params)
 

@@ -41,7 +41,7 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator("gamerig.leg_fk2ik_" + rig_id, text="Snap FK->IK (" + fk_ctrl + ")")
+    props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -50,7 +50,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
     props.toe_ik   = controls[5]
-    props = layout.operator("gamerig.leg_ik2fk_" + rig_id, text="Snap IK->FK (" + fk_ctrl + ")")
+    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")")
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -334,15 +334,15 @@ class Leg_FK2IK(bpy.types.Operator):
     bl_label = "Snap FK leg to IK"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
-    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
-    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
-    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
-    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
+    thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk  : bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk  : bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk   : bpy.props.StringProperty(name="Toe FK Name")
 
-    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
-    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
-    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
-    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
+    thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
+    toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -394,17 +394,17 @@ class Leg_IK2FK(bpy.types.Operator):
     bl_label = "Snap IK leg to FK"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
-    thigh_fk: bpy.props.StringProperty(name="Thigh FK Name")
-    shin_fk:  bpy.props.StringProperty(name="Shin FK Name")
-    foot_fk:  bpy.props.StringProperty(name="Foot FK Name")
-    toe_fk:   bpy.props.StringProperty(name="Toe FK Name")
+    thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
+    shin_fk  : bpy.props.StringProperty(name="Shin FK Name")
+    foot_fk  : bpy.props.StringProperty(name="Foot FK Name")
+    toe_fk   : bpy.props.StringProperty(name="Toe FK Name")
 
-    thigh_ik: bpy.props.StringProperty(name="Thigh IK Name")
-    shin_ik:  bpy.props.StringProperty(name="Shin IK Name")
-    foot_ik:  bpy.props.StringProperty(name="Foot IK Name")
-    footroll: bpy.props.StringProperty(name="Foot Roll Name")
-    mfoot_ik: bpy.props.StringProperty(name="MFoot IK Name")
-    toe_ik:   bpy.props.StringProperty(name="Toe IK Name")
+    thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
+    shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
+    foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
+    footroll : bpy.props.StringProperty(name="Foot Roll Name")
+    mfoot_ik : bpy.props.StringProperty(name="MFoot IK Name")
+    toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -468,7 +468,7 @@ for cl in (Leg_FK2IK, Leg_IK2FK):
 
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
     """
     params.footprint_bone = bpy.props.StringProperty(
         name="Footprint Bone Name",

@@ -169,7 +169,7 @@ class Rig:
 
 def add_parameters(params):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
 
     """
     items = [('X', 'X', ''), ('Z', 'Z', '')]

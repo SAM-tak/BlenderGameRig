@@ -150,7 +150,7 @@ class Rig:
 
 def add_parameters(params):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
     """
     items = [('X', 'X', ''), ('Y', 'Y', ''), ('Z', 'Z', '')]
     params.primary_rotation_axis = bpy.props.EnumProperty(items=items, name="Primary Rotation Axis", default='X')

@@ -465,7 +465,7 @@ if is_selected( ik_ctrl ):
     @staticmethod
     def add_parameters( params ):
         """ Add the parameters of this rig type to the
-            GameRigParameters PropertyGroup
+            RigParameters PropertyGroup
         """
         params.rotation_axis = bpy.props.EnumProperty(
             items   = [

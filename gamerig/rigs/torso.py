@@ -633,7 +633,7 @@ for tweak in tweaks:
 
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
-        GameRigParameters PropertyGroup
+        RigParameters PropertyGroup
     """
     params.neck_pos = bpy.props.IntProperty(
         name        = 'Neck Position',
