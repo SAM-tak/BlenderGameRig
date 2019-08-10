@@ -407,6 +407,7 @@ class Tentacle_FK2IK(bpy.types.Operator):
     """
     bl_idname = "gamerig.tentacle_fk2ik_{rig_id}"
     bl_label = "Snap FK controller to IK"
+    bl_description = "Snap FK tentacle controllers to IK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     fk_ctrls : bpy.props.StringProperty(name="FK Ctrl Bone names")
@@ -442,6 +443,7 @@ class Tentacle_IK2FK(bpy.types.Operator):
     """
     bl_idname = "gamerig.tentacle_ik2fk_{rig_id}"
     bl_label = "Snap IK controller to FK"
+    bl_description = "Snap IK tentacle controllers to FK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     ik_ctrls : bpy.props.StringProperty(name="IK Ctrl Bone names")

@@ -332,6 +332,7 @@ class Leg_FK2IK(bpy.types.Operator):
     """
     bl_idname = "gamerig.leg_fk2ik_{rig_id}"
     bl_label = "Snap FK leg to IK"
+    bl_description = "Snap FK leg controllers to IK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
@@ -392,6 +393,7 @@ class Leg_IK2FK(bpy.types.Operator):
     """
     bl_idname = "gamerig.leg_ik2fk_{rig_id}"
     bl_label = "Snap IK leg to FK"
+    bl_description = "Snap IK leg controllers to FK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")

@@ -180,7 +180,8 @@ class MainPanel(bpy.types.Panel):
 
 class AddBoneGroupsOperator(bpy.types.Operator):
     bl_idname = "gamerig.add_bone_groups"
-    bl_label  = "GameRig Add Standard Bone Groups"
+    bl_label = "Add Bone Groups"
+    bl_description = "Add Standard Bone Groups"
 
     @classmethod
     def poll(cls, context):
@@ -223,7 +224,9 @@ class AddBoneGroupsOperator(bpy.types.Operator):
 
 class UseStandardColorsOperator(bpy.types.Operator):
     bl_idname = "gamerig.use_standard_colors"
-    bl_label  = "GameRig Get active/select colors from current theme"
+    bl_label  = "Use standard colors"
+    bl_description = "Reset active/select colors from current theme"
+    bl_options = {'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -250,7 +253,8 @@ class UseStandardColorsOperator(bpy.types.Operator):
 
 class ApplySelectionColorsOperator(bpy.types.Operator):
     bl_idname = "gamerig.apply_selection_colors"
-    bl_label  = "GameRig Apply user defined active/select colors"
+    bl_label = "Apply colors"
+    bl_description = "Apply user defined active/select colors"
 
     @classmethod
     def poll(cls, context):
@@ -274,7 +278,8 @@ class ApplySelectionColorsOperator(bpy.types.Operator):
 
 class AddBoneGroupOperator(bpy.types.Operator):
     bl_idname = "gamerig.bone_group_add"
-    bl_label  = "GameRig Add Bone Group color set"
+    bl_label  = "Add GameRig bone group"
+    bl_description = "Add bone group color set"
 
     @classmethod
     def poll(cls, context):
@@ -302,8 +307,9 @@ class AddBoneGroupOperator(bpy.types.Operator):
 
 
 class AddBoneGroupThemeOperator(bpy.types.Operator):
-    bl_idname  = "gamerig.add_bone_group_theme"
-    bl_label   = "GameRig Add Bone Group color set from Theme"
+    bl_idname = "gamerig.add_bone_group_theme"
+    bl_label = "Add Gamerig bone group"
+    bl_description = "Add Bone Group color set from Theme"
     bl_options = {"REGISTER", "UNDO"}
 
     theme: EnumProperty(
@@ -360,7 +366,9 @@ class AddBoneGroupThemeOperator(bpy.types.Operator):
 
 class RemoveBoneGroupOperator(bpy.types.Operator):
     bl_idname = "gamerig.remove_bone_group"
-    bl_label  = "GameRig Remove Bone Group color set"
+    bl_label  = "Remove Color Set"
+    bl_description = "Remove a selected bone group color set"
+    bl_options = {'UNDO'}
 
     idx: IntProperty()
 
@@ -384,7 +392,9 @@ class RemoveBoneGroupOperator(bpy.types.Operator):
 
 class RemoveAllBoneGroupOperator(bpy.types.Operator):
     bl_idname = "gamerig.remove_all_bone_group"
-    bl_label  = "GameRig Remove All Bone Groups"
+    bl_label  = "Remove All Bone Groups"
+    bl_description = "Remove all gamerig bone groups settings"
+    bl_options = {'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -570,8 +580,9 @@ def gamerig_report_exception(operator, exception):
 class InitLayerOperator(bpy.types.Operator):
     """Initialize armature gamerig layers"""
 
-    bl_idname  = "gamerig.init_layer"
-    bl_label   = "Add GameRig Layers"
+    bl_idname = "gamerig.init_layer"
+    bl_label = "Add Layer Settings"
+    bl_description = "Add GameRig Layers setting by default values"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -585,8 +596,9 @@ class InitLayerOperator(bpy.types.Operator):
 class RevealUnlinkedWidgetOperator(bpy.types.Operator):
     """Reveal unlinked widget in current scene.
     """
-    bl_idname  = "gamerig.reveal_unlinked_widget"
-    bl_label   = "Reveal unlinked widget to current scene"
+    bl_idname = "gamerig.reveal_unlinked_widget"
+    bl_label = "Reveal unlinked widget"
+    bl_description = "Link unlinked widget to current collection for edit"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -604,7 +616,7 @@ class GenerateOperator(bpy.types.Operator):
     """Generates a rig from the active metarig armature"""
 
     bl_idname      = "gamerig.generate"
-    bl_label       = "GameRig Generate Rig"
+    bl_label       = "Generate Rig"
     bl_description = 'Generates a rig from the active metarig armature'
     bl_options     = {'UNDO'}
 
@@ -632,7 +644,8 @@ class ToggleArmatureReferenceOperator(bpy.types.Operator):
     """Toggle armature reference between metarig and generated rig."""
 
     bl_idname  = "gamerig.toggle_armature"
-    bl_label   = "GameRig Toggle Rig"
+    bl_label   = "Toggle Rig"
+    bl_description = "Toggle armature reference between metarig and generated rig"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -657,7 +670,8 @@ class AddSampleOperator(bpy.types.Operator):
     """the final rig"""
 
     bl_idname  = "gamerig.add_metarig_sample"
-    bl_label   = "Add a sample metarig for a rig type"
+    bl_label = "Add sample"
+    bl_description = "Add a sample metarig for a rig type"
     bl_options = {'UNDO'}
 
     metarig_type: StringProperty(
@@ -687,8 +701,9 @@ class AddSampleOperator(bpy.types.Operator):
 class EncodeMetarigOperator(bpy.types.Operator):
     """ Creates Python code that will generate the selected metarig.
     """
-    bl_idname  = "gamerig.encode_metarig"
-    bl_label   = "GameRig Encode Metarig"
+    bl_idname = "gamerig.encode_metarig"
+    bl_label = "Encode Metarig"
+    bl_description = "Encode whole metarig to script"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -716,7 +731,8 @@ class EncodeMetarigSampleOperator(bpy.types.Operator):
         as a sample.
     """
     bl_idname  = "gamerig.encode_metarig_sample"
-    bl_label   = "GameRig Encode Metarig Sample"
+    bl_label   = "Encode Metarig Sample"
+    bl_description = "Encode rig to script as sample rig"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -742,8 +758,9 @@ class EncodeMetarigSampleOperator(bpy.types.Operator):
 class EncodeWidgetOperator(bpy.types.Operator):
     """ Creates Python code that will generate the selected metarig.
     """
-    bl_idname  = "gamerig.encode_mesh_widget"
-    bl_label   = "GameRig Encode Widget"
+    bl_idname = "gamerig.encode_mesh_widget"
+    bl_label = "Encode Widget"
+    bl_description = "Encode widget mesh data to script"
     bl_options = {'UNDO'}
 
     @classmethod

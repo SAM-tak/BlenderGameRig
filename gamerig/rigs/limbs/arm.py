@@ -131,6 +131,7 @@ class Arm_FK2IK(bpy.types.Operator):
     """
     bl_idname = "gamerig.arm_fk2ik_{rig_id}"
     bl_label = "Snap FK arm to IK"
+    bl_description = "Snap FK arm controllers to IK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
@@ -184,6 +185,7 @@ class Arm_IK2FK(bpy.types.Operator):
     """
     bl_idname = "gamerig.arm_ik2fk_{rig_id}"
     bl_label = "Snap IK arm to FK"
+    bl_description = "Snap IK arm controllers to FK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     uarm_fk : bpy.props.StringProperty(name="Upper Arm FK Name")
