@@ -278,6 +278,6 @@ class LayersPanel(bpy.types.Panel):
         col = layout.column()
 {layers}
 
-for cl in (PropertiesPanel, LayersPanel):
-    register_class(cl)
+register_class(PropertiesPanel)
+register_class(LayersPanel)
 '''

@@ -234,15 +234,87 @@ class GlobalProperties(PropertyGroup):
 
     @classmethod
     def register(cls):
+        # Sub-modules.
+        ui.register()
+        metarig_menu.register()
+
         bpy.types.WindowManager.gamerig = PointerProperty(type=cls)
 
+        bpy.types.Armature.gamerig_rig_ui_template = StringProperty(
+            name="GameRig Rig UI Template",
+            description="Rig UI Template for this armature"
+        )
+        bpy.types.Armature.gamerig_rig_name = StringProperty(
+            name="GameRig Rig Name",
+            description="Defines the name of the Rig."
+        )
+    
+        bpy.types.Armature.gamerig_layers = CollectionProperty(type=ArmatureLayer)
+        bpy.types.Armature.gamerig_colors = CollectionProperty(type=ColorSet)
+        bpy.types.Armature.gamerig_selection_colors = PointerProperty(type=SelectionColors)
+        bpy.types.Armature.gamerig_colors_index = IntProperty(default=-1)
+        bpy.types.Armature.gamerig_colors_lock = BoolProperty(default=True)
+        bpy.types.Armature.gamerig_theme_to_add = EnumProperty(
+            items=(
+                ('THEME01', 'THEME01', ''),
+                ('THEME02', 'THEME02', ''),
+                ('THEME03', 'THEME03', ''),
+                ('THEME04', 'THEME04', ''),
+                ('THEME05', 'THEME05', ''),
+                ('THEME06', 'THEME06', ''),
+                ('THEME07', 'THEME07', ''),
+                ('THEME08', 'THEME08', ''),
+                ('THEME09', 'THEME09', ''),
+                ('THEME10', 'THEME10', ''),
+                ('THEME11', 'THEME11', ''),
+                ('THEME12', 'THEME12', ''),
+                ('THEME13', 'THEME13', ''),
+                ('THEME14', 'THEME14', ''),
+                ('THEME15', 'THEME15', ''),
+                ('THEME16', 'THEME16', ''),
+                ('THEME17', 'THEME17', ''),
+                ('THEME18', 'THEME18', ''),
+                ('THEME19', 'THEME19', ''),
+                ('THEME20', 'THEME20', '')
+            ),
+            name='Theme'
+        )
+    
+        bpy.types.PoseBone.gamerig_type = StringProperty(name="GameRig Type", description="Rig type for this bone")
+        bpy.types.PoseBone.gamerig_parameters = PointerProperty(type=RigParameters)
+    
+        # Add rig parameters
+        for rig in rig_lists.rig_list:
+            r = utils.get_rig_type(rig)
+            try:
+                r.add_parameters(RigParameters)
+            except AttributeError:
+                pass
+    
     @classmethod
     def unregister(cls):
         del bpy.types.WindowManager.gamerig
+
+        # Properties.
+        del bpy.types.Armature.gamerig_rig_ui_template
+        del bpy.types.Armature.gamerig_rig_name
+        del bpy.types.Armature.gamerig_layers
+        del bpy.types.Armature.gamerig_colors
+        del bpy.types.Armature.gamerig_selection_colors
+        del bpy.types.Armature.gamerig_colors_index
+        del bpy.types.Armature.gamerig_colors_lock
+        del bpy.types.Armature.gamerig_theme_to_add
+
+        del bpy.types.PoseBone.gamerig_type
+        del bpy.types.PoseBone.gamerig_parameters
+
+        # Sub-modules.
+        metarig_menu.unregister()
+        ui.unregister()
     
 ##### REGISTER #####
 
-classes = (
+register, unregister = bpy.utils.register_classes_factory((
     RigType,
     RigParameters,
     ColorSet,
@@ -251,87 +323,4 @@ classes = (
     RigUITemplateName,
     Preferences,
     GlobalProperties,
-)
-
-def register():
-    # Sub-modules.
-    ui.register()
-    metarig_menu.register()
-
-    # Classes.
-    for cl in classes:
-        bpy.utils.register_class(cl)
-
-    bpy.types.Armature.gamerig_rig_ui_template = StringProperty(
-        name="GameRig Rig UI Template",
-        description="Rig UI Template for this armature"
-    )
-    bpy.types.Armature.gamerig_rig_name = StringProperty(
-        name="GameRig Rig Name",
-        description="Defines the name of the Rig."
-    )
-
-    bpy.types.Armature.gamerig_layers = CollectionProperty(type=ArmatureLayer)
-    bpy.types.Armature.gamerig_colors = CollectionProperty(type=ColorSet)
-    bpy.types.Armature.gamerig_selection_colors = PointerProperty(type=SelectionColors)
-    bpy.types.Armature.gamerig_colors_index = IntProperty(default=-1)
-    bpy.types.Armature.gamerig_colors_lock = BoolProperty(default=True)
-    bpy.types.Armature.gamerig_theme_to_add = EnumProperty(
-        items=(
-            ('THEME01', 'THEME01', ''),
-            ('THEME02', 'THEME02', ''),
-            ('THEME03', 'THEME03', ''),
-            ('THEME04', 'THEME04', ''),
-            ('THEME05', 'THEME05', ''),
-            ('THEME06', 'THEME06', ''),
-            ('THEME07', 'THEME07', ''),
-            ('THEME08', 'THEME08', ''),
-            ('THEME09', 'THEME09', ''),
-            ('THEME10', 'THEME10', ''),
-            ('THEME11', 'THEME11', ''),
-            ('THEME12', 'THEME12', ''),
-            ('THEME13', 'THEME13', ''),
-            ('THEME14', 'THEME14', ''),
-            ('THEME15', 'THEME15', ''),
-            ('THEME16', 'THEME16', ''),
-            ('THEME17', 'THEME17', ''),
-            ('THEME18', 'THEME18', ''),
-            ('THEME19', 'THEME19', ''),
-            ('THEME20', 'THEME20', '')
-        ),
-        name='Theme'
-    )
-
-    bpy.types.PoseBone.gamerig_type = StringProperty(name="GameRig Type", description="Rig type for this bone")
-    bpy.types.PoseBone.gamerig_parameters = PointerProperty(type=RigParameters)
-
-    # Add rig parameters
-    for rig in rig_lists.rig_list:
-        r = utils.get_rig_type(rig)
-        try:
-            r.add_parameters(RigParameters)
-        except AttributeError:
-            pass
-
-
-def unregister():
-    # Properties.
-    del bpy.types.Armature.gamerig_rig_ui_template
-    del bpy.types.Armature.gamerig_rig_name
-    del bpy.types.Armature.gamerig_layers
-    del bpy.types.Armature.gamerig_colors
-    del bpy.types.Armature.gamerig_selection_colors
-    del bpy.types.Armature.gamerig_colors_index
-    del bpy.types.Armature.gamerig_colors_lock
-    del bpy.types.Armature.gamerig_theme_to_add
-
-    del bpy.types.PoseBone.gamerig_type
-    del bpy.types.PoseBone.gamerig_parameters
-
-    # Classes.
-    for cl in classes:
-        bpy.utils.unregister_class(cl)
-
-    # Sub-modules.
-    metarig_menu.unregister()
-    ui.unregister()
+))

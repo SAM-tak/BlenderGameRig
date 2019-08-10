@@ -784,7 +784,7 @@ class EncodeWidgetOperator(bpy.types.Operator):
 
 ### Registering ###
 
-classes = (
+register, unregister = bpy.utils.register_classes_factory((
     AddBoneGroupsOperator,
     UseStandardColorsOperator,
     ApplySelectionColorsOperator,
@@ -806,16 +806,4 @@ classes = (
     RigTypePanel,
     UtilityPanel,
     DevToolsPanel,
-)
-
-
-def register():
-    # Classes.
-    for cl in classes:
-        bpy.utils.register_class(cl)
-
-
-def unregister():
-    # Classes.
-    for cl in classes:
-        bpy.utils.unregister_class(cl)
+))

@@ -461,9 +461,9 @@ class Leg_IK2FK(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-for cl in (Leg_FK2IK, Leg_IK2FK):
-    register_class(cl)
-
+register_class(Leg_FK2IK)
+register_class(Leg_IK2FK)
+    
 
 '''.format(rig_id=rig_id)
 

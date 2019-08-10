@@ -273,9 +273,8 @@ class Paw_IK2FK(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-for cl in (Paw_FK2IK, Paw_IK2FK):
-    register_class(cl)
-
+register_class(Paw_FK2IK)
+register_class(Paw_IK2FK)
 
 '''.format(rig_id=rig_id)
 

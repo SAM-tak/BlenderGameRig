@@ -230,8 +230,8 @@ class Arm_IK2FK(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-for cl in (Arm_FK2IK, Arm_IK2FK):
-    register_class(cl)
+register_class(Arm_FK2IK)
+register_class(Arm_IK2FK)
 
 
 '''.format(rig_id=rig_id)
