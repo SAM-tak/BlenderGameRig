@@ -144,13 +144,17 @@ class MainPanel(bpy.types.Panel):
             rig_name = get_rig_name(obj)
             target = next((i for i in context.collection.objects if i != obj and i.type == 'ARMATURE' and i.name == rig_name), None)
             if target:
-                layout.row().operator(GenerateOperator.bl_idname, text="Regenerate Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Overwrite to '%s'" % target.name, icon='INFO')
+                layout.row().operator(GenerateOperator.bl_idname, text="Regenerate Rig", icon='POSE_HLT')
                 if obj.mode == 'OBJECT':
-                    layout.row().operator(ToggleArmatureReferenceOperator.bl_idname, text="Toggle armature metarig/generated", icon='POSE_HLT')
+                    layout.separator()
+                    row = layout.row(align=True).split(factor=0.06)
+                    row.label()
+                    row = row.split()
+                    row.operator(ToggleArmatureReferenceOperator.bl_idname, text="Toggle armature metarig/generated", icon='ARROW_LEFTRIGHT')
             else:
-                layout.row().operator(GenerateOperator.bl_idname, text="Generate New Rig", icon='POSE_HLT')
                 layout.row().box().label(text="Create new armature '%s'" % rig_name, icon='INFO')
+                layout.row().operator(GenerateOperator.bl_idname, text="Generate New Rig", icon='POSE_HLT')
 
         elif obj.mode == 'EDIT':
             # Build types list

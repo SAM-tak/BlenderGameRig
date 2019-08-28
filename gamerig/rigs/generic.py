@@ -108,8 +108,11 @@ control = '%s'
 # Rig/Phy Switch on all Control Bones
 if is_selected( control ):
     layout.prop( pose_bones[ control ], '["Rig/Phy"]', text='Rig/Phy (' + control + ')', slider = True )
-""" % bone]
-    
+    props = layout.operator(Generic_Snap.bl_idname, text="Snap to Target (" + control + ")", icon='SNAP_ON')
+    props.ctrl = control
+    props.target  = "%s"
+""" % (bone, self.org_bone)]
+
 
     def stash_constraint( self ):
         pb = self.obj.pose.bones[self.org_bone]
@@ -149,6 +152,46 @@ if is_selected( control ):
                     except AttributeError:
                         pass
 
+
+def operator_script(rig_id):
+    return '''
+class Generic_Snap(bpy.types.Operator):
+    """ Snaps an generic controller to Target Bone Position.
+    """
+    bl_idname = "gamerig.generic_snap_{rig_id}"
+    bl_label = "Snap to Target"
+    bl_description = "Snap generic controller to target bone position (no keying)"
+    bl_options = {{'UNDO', 'INTERNAL'}}
+
+    ctrl   : bpy.props.StringProperty(name="Ctrl Bone name")
+    target : bpy.props.StringProperty(name="Ctrl Target Bone name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
+        try:
+            """ Matches the fk bones in an arm rig to the ik bones.
+            """
+            obj = context.active_object
+
+            cb = obj.pose.bones[self.ctrl]
+            tb = obj.pose.bones[self.target]
+            match_pose_translation(cb, tb)
+            match_pose_rotation(cb, tb)
+            match_pose_scale(cb, tb)
+        finally:
+            context.preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+register_class(Generic_Snap)
+
+
+'''.format(rig_id=rig_id)
 
 def add_parameters(params):
     """ Add the parameters of this rig type to the

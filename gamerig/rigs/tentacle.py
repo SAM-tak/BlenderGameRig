@@ -385,20 +385,23 @@ class Rig:
 
         return ["""
 controls = %s
-orgs = %s
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
     if 'Rig/Phy' in pose_bones[ controls[0] ]:
         layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
-    props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK (" + controls[0] + ")")
+    props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK (" + controls[0] + ")", icon='SNAP_ON')
     props.fk_ctrls = "%s"
     props.ik_chain = "%s"
-    props = layout.operator(Tentacle_IK2FK.bl_idname, text="Snap IK->FK (" + controls[0] + ")")
+    props = layout.operator(Tentacle_IK2FK.bl_idname, text="Snap IK->FK (" + controls[0] + ")", icon='SNAP_ON')
     props.ik_ctrls = "%s"
     props.fk_chain = "%s"
-""" % (ctrls[0] + ctrls[1], self.org_bones[1:], ctrls[0], mchs[1][1:], ctrls[1], ik_fk_snap_target)]
+    if 'Rig/Phy' in pose_bones[ controls[0] ]:
+        props = layout.operator(Tentacle_FK2Target.bl_idname, text="Snap FK->Target (" + controls[0] + ")", icon='SNAP_ON')
+        props.fk_ctrls = "%s"
+        props.targets  = "%s"
+""" % (ctrls[0] + ctrls[1], ctrls[0], mchs[1][1:], ctrls[1], ik_fk_snap_target, ctrls[0], self.org_bones[1:])]
 
 def operator_script(rig_id):
     return '''
@@ -406,7 +409,7 @@ class Tentacle_FK2IK(bpy.types.Operator):
     """ Snaps an FK to IK.
     """
     bl_idname = "gamerig.tentacle_fk2ik_{rig_id}"
-    bl_label = "Snap FK controller to IK"
+    bl_label = "Snap FK tentacle to IK"
     bl_description = "Snap FK tentacle controllers to IK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
@@ -435,14 +438,14 @@ class Tentacle_FK2IK(bpy.types.Operator):
                 match_pose_rotation(fkb, ikb)
                 match_pose_scale(fkb, ikb)
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
 class Tentacle_IK2FK(bpy.types.Operator):
     """ Snaps an IK to FK.
     """
     bl_idname = "gamerig.tentacle_ik2fk_{rig_id}"
-    bl_label = "Snap IK controller to FK"
+    bl_label = "Snap IK tentacle to FK"
     bl_description = "Snap IK tentacle controllers to FK ones (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
@@ -454,8 +457,8 @@ class Tentacle_IK2FK(bpy.types.Operator):
         return context.active_object is not None and context.mode == 'POSE'
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
         try:
             """ Matches the fk bones in an arm rig to the ik bones.
             """
@@ -474,8 +477,56 @@ class Tentacle_IK2FK(bpy.types.Operator):
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
 
+
+class Tentacle_FK2Target(bpy.types.Operator):
+    """ Snaps an FK to Target Bone Position.
+    """
+    bl_idname = "gamerig.tentacle_fk2bone_{rig_id}"
+    bl_label = "Snap FK tentacle to Target"
+    bl_description = "Snap FK tentacle controllers to target bone position (no keying)"
+    bl_options = {{'UNDO', 'INTERNAL'}}
+
+    fk_ctrls : bpy.props.StringProperty(name="FK Ctrl Bone names")
+    targets  : bpy.props.StringProperty(name="Ctrl Target Bone names")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
+        try:
+            """ Matches the fk bones in an arm rig to the ik bones.
+            """
+            obj = context.active_object
+
+            fks  = eval(self.fk_ctrls)
+            targets  = eval(self.targets)
+
+            for fk, target in zip(fks, targets):
+                fkb = obj.pose.bones[fk]
+                tb = obj.pose.bones[target]
+                match_pose_translation(fkb, tb)
+                match_pose_rotation(fkb, tb)
+                match_pose_scale(fkb, tb)
+            
+            fkb = obj.pose.bones[fks[-1]]
+            mat = get_pose_matrix_in_other_space(Matrix.Translation(tb.vector) @ tb.matrix, fkb)
+            set_pose_translation(fkb, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            match_pose_rotation(fkb, tb)
+            match_pose_scale(fkb, tb)
+
+        finally:
+            context.preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
 register_class(Tentacle_FK2IK)
 register_class(Tentacle_IK2FK)
+register_class(Tentacle_FK2Target)
 
 
 '''.format(rig_id=rig_id)

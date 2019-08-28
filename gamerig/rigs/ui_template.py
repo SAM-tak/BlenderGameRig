@@ -226,7 +226,7 @@ class PropertiesPanel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = 'Item'
     bl_label = "GameRig Properties"
-    bl_idname = "POSE_PT_gamerig_properties_{rig_id}"
+    bl_idname = "GAMERIG_PT_properties_{rig_id}"
 
     @classmethod
     def poll(self, context):
@@ -260,16 +260,16 @@ class PropertiesPanel(bpy.types.Panel):
 {properties}
 
 class LayersPanel(bpy.types.Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'View'
+    bl_idname = "GAMERIG_PT_layers_{rig_id}"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
     bl_label = "GameRig Layers"
-    bl_idname = "POSE_PT_gamerig_layers_{rig_id}"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         try:
-            return context.active_object.data.get("gamerig_id") == "{rig_id}"
+            return context.object and context.object.type == 'ARMATURE' and context.active_object.data.get("gamerig_id") == "f5j1rsyy5i"
         except (AttributeError, KeyError, TypeError):
             return False
 

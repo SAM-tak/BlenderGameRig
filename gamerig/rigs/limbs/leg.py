@@ -41,7 +41,7 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")")
+    props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -50,7 +50,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
     props.toe_ik   = controls[5]
-    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")")
+    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
@@ -261,8 +261,9 @@ if is_selected( fk_ctrl ):
 
         # Create heel ctrl locks
         pb[ heel ].lock_location = True, True, True
-        pb[ heel ].lock_rotation = False, False, True
+        pb[ heel ].lock_rotation = False, False, False
         pb[ heel ].lock_scale    = True, True, True
+        pb[ heel ].rotation_mode = 'ZXY'
 
         # Add ballsocket widget to heel
         create_ballsocket_widget(self.obj, heel)
