@@ -524,9 +524,9 @@ class Tentacle_FK2Target(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-register_class(Tentacle_FK2IK)
-register_class(Tentacle_IK2FK)
-register_class(Tentacle_FK2Target)
+classes.append(Tentacle_FK2IK)
+classes.append(Tentacle_IK2FK)
+classes.append(Tentacle_FK2Target)
 
 
 '''.format(rig_id=rig_id)
@@ -643,29 +643,29 @@ def create_sample(obj):
     
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['ORG-Bone']]
-    pbone.gamerig_type = 'tentacle'
+    pbone.gamerig.name = 'tentacle'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     try:
-        pbone.gamerig_parameters.chain_length = 3
+        pbone.gamerig.chain_length = 3
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.stretchable = True
+        pbone.gamerig.stretchable = True
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-Bone.001']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['ORG-Bone.002']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

@@ -25,7 +25,6 @@ UI_TEMPLATE = '''
 import bpy
 from mathutils import Matrix, Vector
 from math import acos, pi, radians
-from bpy.utils import register_class
 
 ############################
 ## Math utility functions ##
@@ -212,6 +211,7 @@ def correct_rotation(bone_ik, bone_fk):
     bone_ik.rotation_axis_angle[0] = alfamin
     bone_ik.rotation_mode = rot_mod
 
+classes = []
 
 ###########################
 ## Rig special operators ##
@@ -225,22 +225,22 @@ class PropertiesPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Item'
-    bl_label = "GameRig Properties"
-    bl_idname = "GAMERIG_PT_properties_{rig_id}"
+    bl_label = 'GameRig Properties'
+    bl_idname = 'GAMERIG_PT_properties_{rig_id}'
 
     @classmethod
     def poll(self, context):
         if context.mode != 'POSE':
             return False
         try:
-            return context.active_object.data.get("gamerig_id") == "{rig_id}"
+            return context.object.data['gamerig_id'] == '{rig_id}'
         except (AttributeError, KeyError, TypeError):
             return False
 
     def draw(self, context):
         layout = self.layout
-        pose_bones = context.active_object.pose.bones
-        rig_id = "{rig_id}"
+        pose_bones = context.object.pose.bones
+        rig_id = '{rig_id}'
         try:
             selected_bones = [bone.name for bone in context.selected_pose_bones]
             if context.active_pose_bone and not context.active_pose_bone.name in selected_bones:
@@ -259,17 +259,19 @@ class PropertiesPanel(bpy.types.Panel):
             return False
 {properties}
 
+classes.append(PropertiesPanel)
+
 class LayersPanel(bpy.types.Panel):
-    bl_idname = "GAMERIG_PT_layers_{rig_id}"
+    bl_idname = 'GAMERIG_PT_layers_{rig_id}'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
-    bl_context = "data"
-    bl_label = "GameRig Layers"
+    bl_context = 'data'
+    bl_label = 'GameRig Layers'
 
     @classmethod
     def poll(cls, context):
         try:
-            return context.object and context.object.type == 'ARMATURE' and context.active_object.data.get("gamerig_id") == "f5j1rsyy5i"
+            return context.object and context.object.type == 'ARMATURE' and context.object.data['gamerig_id'] == '{rig_id}'
         except (AttributeError, KeyError, TypeError):
             return False
 
@@ -278,6 +280,7 @@ class LayersPanel(bpy.types.Panel):
         col = layout.column()
 {layers}
 
-register_class(PropertiesPanel)
-register_class(LayersPanel)
+classes.append(LayersPanel)
+
+register, unregister = bpy.utils.register_classes_factory(classes)
 '''

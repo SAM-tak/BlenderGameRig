@@ -172,9 +172,8 @@ def add_parameters(params):
         RigParameters PropertyGroup
 
     """
-    items = [('X', 'X', ''), ('Z', 'Z', '')]
     params.palm_rotation_axis = bpy.props.EnumProperty(
-        items=items,
+        items=[('X', 'X', ''), ('Z', 'Z', '')],
         name="Palm Rotation Axis",
         default='X',
     )
@@ -233,35 +232,35 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['palm.parent']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['palm.04']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['palm.03']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['palm.02']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['palm.01']]
-    pbone.gamerig_type = 'palm'
+    pbone.gamerig.name = 'palm'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False

@@ -56,7 +56,7 @@ class MetarigError(Exception):
 #=======================================================================
 
 def get_rig_name(metarig):
-    rig_name = metarig.data.gamerig_rig_name
+    rig_name = metarig.data.gamerig.rig_name
     if not rig_name:
         rig_name = metarig.name
         if 'metarig' in rig_name:
@@ -255,7 +255,7 @@ def copy_bone(obj, bone_name, assign_name=''):
 
         # Copy custom properties
         for key in pose_bone_1.keys():
-            if key != "_RNA_UI" and key != "gamerig_parameters" and key != "gamerig_type":
+            if key != "_RNA_UI" and key != "gamerig":
                 prop1 = rna_idprop_ui_prop_get(pose_bone_1, key, create=False)
                 if prop1 is not None:
                     prop2 = rna_idprop_ui_prop_get(pose_bone_2, key, create=True)
@@ -340,7 +340,6 @@ def create_widget(rig, bone_name, bone_transform_name=None):
     obj_name = get_wgt_name(rig.name, bone_name)
     view_layer = bpy.context.view_layer
     collection = bpy.context.collection
-    gparam = bpy.context.window_manager.gamerig
 
     # Check if it already exists in the scene
     if obj_name in view_layer.objects:
@@ -608,7 +607,7 @@ def find_root_bone(obj, bone_name):
         bone = bone.parent
         while(bone):
             pb = obj.pose.bones[bone.name]
-            if hasattr(pb, 'gamerig_type') and pb.gamerig_type == 'root':
+            if hasattr(pb, 'gamerig') and pb.gamerig.name == 'root':
                 return bone.name
             bone = bone.parent
     return None
@@ -666,42 +665,42 @@ def write_metarig(obj, func_name="create", layers=False, groups=False, template=
     arm = obj.data
 
     if template:
-        if arm.gamerig_rig_ui_template:
-            code.append("\n    arm.gamerig_rig_ui_template = '%s'" % arm.gamerig_rig_ui_template)
+        if arm.gamerig.rig_ui_template:
+            code.append("\n    arm.gamerig.rig_ui_template = '%s'" % arm.gamerig.rig_ui_template)
         else:
-            code.append("\n    arm.gamerig_rig_ui_template = 'ui_template'")
+            code.append("\n    arm.gamerig.rig_ui_template = 'ui_template'")
 
     # GameRig bone group colors info
-    if groups and len(arm.gamerig_colors) > 0:
-        code.append("\n    for i in range(" + str(len(arm.gamerig_colors)) + "):")
-        code.append("        arm.gamerig_colors.add()\n")
+    if groups and len(arm.gamerig.colors) > 0:
+        code.append("\n    for i in range(" + str(len(arm.gamerig.colors)) + "):")
+        code.append("        arm.gamerig.colors.add()\n")
 
-        for i in range(len(arm.gamerig_colors)):
-            name = arm.gamerig_colors[i].name
-            active = arm.gamerig_colors[i].active
-            normal = arm.gamerig_colors[i].normal
-            select = arm.gamerig_colors[i].select
-            standard_colors_lock = arm.gamerig_colors[i].standard_colors_lock
-            code.append('    arm.gamerig_colors[' + str(i) + '].name = "' + name + '"')
-            code.append('    arm.gamerig_colors[' + str(i) + '].active = Color(' + str(active[:]) + ')')
-            code.append('    arm.gamerig_colors[' + str(i) + '].normal = Color(' + str(normal[:]) + ')')
-            code.append('    arm.gamerig_colors[' + str(i) + '].select = Color(' + str(select[:]) + ')')
-            code.append('    arm.gamerig_colors[' + str(i) + '].standard_colors_lock = ' + str(standard_colors_lock))
+        for i in range(len(arm.gamerig.colors)):
+            name = arm.gamerig.colors[i].name
+            active = arm.gamerig.colors[i].active
+            normal = arm.gamerig.colors[i].normal
+            select = arm.gamerig.colors[i].select
+            standard_colors_lock = arm.gamerig.colors[i].standard_colors_lock
+            code.append('    arm.gamerig.colors[' + str(i) + '].name = "' + name + '"')
+            code.append('    arm.gamerig.colors[' + str(i) + '].active = Color(' + str(active[:]) + ')')
+            code.append('    arm.gamerig.colors[' + str(i) + '].normal = Color(' + str(normal[:]) + ')')
+            code.append('    arm.gamerig.colors[' + str(i) + '].select = Color(' + str(select[:]) + ')')
+            code.append('    arm.gamerig.colors[' + str(i) + '].standard_colors_lock = ' + str(standard_colors_lock))
 
     # GameRig layer layout info
-    if layers and len(arm.gamerig_layers) > 0:
-        code.append("\n    for i in range(" + str(len(arm.gamerig_layers)) + "):")
-        code.append("        arm.gamerig_layers.add()\n")
+    if layers and len(arm.gamerig.layers) > 0:
+        code.append("\n    for i in range(" + str(len(arm.gamerig.layers)) + "):")
+        code.append("        arm.gamerig.layers.add()\n")
 
-        for i in range(len(arm.gamerig_layers)):
-            name = arm.gamerig_layers[i].name
-            row = arm.gamerig_layers[i].row
-            set = arm.gamerig_layers[i].selset
-            group = arm.gamerig_layers[i].group
-            code.append('    arm.gamerig_layers[' + str(i) + '].name = "' + name + '"')
-            code.append('    arm.gamerig_layers[' + str(i) + '].row = ' + str(row))
-            code.append('    arm.gamerig_layers[' + str(i) + '].selset = ' + str(set))
-            code.append('    arm.gamerig_layers[' + str(i) + '].group = ' + str(group))
+        for i in range(len(arm.gamerig.layers)):
+            name = arm.gamerig.layers[i].name
+            row = arm.gamerig.layers[i].row
+            set = arm.gamerig.layers[i].selset
+            group = arm.gamerig.layers[i].group
+            code.append('    arm.gamerig.layers[' + str(i) + '].name = "' + name + '"')
+            code.append('    arm.gamerig.layers[' + str(i) + '].row = ' + str(row))
+            code.append('    arm.gamerig.layers[' + str(i) + '].selset = ' + str(set))
+            code.append('    arm.gamerig.layers[' + str(i) + '].group = ' + str(group))
 
     # write parents first
     bones = [(len(bone.parent_recursive), bone.name) for bone in arm.edit_bones]
@@ -731,7 +730,6 @@ def write_metarig(obj, func_name="create", layers=False, groups=False, template=
         pbone = obj.pose.bones[bone_name]
 
         code.append("    pbone = obj.pose.bones[bones[%r]]" % bone_name)
-        code.append("    pbone.gamerig_type = %r" % pbone.gamerig_type)
         code.append("    pbone.lock_location = %s" % str(tuple(pbone.lock_location)))
         code.append("    pbone.lock_rotation = %s" % str(tuple(pbone.lock_rotation)))
         code.append("    pbone.lock_rotation_w = %s" % str(pbone.lock_rotation_w))
@@ -740,16 +738,19 @@ def write_metarig(obj, func_name="create", layers=False, groups=False, template=
         if layers:
             code.append("    pbone.bone.layers = %s" % str(list(pbone.bone.layers)))
         # Rig type parameters
-        for param_name in pbone.gamerig_parameters.keys():
-            param = getattr(pbone.gamerig_parameters, param_name, '')
-            if str(type(param)) == "<class 'bpy_prop_array'>":
-                param = list(param)
-            if type(param) == str:
-                param = '"' + param + '"'
-            code.append("    try:")
-            code.append("        pbone.gamerig_parameters.%s = %s" % (param_name, str(param)))
-            code.append("    except AttributeError:")
-            code.append("        pass")
+        if pbone.gamerig.name:
+            for i in pbone.gamerig.keys():
+                param = pbone.gamerig[i]
+                if str(type(param)) == "<class 'IDPropertyArray'>":
+                    print(pbone, str(type(param[0])))
+                    param = list(param)
+                if type(param) == str:
+                    param = '"' + param + '"'
+                    print('str', pbone, i, param)
+                code.append("    try:")
+                code.append("        pbone.gamerig.%s = %s" % (i, str(param)))
+                code.append("    except AttributeError:")
+                code.append("        pass")
 
     code.append("\n    bpy.ops.object.mode_set(mode='EDIT')")
     code.append("    for bone in arm.edit_bones:")

@@ -230,8 +230,8 @@ class Arm_IK2FK(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-register_class(Arm_FK2IK)
-register_class(Arm_IK2FK)
+classes.append(Arm_FK2IK)
+classes.append(Arm_IK2FK)
 
 
 '''.format(rig_id=rig_id)
@@ -282,33 +282,33 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['ORG-upper_arm.L']]
-    pbone.gamerig_type = 'limbs.arm'
+    pbone.gamerig.name = 'limbs.arm'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     try:
-        pbone.gamerig_parameters.tweak_layers = [False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig.tweak_layers = [False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig.fk_layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.allow_ik_stretch = True
+        pbone.gamerig.allow_ik_stretch = True
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-forearm.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['ORG-hand.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

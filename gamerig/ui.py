@@ -24,12 +24,12 @@ from mathutils import Color
 
 from .utils import (
     get_rig_type, MetarigError, write_metarig, write_widget, unique_name, get_keyed_frames,
-    bones_in_frame, overwrite_prop_animation, get_rig_name
+    bones_in_frame, overwrite_prop_animation, get_rig_name, copy_attributes
 )
 from . import rig_lists, generate
 
 
-class MainPanel(bpy.types.Panel):
+class ArmaturePanel(bpy.types.Panel):
     bl_idname = "GAMERIG_PT_main"
     bl_label = "GameRig"
     bl_space_type = 'PROPERTIES'
@@ -38,10 +38,14 @@ class MainPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE'\
-            and context.active_object.data.get("gamerig_rig_ui_template") is not None
+        return context.object and context.object.type == 'ARMATURE' and (context.object.data.gamerig.rig_ui_template or 'gamerig_rig_ui_template' in context.object.data)
 
     def draw(self, context):
+        if 'gamerig_rig_ui_template' in context.object.data:
+            self.layout.label(text='This metarig armature has old format data.', icon='ERROR')
+            self.layout.operator(MigrateOperator.bl_idname)
+            return
+        
         layout = self.layout
         obj = context.object
         gparam = context.window_manager.gamerig
@@ -50,7 +54,7 @@ class MainPanel(bpy.types.Panel):
         ## Layers
         # Ensure that the layers exist
         # Can't add while drawing, just use button
-        if len(armature.gamerig_layers) < 30:
+        if len(armature.gamerig.layers) < 30:
             layout.operator(InitLayerOperator.bl_idname)
         else:
             box = layout.box()
@@ -71,8 +75,8 @@ class MainPanel(bpy.types.Panel):
                         col1.label()
                     col1.label(text=str(i))
 
-                for i, gamerig_layer in enumerate(armature.gamerig_layers):
-                    # note: gamerig_layer == armature.gamerig_layers[i]
+                for i, layer in enumerate(armature.gamerig.layers):
+                    # note: layer == armature.gamerig.layers[i]
                     if (i % 16) == 0:
                         col = col2.column()
                         if i == 0:
@@ -84,15 +88,15 @@ class MainPanel(bpy.types.Panel):
                     row = col.row(align=True)
                     icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
                     row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
-                    row.prop(gamerig_layer, "name", text="")
-                    row.prop(gamerig_layer, "row", text="UI Row")
-                    icon = 'RADIOBUT_ON' if gamerig_layer.selset else 'RADIOBUT_OFF'
-                    row.prop(gamerig_layer, "selset", text="", toggle=True, icon=icon)
-                    row.prop(gamerig_layer, "group", text="Bone Group")
-                    if gamerig_layer.group == 0:
+                    row.prop(layer, "name", text="")
+                    row.prop(layer, "row", text="UI Row")
+                    icon = 'RADIOBUT_ON' if layer.selset else 'RADIOBUT_OFF'
+                    row.prop(layer, "selset", text="", toggle=True, icon=icon)
+                    row.prop(layer, "group", text="Bone Group")
+                    if layer.group == 0:
                         row.label(text='None')
                     else:
-                        row.label(text=armature.gamerig_colors[gamerig_layer.group-1].name)
+                        row.label(text=armature.gamerig.colors[layer.group-1].name)
 
                 # buttons
                 col = col2.column()
@@ -112,35 +116,35 @@ class MainPanel(bpy.types.Panel):
         row.alignment = 'LEFT'
         row.label(text='Bone Group Settings')
         if show:
-            color_sets = obj.data.gamerig_colors
-            idx = obj.data.gamerig_colors_index
+            color_sets = obj.data.gamerig.colors
+            idx = obj.data.gamerig.colors_index
 
             row = box.row()
             row.operator(UseStandardColorsOperator.bl_idname, icon='FILE_REFRESH', text='')
             row = row.row(align=True)
-            row.prop(armature.gamerig_selection_colors, 'select', text='')
-            row.prop(armature.gamerig_selection_colors, 'active', text='')
+            row.prop(armature.gamerig.selection_colors, 'select', text='')
+            row.prop(armature.gamerig.selection_colors, 'active', text='')
             row = box.row(align=True)
-            icon = 'LOCKED' if armature.gamerig_colors_lock else 'UNLOCKED'
-            row.prop(armature, 'gamerig_colors_lock', text = 'Unified select/active colors', icon=icon)
+            icon = 'LOCKED' if armature.gamerig.colors_lock else 'UNLOCKED'
+            row.prop(armature.gamerig, 'colors_lock', text = 'Unified select/active colors', icon=icon)
             row.operator(ApplySelectionColorsOperator.bl_idname, icon='FILE_REFRESH', text='Apply')
             row = box.row()
-            row.template_list(BoneGroupsUIList.bl_idname, "", obj.data, "gamerig_colors", obj.data, "gamerig_colors_index")
+            row.template_list(BoneGroupsUIList.bl_idname, "", armature.gamerig, "colors", armature.gamerig, "colors_index")
 
             col = row.column(align=True)
             col.operator(AddBoneGroupOperator.bl_idname, icon='ZOOM_IN', text="")
-            col.operator(RemoveBoneGroupOperator.bl_idname, icon='ZOOM_OUT', text="").idx = obj.data.gamerig_colors_index
+            col.operator(RemoveBoneGroupOperator.bl_idname, icon='ZOOM_OUT', text="").idx = obj.data.gamerig.colors_index
             col.menu(BoneGroupsSpecialsMenu.bl_idname, icon='DOWNARROW_HLT', text="")
             row = box.row()
-            row.prop(armature, 'gamerig_theme_to_add', text = 'Theme')
+            row.prop(armature.gamerig, 'theme_to_add', text = 'Theme')
             op = row.operator(AddBoneGroupThemeOperator.bl_idname, text="Add From Theme")
-            op.theme = armature.gamerig_theme_to_add
+            op.theme = armature.gamerig.theme_to_add
             row = box.row()
             row.operator(AddBoneGroupsOperator.bl_idname, text="Add Standard")
 
         ## Generation
         if obj.mode in {'POSE', 'OBJECT'}:
-            layout.row().prop(obj.data, "gamerig_rig_name", text="Rig Name")
+            layout.row().prop(armature.gamerig, "rig_name", text="Rig Name")
             rig_name = get_rig_name(obj)
             target = next((i for i in context.collection.objects if i != obj and i.type == 'ARMATURE' and i.name == rig_name), None)
             if target:
@@ -176,7 +180,7 @@ class MainPanel(bpy.types.Panel):
                     a.name = r
 
             # Rig type list
-            layout.row().template_list("UI_UL_list", "gamerig_types", gparam, "types", gparam, 'active_type')
+            layout.row().template_list("UI_UL_list", "gamerig_type", gparam, "types", gparam, 'active_type')
 
             props = layout.operator(AddSampleOperator.bl_idname, text="Add sample")
             props.metarig_type = gparam.types[gparam.active_type].name
@@ -194,34 +198,32 @@ class AddBoneGroupsOperator(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         armature = obj.data
-        if not hasattr(armature, 'gamerig_colors'):
-            return {'FINISHED'}
 
         groups = ['Root', 'IK', 'Special', 'Tweak', 'FK', 'Extra']
 
         for g in groups:
-            if g in armature.gamerig_colors.keys():
+            if g in armature.gamerig.colors.keys():
                 continue
 
-            armature.gamerig_colors.add()
-            armature.gamerig_colors[-1].name = g
+            armature.gamerig.colors.add()
+            armature.gamerig.colors[-1].name = g
 
-            armature.gamerig_colors[g].select = Color((0.3140000104904175, 0.7839999794960022, 1.0))
-            armature.gamerig_colors[g].active = Color((0.5490000247955322, 1.0, 1.0))
-            armature.gamerig_colors[g].standard_colors_lock = True
+            armature.gamerig.colors[g].select = Color((0.3140000104904175, 0.7839999794960022, 1.0))
+            armature.gamerig.colors[g].active = Color((0.5490000247955322, 1.0, 1.0))
+            armature.gamerig.colors[g].standard_colors_lock = True
 
             if g == "Root":
-                armature.gamerig_colors[g].normal = Color((0.43529415130615234, 0.18431372940540314, 0.41568630933761597))
+                armature.gamerig.colors[g].normal = Color((0.43529415130615234, 0.18431372940540314, 0.41568630933761597))
             if g == "IK":
-                armature.gamerig_colors[g].normal = Color((0.6039215922355652, 0.0, 0.0))
+                armature.gamerig.colors[g].normal = Color((0.6039215922355652, 0.0, 0.0))
             if g== "Special":
-                armature.gamerig_colors[g].normal = Color((0.9568628072738647, 0.7882353663444519, 0.0470588281750679))
+                armature.gamerig.colors[g].normal = Color((0.9568628072738647, 0.7882353663444519, 0.0470588281750679))
             if g== "Tweak":
-                armature.gamerig_colors[g].normal = Color((0.03921568766236305, 0.21176472306251526, 0.5803921818733215))
+                armature.gamerig.colors[g].normal = Color((0.03921568766236305, 0.21176472306251526, 0.5803921818733215))
             if g== "FK":
-                armature.gamerig_colors[g].normal = Color((0.11764706671237946, 0.5686274766921997, 0.03529411926865578))
+                armature.gamerig.colors[g].normal = Color((0.11764706671237946, 0.5686274766921997, 0.03529411926865578))
             if g== "Extra":
-                armature.gamerig_colors[g].normal = Color((0.9686275124549866, 0.250980406999588, 0.0941176563501358))
+                armature.gamerig.colors[g].normal = Color((0.9686275124549866, 0.250980406999588, 0.0941176563501358))
 
         return {'FINISHED'}
 
@@ -239,16 +241,14 @@ class UseStandardColorsOperator(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         armature = obj.data
-        if not hasattr(armature, 'gamerig_colors'):
-            return {'FINISHED'}
 
         current_theme = bpy.context.preferences.themes.items()[0][0]
         theme = bpy.context.preferences.themes[current_theme]
 
-        armature.gamerig_selection_colors.select = theme.view_3d.bone_pose
-        armature.gamerig_selection_colors.active = theme.view_3d.bone_pose_active
+        armature.gamerig.selection_colors.select = theme.view_3d.bone_pose
+        armature.gamerig.selection_colors.active = theme.view_3d.bone_pose_active
 
-        # for col in armature.gamerig_colors:
+        # for col in armature.gamerig.colors:
         #     col.select = theme.view_3d.bone_pose
         #     col.active = theme.view_3d.bone_pose_active
 
@@ -267,15 +267,13 @@ class ApplySelectionColorsOperator(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         armature = obj.data
-        if not hasattr(armature, 'gamerig_colors'):
-            return {'FINISHED'}
 
         #current_theme = bpy.context.preferences.themes.items()[0][0]
         #theme = bpy.context.preferences.themes[current_theme]
 
-        for col in armature.gamerig_colors:
-            col.select = armature.gamerig_selection_colors.select
-            col.active = armature.gamerig_selection_colors.active
+        for col in armature.gamerig.colors:
+            col.select = armature.gamerig.selection_colors.select
+            col.active = armature.gamerig.selection_colors.active
 
         return {'FINISHED'}
 
@@ -293,19 +291,18 @@ class AddBoneGroupOperator(bpy.types.Operator):
         obj = context.object
         armature = obj.data
 
-        if hasattr(armature, 'gamerig_colors'):
-            armature.gamerig_colors.add()
-            armature.gamerig_colors[-1].name = unique_name(armature.gamerig_colors, 'Group')
+        armature.gamerig.colors.add()
+        armature.gamerig.colors[-1].name = unique_name(armature.gamerig.colors, 'Group')
 
-            current_theme = bpy.context.preferences.themes.items()[0][0]
-            theme = bpy.context.preferences.themes[current_theme]
+        current_theme = bpy.context.preferences.themes.items()[0][0]
+        theme = bpy.context.preferences.themes[current_theme]
 
-            armature.gamerig_colors[-1].normal = theme.view_3d.wire
-            armature.gamerig_colors[-1].normal.hsv = theme.view_3d.wire.hsv
-            armature.gamerig_colors[-1].select = theme.view_3d.bone_pose
-            armature.gamerig_colors[-1].select.hsv = theme.view_3d.bone_pose.hsv
-            armature.gamerig_colors[-1].active = theme.view_3d.bone_pose_active
-            armature.gamerig_colors[-1].active.hsv = theme.view_3d.bone_pose_active.hsv
+        armature.gamerig.colors[-1].normal = theme.view_3d.wire
+        armature.gamerig.colors[-1].normal.hsv = theme.view_3d.wire.hsv
+        armature.gamerig.colors[-1].select = theme.view_3d.bone_pose
+        armature.gamerig.colors[-1].select.hsv = theme.view_3d.bone_pose.hsv
+        armature.gamerig.colors[-1].active = theme.view_3d.bone_pose_active
+        armature.gamerig.colors[-1].active.hsv = theme.view_3d.bone_pose_active.hsv
 
         return {'FINISHED'}
 
@@ -350,20 +347,18 @@ class AddBoneGroupThemeOperator(bpy.types.Operator):
         obj = context.object
         armature = obj.data
 
-        if hasattr(armature, 'gamerig_colors'):
+        if self.theme in armature.gamerig.colors.keys():
+            return {'FINISHED'}
+        armature.gamerig.colors.add()
+        armature.gamerig.colors[-1].name = self.theme
 
-            if self.theme in armature.gamerig_colors.keys():
-                return {'FINISHED'}
-            armature.gamerig_colors.add()
-            armature.gamerig_colors[-1].name = self.theme
+        id = int(self.theme[-2:]) - 1
 
-            id = int(self.theme[-2:]) - 1
+        theme_color_set = bpy.context.preferences.themes[0].bone_color_sets[id]
 
-            theme_color_set = bpy.context.preferences.themes[0].bone_color_sets[id]
-
-            armature.gamerig_colors[-1].normal = theme_color_set.normal
-            armature.gamerig_colors[-1].select = theme_color_set.select
-            armature.gamerig_colors[-1].active = theme_color_set.active
+        armature.gamerig.colors[-1].normal = theme_color_set.normal
+        armature.gamerig.colors[-1].select = theme_color_set.select
+        armature.gamerig.colors[-1].active = theme_color_set.active
 
         return {'FINISHED'}
 
@@ -382,10 +377,10 @@ class RemoveBoneGroupOperator(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.object
-        obj.data.gamerig_colors.remove(self.idx)
+        obj.data.gamerig.colors.remove(self.idx)
 
         # set layers references to 0
-        for l in obj.data.gamerig_layers:
+        for l in obj.data.gamerig.layers:
             if l.group == self.idx + 1:
                 l.group = 0
             elif l.group > self.idx + 1:
@@ -407,10 +402,10 @@ class RemoveAllBoneGroupOperator(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
 
-        for i, col in enumerate(obj.data.gamerig_colors):
-            obj.data.gamerig_colors.remove(0)
+        for i, col in enumerate(obj.data.gamerig.colors):
+            obj.data.gamerig.colors.remove(0)
             # set layers references to 0
-            for l in obj.data.gamerig_layers:
+            for l in obj.data.gamerig.layers:
                 if l.group == i + 1:
                     l.group = 0
 
@@ -434,7 +429,7 @@ class BoneGroupsUIList(bpy.types.UIList):
         row2.prop(item, "select", text='')
         row2.prop(item, "active", text='')
         #row2.enabled = not item.standard_colors_lock
-        row2.enabled = not bpy.context.object.data.gamerig_colors_lock
+        row2.enabled = not bpy.context.object.data.gamerig.colors_lock
 
 
 class BoneGroupsSpecialsMenu(bpy.types.Menu):
@@ -447,24 +442,22 @@ class BoneGroupsSpecialsMenu(bpy.types.Menu):
         layout.operator(RemoveAllBoneGroupOperator.bl_idname)
 
 
-class RigTypePanel(bpy.types.Panel):
+class BonePanel(bpy.types.Panel):
     bl_idname      = "GAMERIG_PT_rig_type"
     bl_label       = "GameRig Rig Type"
     bl_space_type  = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context     = "bone"
-    #bl_options    = {'DEFAULT_OPEN'}
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
-            and context.active_object.data.get("gamerig_rig_ui_template") is not None
+        return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone and context.object.data.gamerig.rig_ui_template
 
     def draw(self, context):
         gparam = context.window_manager.gamerig
         bone = context.active_pose_bone
         category_name = str(gparam.category).replace(" ", "")
-        rig_name = str(context.active_pose_bone.gamerig_type).replace(" ", "")
+        rig_name = str(context.active_pose_bone.gamerig.name).replace(" ", "")
 
         layout = self.layout
 
@@ -492,7 +485,7 @@ class RigTypePanel(bpy.types.Panel):
 
         # Rig type field
         row = layout.row()
-        row.prop_search(bone, "gamerig_type", gparam, "types", text="Rig type:")
+        row.prop_search(bone.gamerig, "name", gparam, "types", text="Rig type:")
 
         # Rig type parameters / Rig type non-exist alert
         if rig_name != "":
@@ -502,7 +495,7 @@ class RigTypePanel(bpy.types.Panel):
             except (ImportError, AttributeError):
                 row = layout.row()
                 box = row.box()
-                box.label(text="ALERT: type \"%s\" does not exist!" % rig_name)
+                box.label(text="Rig \"%s\" does not exist!" % rig_name, icon='ERROR')
             else:
                 try:
                     rig.parameters_ui
@@ -513,7 +506,7 @@ class RigTypePanel(bpy.types.Panel):
                     col = layout.column()
                     col.label(text="Options:")
                     box = layout.box()
-                    rig.parameters_ui(box, bone.gamerig_parameters)
+                    rig.parameters_ui(box, bone.gamerig)
 
 
 class DevToolsPanel(bpy.types.Panel):
@@ -524,8 +517,7 @@ class DevToolsPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in ['EDIT_ARMATURE', 'EDIT_MESH']\
-         and context.preferences.addons['gamerig'].preferences.shows_dev_tools
+        return context.mode in ['EDIT_ARMATURE', 'EDIT_MESH'] and context.preferences.addons['gamerig'].preferences.shows_dev_tools
 
     def draw(self, context):
         obj = context.active_object
@@ -551,15 +543,14 @@ class UtilityPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return context.object and context.object.type == 'ARMATURE' and context.active_pose_bone\
-          and context.active_object.data.get("gamerig_id") is not None\
-          and context.preferences.addons['gamerig'].preferences.shows_dev_tools
+          and 'gamerig_id' in context.active_object.data and context.preferences.addons['gamerig'].preferences.shows_dev_tools
 
     def draw(self, context):
         layout = self.layout
         layout.operator(RevealUnlinkedWidgetOperator.bl_idname)
 
 
-def gamerig_report_exception(operator, exception):
+def report_exception(operator, exception):
     import traceback
     import sys
     import os
@@ -592,8 +583,8 @@ class InitLayerOperator(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         arm = obj.data
-        for i in range(1 + len(arm.gamerig_layers), 31):
-            arm.gamerig_layers.add()
+        for i in range(1 + len(arm.gamerig.layers), 31):
+            arm.gamerig.layers.add()
         return {'FINISHED'}
 
 
@@ -637,7 +628,7 @@ class GenerateOperator(bpy.types.Operator):
         try:
             generate.generate_rig(context, context.object)
         except MetarigError as rig_exception:
-            gamerig_report_exception(self, rig_exception)
+            report_exception(self, rig_exception)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
 
@@ -654,7 +645,7 @@ class ToggleArmatureReferenceOperator(bpy.types.Operator):
 
     def execute(self, context):
         metarig = context.object
-        if metarig.data.get("gamerig_rig_ui_template") is not None:
+        if metarig.data.gamerig.rig_ui_template:
             rig_name = get_rig_name(metarig)
             genrig = next((i for i in context.collection.objects if i and i != metarig and i.type == 'ARMATURE' and i.name == rig_name), None)
             if genrig is not None:
@@ -786,6 +777,76 @@ class EncodeWidgetOperator(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+class MigrateOperator(bpy.types.Operator):
+    bl_idname = "gamerig.migrate_armature"
+    bl_label = "Migrate"
+    bl_description = "Migrate old armature properties to new"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode in {'OBJECT', 'POSE'}
+    
+    def execute(self, context):
+        armature = context.object.data
+        if 'gamerig_rig_ui_template' in armature:
+            armature.gamerig.rig_ui_template = armature['gamerig_rig_ui_template']
+            del armature['gamerig_rig_ui_template']
+        
+        if 'gamerig_rig_name' in armature:
+            armature.gamerig.rig_name = armature['gamerig_rig_name']
+            del armature['gamerig_rig_name']
+        
+        if 'gamerig_layers' in armature:
+            armature.gamerig.layers.clear()
+            for i in armature['gamerig_layers']:
+                item = armature.gamerig.layers.add()
+                for k, v in i.items():
+                    item[k] = v
+            del armature['gamerig_layers']
+        
+        if 'gamerig_colors' in armature:
+            armature.gamerig.colors.clear()
+            for i in armature['gamerig_colors']:
+                item = armature.gamerig.colors.add()
+                for k, v in i.items():
+                    item[k] = v
+            del armature['gamerig_colors']
+        
+        if 'gamerig_selection_colors' in armature:
+            if 'select' in armature['gamerig_selection_colors']:
+                armature.gamerig.selection_colors.select = armature['gamerig_selection_colors']['select']
+            if 'active' in armature['gamerig_selection_colors']:
+                armature.gamerig.selection_colors.active = armature['gamerig_selection_colors']['active']
+            del armature['gamerig_selection_colors']
+        
+        if 'gamerig_colors_index' in armature:
+            armature.gamerig.colors_index = armature['gamerig_colors_index']
+            del armature['gamerig_colors_index']
+        
+        if 'gamerig_colors_lock' in armature:
+            armature.gamerig.colors_lock = armature['gamerig_colors_lock']
+            del armature['gamerig_colors_lock']
+        
+        # if 'gamerig_theme_to_add' in armature:
+        #     armature.gamerig.theme_to_add = armature['gamerig_theme_to_add']
+        #     del armature['gamerig_theme_to_add']
+
+        for pb in context.object.pose.bones:
+            if 'gamerig_type' in pb:
+                pb.gamerig.name = pb['gamerig_type']
+                if 'gamerig_parameters' in pb:
+                    for k, v in pb['gamerig_parameters'].items():
+                        if k != 'name':
+                            pb.gamerig[k] = v
+                del pb['gamerig_type']
+            if 'gamerig_parameters' in pb:
+                del pb['gamerig_parameters']
+
+        return {'FINISHED'}
+
+
 ### Registering ###
 
 register, unregister = bpy.utils.register_classes_factory((
@@ -804,10 +865,11 @@ register, unregister = bpy.utils.register_classes_factory((
     EncodeMetarigOperator,
     EncodeMetarigSampleOperator,
     EncodeWidgetOperator,
+    MigrateOperator,
     BoneGroupsUIList,
     BoneGroupsSpecialsMenu,
-    MainPanel,
-    RigTypePanel,
+    ArmaturePanel,
+    BonePanel,
     UtilityPanel,
     DevToolsPanel,
 ))

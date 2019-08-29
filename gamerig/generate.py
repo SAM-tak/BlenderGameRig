@@ -61,8 +61,8 @@ def generate_rig(context, metarig):
     rig_name = get_rig_name(metarig)
 
     # store rig name to property if rig name already not stored.
-    if not metarig.data.gamerig_rig_name:
-        metarig.data.gamerig_rig_name = rig_name
+    if not metarig.data.gamerig.rig_name:
+        metarig.data.gamerig.rig_name = rig_name
 
     print("Fetch rig (%s)." % rig_name)
     obj = next((i for i in context.collection.objects if i != metarig and i.type == 'ARMATURE' and i.name == rig_name), None)
@@ -80,7 +80,6 @@ def generate_rig(context, metarig):
     view_layer = context.view_layer
     collection = context.collection
     layer_collection = context.layer_collection
-    gparam = context.window_manager.gamerig
     #------------------------------------------
     # Create/find the rig object and set it up
 
@@ -109,7 +108,7 @@ def generate_rig(context, metarig):
     
     if obj is None:
         print("Create new rig.")
-        name = metarig.data.get("gamerig_rig_name") or "rig"
+        name = metarig.data.gamerig.rig_name or "rig"
         obj = bpy.data.objects.new(name, bpy.data.armatures.new(name))  # in case name 'rig' exists it will be rig.001
         obj.display_type = 'WIRE'
         collection.objects.link(obj)
@@ -185,12 +184,12 @@ def generate_rig(context, metarig):
         bone_gen.lock_location = tuple(bone.lock_location)
         bone_gen.lock_scale = tuple(bone.lock_scale)
 
-        # gamerig_type and gamerig_parameters
-        bone_gen.gamerig_type = bone.gamerig_type
-        for prop in dir(bone_gen.gamerig_parameters):
-            if (not prop.startswith("_")) and (not prop.startswith("bl_")) and (prop != "rna_type"):
+        # gamerig type and parameters
+        bone_gen.gamerig.name = bone.gamerig.name
+        for prop in dir(bone_gen.gamerig):
+            if (not prop.startswith("_")) and (not prop.startswith("bl_")) and (prop != "rna_type") and (prop != "type"):
                 try:
-                    setattr(bone_gen.gamerig_parameters, prop, getattr(bone.gamerig_parameters, prop))
+                    setattr(bone_gen.gamerig, prop, getattr(bone.gamerig, prop))
                 except AttributeError:
                     print("FAILED TO COPY PARAMETER: " + str(prop))
 
@@ -361,12 +360,12 @@ def generate_rig(context, metarig):
     obj.data.layers = vis_layers
 
     # Ensure the collection of layer names exists
-    for i in range(1 + len(metarig.data.gamerig_layers), 30):
-        metarig.data.gamerig_layers.add()
+    for i in range(1 + len(metarig.data.gamerig.layers), 30):
+        metarig.data.gamerig.layers.add()
 
     # Create list of layer name/row pairs
     layer_layout = []
-    for l in metarig.data.gamerig_layers:
+    for l in metarig.data.gamerig.layers:
         #print(l.name)
         layer_layout.append((l.name, l.row))
 
@@ -375,6 +374,10 @@ def generate_rig(context, metarig):
 
     if rig_ui_name in bpy.data.texts.keys():
         script = bpy.data.texts[rig_ui_name]
+        try:
+            script.as_module().unregister()
+        except:
+            pass
         script.clear()
     else:
         script = bpy.data.texts.new(rig_ui_name)
@@ -388,7 +391,7 @@ def generate_rig(context, metarig):
         else:
             operator_scripts += rigt.operator_script(rig_id)
 
-    uitemplate = rig_lists.riguitemplate_dic[metarig.data.gamerig_rig_ui_template]
+    uitemplate = rig_lists.riguitemplate_dic[metarig.data.gamerig.rig_ui_template]
 
     script.write(
         uitemplate[0].format(
@@ -460,8 +463,8 @@ def create_selection_sets(obj, metarig):
     metarig.select_set(False)
     pbones = obj.pose.bones
 
-    for i, name in enumerate(metarig.data.gamerig_layers.keys()):
-        if name == '' or not metarig.data.gamerig_layers[i].selset:
+    for i, name in enumerate(metarig.data.gamerig.layers.keys()):
+        if name == '' or not metarig.data.gamerig.layers[i].selset:
             continue
 
         bpy.ops.pose.select_all(action='DESELECT')
@@ -486,8 +489,8 @@ def create_bone_groups(obj, metarig):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pb = obj.pose.bones
-    layers = metarig.data.gamerig_layers
-    groups = metarig.data.gamerig_colors
+    layers = metarig.data.gamerig.layers
+    groups = metarig.data.gamerig.colors
 
     # Create BGs
     for l in layers:
@@ -545,19 +548,16 @@ def get_bone_rigs(obj, bone_name, rigtypes, halt_on_missing=False):
     """ Fetch all the rigs specified on a bone.
     """
     rigs = []
-    rig_type = obj.pose.bones[bone_name].gamerig_type
+    rig_type = obj.pose.bones[bone_name].gamerig.name
     rig_type = rig_type.replace(" ", "")
 
     if rig_type == "":
         pass
     else:
-        # Gather parameters
-        params = obj.pose.bones[bone_name].gamerig_parameters
-
         # Get the rig
         try:
             rigt = get_rig_type(rig_type)
-            rig = rigt.Rig(obj, bone_name, params)
+            rig = rigt.Rig(obj, bone_name, obj.pose.bones[bone_name].gamerig)
         except ImportError:
             message = "Rig Type Missing: python module for type '%s' not found (bone: %s)" % (rig_type, bone_name)
             if halt_on_missing:

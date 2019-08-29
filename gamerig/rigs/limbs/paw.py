@@ -274,8 +274,8 @@ class Paw_IK2FK(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-register_class(Paw_FK2IK)
-register_class(Paw_IK2FK)
+classes.append(Paw_FK2IK)
+classes.append(Paw_IK2FK)
 
 '''.format(rig_id=rig_id)
 
@@ -348,51 +348,51 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['ORG-forelimb.01.L']]
-    pbone.gamerig_type = 'limbs.paw'
+    pbone.gamerig.name = 'limbs.paw'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     try:
-        pbone.gamerig_parameters.fk_layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig.fk_layers = [False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.tweak_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig.tweak_layers = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.allow_ik_stretch = True
+        pbone.gamerig.allow_ik_stretch = True
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.footprint_bone = "JIG-forepawstamp.L"
+        pbone.gamerig.footprint_bone = "JIG-forepawstamp.L"
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['ORG-forelimb.02.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['ORG-forelimb.03.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['ORG-forepaw.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['JIG-forepawstamp.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

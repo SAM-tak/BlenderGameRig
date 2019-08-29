@@ -152,8 +152,11 @@ def add_parameters(params):
     """ Add the parameters of this rig type to the
         RigParameters PropertyGroup
     """
-    items = [('X', 'X', ''), ('Y', 'Y', ''), ('Z', 'Z', '')]
-    params.primary_rotation_axis = bpy.props.EnumProperty(items=items, name="Primary Rotation Axis", default='X')
+    params.primary_rotation_axis = bpy.props.EnumProperty(
+        items=[('X', 'X', ''), ('Y', 'Y', ''), ('Z', 'Z', '')],
+        name="Primary Rotation Axis",
+        default='X'
+    )
 
 
 def parameters_ui(layout, params):
@@ -201,40 +204,40 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['palm.04.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'YXZ'
     pbone = obj.pose.bones[bones['f_pinky.01.L']]
-    pbone.gamerig_type = 'finger'
+    pbone.gamerig.name = 'finger'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     try:
-        pbone.gamerig_parameters.separate_extra_layers = True
+        pbone.gamerig.separate_extra_layers = True
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.extra_layers = [False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig.extra_layers = [False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.tweak_extra_layers = False
+        pbone.gamerig.tweak_extra_layers = False
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['f_pinky.02.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['f_pinky.03.L']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

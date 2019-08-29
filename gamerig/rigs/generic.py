@@ -188,7 +188,7 @@ class Generic_Snap(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-register_class(Generic_Snap)
+classes.append(Generic_Snap)
 
 
 '''.format(rig_id=rig_id)
@@ -230,7 +230,7 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['Bone']]
-    pbone.gamerig_type = 'generic'
+    pbone.gamerig.name = 'generic'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False

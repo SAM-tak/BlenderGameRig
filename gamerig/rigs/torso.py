@@ -631,6 +631,7 @@ for tweak in tweaks:
 """ % (bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['tweak'] + [ bones['neck']['ctrl'] ])
         return [code]
 
+
 def add_parameters( params ):
     """ Add the parameters of this rig type to the
         RigParameters PropertyGroup
@@ -776,62 +777,62 @@ def create_sample(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['hips']]
-    pbone.gamerig_type = 'torso'
+    pbone.gamerig.name = 'torso'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     try:
-        pbone.gamerig_parameters.pivot_pos = 2
+        pbone.gamerig.pivot_pos = 2
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.neck_pos = 5
+        pbone.gamerig.neck_pos = 5
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.stretchable_tweak = True
+        pbone.gamerig.stretchable_tweak = True
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.tweak_layers = [False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig.tweak_layers = [False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     try:
-        pbone.gamerig_parameters.chain_bone_controls = ""
+        pbone.gamerig.chain_bone_controls = ""
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['waist']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['chest']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['upper_chest']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['neck']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone = obj.pose.bones[bones['head']]
-    pbone.gamerig_type = ''
+    pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
