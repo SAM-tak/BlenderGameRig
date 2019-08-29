@@ -75,12 +75,7 @@ class Preferences(AddonPreferences):
         self.layout.row().prop(self, 'shows_dev_tools')
 
 
-class RigType(PropertyGroup):
-    pass
-
-
 class ColorSet(PropertyGroup):
-    name : StringProperty(name="Color Set", default=" ")
     active : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
@@ -207,6 +202,70 @@ class PoseBoneProperties(PropertyGroup):
         del bpy.types.PoseBone.gamerig
 
 
+# Remember the initial property set
+PARAMETERS_BASE_DIR = set(dir(PoseBoneProperties))
+
+PARAMETER_TABLE = {'name': ('DEFAULT', StringProperty())}
+
+def clear_parameters():
+    for name in list(dir(PoseBoneProperties)):
+        if name not in PARAMETERS_BASE_DIR:
+            delattr(PoseBoneProperties, name)
+            if name in PARAMETER_TABLE:
+                del PARAMETER_TABLE[name]
+
+
+def format_property_spec(spec):
+    """Turns the return value of bpy.props.SomeProperty(...) into a readable string."""
+    callback, params = spec
+    param_str = ["%s=%r" % (k, v) for k, v in params.items()]
+    return "%s(%s)" % (callback.__name__, ', '.join(param_str))
+
+
+class ParameterValidator(object):
+    """
+    A wrapper around ParameterValidator that verifies properties
+    defined from rigs for incompatible redefinitions using a table.
+
+    Relies on the implementation details of bpy.props return values:
+    specifically, they just return a tuple containing the real define
+    function, and a dictionary with parameters. This allows comparing
+    parameters before the property is actually defined.
+    """
+    __params = None
+    __rig_name = ''
+    __prop_table = {}
+
+    def __init__(self, params, rig_name, prop_table):
+        self.__params = params
+        self.__rig_name = rig_name
+        self.__prop_table = prop_table
+
+    def __getattr__(self, name):
+        return getattr(self.__params, name)
+
+    def __setattr__(self, name, val):
+        # allow __init__ to work correctly
+        if hasattr(ParameterValidator, name):
+            return object.__setattr__(self, name, val)
+
+        if not (isinstance(val, tuple) and callable(val[0]) and isinstance(val[1], dict)):
+            print("!!! GAMERIG RIG %s: INVALID DEFINITION FOR RIG PARAMETER %s: %r\n" % (self.__rig_name, name, val))
+            return
+
+        if name in self.__prop_table:
+            cur_rig, cur_info = self.__prop_table[name]
+            if val != cur_info:
+                print("!!! GAMERIG RIG %s: REDEFINING PARAMETER %s AS:\n\n    %s\n" % (self.__rig_name, name, format_property_spec(val)))
+                print("!!! PREVIOUS DEFINITION BY %s:\n\n    %s\n" % (cur_rig, format_property_spec(cur_info)))
+
+        # actually defining the property modifies the dictionary with new parameters, so copy it now
+        new_def = (val[0], val[1].copy())
+
+        setattr(self.__params, name, val)
+        self.__prop_table[name] = (self.__rig_name, new_def)
+
+
 class GlobalProperties(PropertyGroup):
     category : EnumProperty(
         items=rig_lists.col_enum_list,
@@ -215,7 +274,7 @@ class GlobalProperties(PropertyGroup):
         description="The selected rig category"
     )
 
-    types : CollectionProperty(type=RigType)
+    types : CollectionProperty(type=PropertyGroup)
     active_type : IntProperty(name="GameRig Active Rig", description="The selected rig type")
 
     show_layer_names_pane : BoolProperty(default=False)
@@ -233,20 +292,22 @@ class GlobalProperties(PropertyGroup):
         for rig in rig_lists.rig_list:
             r = utils.get_rig_type(rig)
             if hasattr(r, 'add_parameters'):
-                r.add_parameters(PoseBoneProperties)
+                r.add_parameters(ParameterValidator(PoseBoneProperties, rig, PARAMETER_TABLE))
     
     @classmethod
     def unregister(cls):
         del bpy.types.WindowManager.gamerig
 
+        clear_parameters()
+
         # Sub-modules.
         metarig_menu.unregister()
         ui.unregister()
-    
+
+
 ##### REGISTER #####
 
 register, unregister = bpy.utils.register_classes_factory((
-    RigType,
     ColorSet,
     SelectionColors,
     ArmatureLayer,

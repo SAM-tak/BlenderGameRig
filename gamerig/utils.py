@@ -740,13 +740,11 @@ def write_metarig(obj, func_name="create", layers=False, groups=False, template=
         # Rig type parameters
         if pbone.gamerig.name:
             for i in pbone.gamerig.keys():
-                param = pbone.gamerig[i]
-                if str(type(param)) == "<class 'IDPropertyArray'>":
-                    print(pbone, str(type(param[0])))
+                param = getattr(pbone.gamerig, i, '')
+                if str(type(param)) == "<class 'bpy_prop_array'>":
                     param = list(param)
                 if type(param) == str:
                     param = '"' + param + '"'
-                    print('str', pbone, i, param)
                 code.append("    try:")
                 code.append("        pbone.gamerig.%s = %s" % (i, str(param)))
                 code.append("    except AttributeError:")
