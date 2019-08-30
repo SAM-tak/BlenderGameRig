@@ -96,7 +96,7 @@ class Rig:
         # Parenting
         eb = self.obj.data.edit_bones
 
-        # turn off inherit scale for all ORG-bones to prevent undesired transformations
+        # turn off inherit scale for all original bones to prevent undesired transformations
 
         for o in self.org_bones:
             eb[o].use_inherit_scale = False

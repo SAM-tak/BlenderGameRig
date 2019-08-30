@@ -615,34 +615,34 @@ def create_sample(obj):
 
     bones = {}
 
-    bone = arm.edit_bones.new('ORG-Bone')
+    bone = arm.edit_bones.new('Bone')
     bone.head[:] = 0.0000, 0.0000, 0.0000
     bone.tail[:] = 0.0000, 0.0000, 0.3333
     bone.roll = 0.0000
     bone.use_connect = False
     bone.use_deform = True
-    bones['ORG-Bone'] = bone.name
+    bones['Bone'] = bone.name
 
-    bone = arm.edit_bones.new('ORG-Bone.001')
+    bone = arm.edit_bones.new('Bone.001')
     bone.head[:] = 0.0000, 0.0000, 0.3333
     bone.tail[:] = 0.0000, 0.0000, 0.6667
     bone.roll = 0.0000
     bone.use_connect = True
     bone.use_deform = True
-    bone.parent = arm.edit_bones[bones['ORG-Bone']]
-    bones['ORG-Bone.001'] = bone.name
+    bone.parent = arm.edit_bones[bones['Bone']]
+    bones['Bone.001'] = bone.name
 
-    bone = arm.edit_bones.new('ORG-Bone.002')
+    bone = arm.edit_bones.new('Bone.002')
     bone.head[:] = 0.0000, 0.0000, 0.6667
     bone.tail[:] = 0.0000, 0.0000, 1.0000
     bone.roll = 0.0000
     bone.use_connect = True
     bone.use_deform = True
-    bone.parent = arm.edit_bones[bones['ORG-Bone.001']]
-    bones['ORG-Bone.002'] = bone.name
+    bone.parent = arm.edit_bones[bones['Bone.001']]
+    bones['Bone.002'] = bone.name
     
     bpy.ops.object.mode_set(mode='OBJECT')
-    pbone = obj.pose.bones[bones['ORG-Bone']]
+    pbone = obj.pose.bones[bones['Bone']]
     pbone.gamerig.name = 'tentacle'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
@@ -657,14 +657,14 @@ def create_sample(obj):
         pbone.gamerig.stretchable = True
     except AttributeError:
         pass
-    pbone = obj.pose.bones[bones['ORG-Bone.001']]
+    pbone = obj.pose.bones[bones['Bone.001']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone = obj.pose.bones[bones['ORG-Bone.002']]
+    pbone = obj.pose.bones[bones['Bone.002']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)

@@ -257,32 +257,32 @@ def create_sample(obj):
 
     bones = {}
 
-    bone = arm.edit_bones.new('ORG-upper_arm.L')
+    bone = arm.edit_bones.new('upper_arm.L')
     bone.head[:] = 0.0000, 0.0000, 0.0000
     bone.tail[:] = 0.2588, 0.0148, 0.0000
     bone.roll = 1.5232
     bone.use_connect = False
     bone.use_deform = True
-    bones['ORG-upper_arm.L'] = bone.name
-    bone = arm.edit_bones.new('ORG-forearm.L')
+    bones['upper_arm.L'] = bone.name
+    bone = arm.edit_bones.new('forearm.L')
     bone.head[:] = 0.2588, 0.0148, 0.0000
     bone.tail[:] = 0.4940, 0.0000, 0.0000
     bone.roll = 1.5232
     bone.use_connect = True
     bone.use_deform = True
-    bone.parent = arm.edit_bones[bones['ORG-upper_arm.L']]
-    bones['ORG-forearm.L'] = bone.name
-    bone = arm.edit_bones.new('ORG-hand.L')
+    bone.parent = arm.edit_bones[bones['upper_arm.L']]
+    bones['forearm.L'] = bone.name
+    bone = arm.edit_bones.new('hand.L')
     bone.head[:] = 0.4940, 0.0000, 0.0000
     bone.tail[:] = 0.5657, 0.0000, 0.0000
     bone.roll = -3.1196
     bone.use_connect = True
     bone.use_deform = True
-    bone.parent = arm.edit_bones[bones['ORG-forearm.L']]
-    bones['ORG-hand.L'] = bone.name
+    bone.parent = arm.edit_bones[bones['forearm.L']]
+    bones['hand.L'] = bone.name
 
     bpy.ops.object.mode_set(mode='OBJECT')
-    pbone = obj.pose.bones[bones['ORG-upper_arm.L']]
+    pbone = obj.pose.bones[bones['upper_arm.L']]
     pbone.gamerig.name = 'limbs.arm'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
@@ -301,14 +301,14 @@ def create_sample(obj):
         pbone.gamerig.allow_ik_stretch = True
     except AttributeError:
         pass
-    pbone = obj.pose.bones[bones['ORG-forearm.L']]
+    pbone = obj.pose.bones[bones['forearm.L']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone = obj.pose.bones[bones['ORG-hand.L']]
+    pbone = obj.pose.bones[bones['hand.L']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
