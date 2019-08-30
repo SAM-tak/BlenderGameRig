@@ -280,6 +280,10 @@ class GlobalProperties(PropertyGroup):
     show_layer_names_pane : BoolProperty(default=False)
     show_bone_groups_pane : BoolProperty(default=False)
 
+    rename_batch_find : StringProperty(name="Find", description="target string for replace")
+    rename_batch_replace : StringProperty(name="Replace", description="replace string")
+    rename_batch_re : BoolProperty(name="Regular expression", description="Use regular expression")
+
     @classmethod
     def register(cls):
         # Sub-modules.

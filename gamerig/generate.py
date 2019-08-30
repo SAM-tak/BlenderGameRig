@@ -25,8 +25,8 @@ import traceback
 import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
-    get_rig_type, create_widget, assign_and_unlink_all_widgets,
-    is_org, is_mch,is_jig,  org, get_wgt_name, random_id,
+    rig_module_name, get_rig_type, create_widget, assign_and_unlink_all_widgets,
+    is_org, is_mch, is_jig, get_wgt_name, random_id,
     copy_attributes, gamma_correct, get_rig_name,
     MetarigError
 )
@@ -264,12 +264,6 @@ def generate_rig(context, metarig):
     # Make a list of the original bones so we can keep track of them.
     original_bones = [bone.name for bone in obj.data.bones]
 
-    # Add the ORG_PREFIX to the original bones.
-    bpy.ops.object.mode_set(mode='OBJECT')
-    for i in range(0, len(original_bones)):
-        obj.data.bones[original_bones[i]].name = org(original_bones[i])
-        original_bones[i] = org(original_bones[i])
-
     # Create a sorted list of the original bones, sorted in the order we're
     # going to traverse them for rigging.
     # (root-most -> leaf-most, alphabetical)
@@ -283,17 +277,19 @@ def generate_rig(context, metarig):
     #----------------------------------
     try:
         # Collect/initialize all the rigs.
-        rigs = []
+        rigs = {}
         rigtypes = set()
         for bone in bones_sorted:
             bpy.ops.object.mode_set(mode='EDIT')
-            rigs += get_bone_rigs(obj, bone, rigtypes)
+            rig = get_bone_rig(obj, bone, rigtypes)
+            if rig:
+                rigs[bone] = rig
         t.tick("Initialize rigs: ")
 
         # Generate all the rigs.
         tt = Timer()
         ui_scripts = []
-        for rig in rigs:
+        for bone, rig in rigs.items():
             # Go into editmode in the rig armature
             bpy.ops.object.mode_set(mode='OBJECT')
             context.view_layer.objects.active = obj
@@ -302,7 +298,7 @@ def generate_rig(context, metarig):
             scripts = rig.generate(context)
             if scripts is not None:
                 ui_scripts.append(scripts[0])
-            tt.tick("Generate rig : %s: " % rig)
+            tt.tick("Generate rig : %s (%s): " % (bone, rig.__class__.__module__))
         t.tick("Generate rigs: ")
     except Exception as e:
         # Cleanup if something goes wrong
@@ -321,7 +317,7 @@ def generate_rig(context, metarig):
     bones = [bone.name for bone in obj.data.bones]
     metabones = [bone.name for bone in metarig.data.bones]
 
-    # All the others make non-deforming. (except for bone that already has 'ORG-' prefix from metarig.)
+    # All the others make non-deforming.
     for bone in bones:
         if not (is_org(bone) or bone in metabones):
             b = obj.data.bones[bone]
@@ -337,7 +333,7 @@ def generate_rig(context, metarig):
                         if bone in obj.data.bones and prop in obj.pose.bones[bone].keys():
                             target.data_path = target.data_path[7:]
                         else:
-                            target.data_path = 'pose.bones["%s"]["%s"]' % (org(bone), prop)
+                            target.data_path = 'pose.bones["%s"]["%s"]' % (basename(bone), prop) #?
 
     # Move all the original bones to their layer.
     for bone in original_bones:
@@ -403,8 +399,6 @@ def generate_rig(context, metarig):
     )
     script.use_module = True
 
-    # Run UI script
-    exec(script.as_string(), {})
     # Register UI script
     script.as_module().register()
 
@@ -546,10 +540,9 @@ def create_persistent_rig_ui(obj, script):
         variable.targets[0].id = script
 
 
-def get_bone_rigs(obj, bone_name, rigtypes, halt_on_missing=False):
+def get_bone_rig(obj, bone_name, rigtypes, halt_on_missing=False):
     """ Fetch all the rigs specified on a bone.
     """
-    rigs = []
     rig_type = obj.pose.bones[bone_name].gamerig.name
     rig_type = rig_type.replace(" ", "")
 
@@ -558,7 +551,9 @@ def get_bone_rigs(obj, bone_name, rigtypes, halt_on_missing=False):
     else:
         # Get the rig
         try:
-            rigt = get_rig_type(rig_type)
+            rigt = next((rigt.__name__ == rig_module_name(rig_type) for rigt in rigtypes), None)
+            if not rigt:
+                rigt = get_rig_type(rig_type)
             rig = rigt.Rig(obj, bone_name, obj.pose.bones[bone_name].gamerig)
         except ImportError:
             message = "Rig Type Missing: python module for type '%s' not found (bone: %s)" % (rig_type, bone_name)
@@ -569,9 +564,8 @@ def get_bone_rigs(obj, bone_name, rigtypes, halt_on_missing=False):
                 print('print_exc():')
                 traceback.print_exc(file=sys.stdout)
         else:
-            rigs.append(rig)
             rigtypes.add(rigt)
-    return rigs
+            return rig
 
 
 def get_xy_spread(bones):

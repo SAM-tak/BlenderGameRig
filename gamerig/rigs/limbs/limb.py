@@ -3,7 +3,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from math import trunc
 from mathutils import Vector
 from ...utils import (
-    copy_bone, org, mch, basename, insert_before_first_period,
+    copy_bone, ctrlname, mchname, insert_before_first_period,
     connected_children_names, find_root_bone,
     create_widget,
     MetarigError
@@ -35,7 +35,7 @@ class Limb:
         bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
-        name = get_bone_name( basename( org_bones[0] ), 'mch', 'parent' )
+        name = get_bone_name( org_bones[0], 'mch', 'parent' )
 
         mch = copy_bone( self.obj, org_bones[0], name )
         self.orient_bone( eb[mch], 'y' )
@@ -384,7 +384,7 @@ class Limb:
         """ add IK Follow feature
         """
         if self.root_bone:
-            mch_ik_socket = copy_bone( self.obj, self.root_bone, mch('socket_' + ctrl) )
+            mch_ik_socket = copy_bone( self.obj, self.root_bone, mchname('socket_' + ctrl) )
             eb[ mch_ik_socket ].length /= 4
             eb[ mch_ik_socket ].use_connect = False
             eb[ mch_ik_socket ].parent = None
@@ -534,12 +534,11 @@ if is_selected( ik_ctrl ):
 
 
 def get_bone_name( name, btype, suffix = '' ):
-    if btype == 'mch':
-        name = mch( basename( name ) )
-    elif btype == 'ctrl':
-        name = basename( name )
-
     if suffix:
         name = insert_before_first_period(name, '_' + suffix)
+    if btype == 'mch':
+        name = mchname( name )
+    elif btype == 'ctrl':
+        name = ctrlname( name )
 
     return name

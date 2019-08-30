@@ -20,7 +20,7 @@
 
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, basename
+from ..utils import copy_bone, ctrlname
 from .widgets import create_bone_widget, create_circle_widget
 
 class Rig:
@@ -34,7 +34,6 @@ class Rig:
         """
         self.obj                 = obj
         self.org_bone            = bone
-        self.basename            = basename(bone)
         self.params              = params
         self.control_widget_type = params.control_widget_type
 
@@ -48,7 +47,7 @@ class Rig:
 
         # Make a control bone (copy of original).
         if self.control_widget_type != 'None':
-            bone = copy_bone(self.obj, self.org_bone, self.basename)
+            bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
         
         # Get edit bones
         eb = self.obj.data.edit_bones

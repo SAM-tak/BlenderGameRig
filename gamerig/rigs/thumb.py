@@ -5,7 +5,7 @@ from ..utils import (
     copy_bone, connected_children_names,
     create_widget,
     MetarigError,
-    basename, mch
+    ctrlname, basename, mchname
 )
 from .widgets import create_circle_widget, create_sphere_widget, create_thumb_widget
 
@@ -41,10 +41,10 @@ class Rig:
         # Creating the bone chains
         for name in org_bones:
             # Create control bones
-            ctrl_bone = copy_bone( self.obj, name, basename(name) )
+            ctrl_bone = copy_bone( self.obj, name, ctrlname(name) )
 
             # Create mechanism bones
-            mch_bone  = copy_bone( self.obj, name, mch(basename(name)) )
+            mch_bone  = copy_bone( self.obj, name, mchname(name) )
 
             # Adding to lists
             ctrl_chain.append(ctrl_bone)
@@ -57,11 +57,11 @@ class Rig:
 
 
         # Create ctrl master bone
-        temp_name = basename(self.org_bones[1])
+        temp_name = self.org_bones[1]
 
         suffix = temp_name[-2:]
         master_name      = temp_name[:-5] + "_master" + suffix
-        master_name      = copy_bone( self.obj, self.org_bones[1], master_name )
+        master_name      = copy_bone( self.obj, self.org_bones[1], ctrlname(master_name) )
         ctrl_bone_master = eb[ master_name ]
 
         ## Parenting bug fix ??

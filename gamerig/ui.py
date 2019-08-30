@@ -21,6 +21,7 @@
 import bpy
 from bpy.props import BoolProperty, IntProperty, EnumProperty, StringProperty
 from mathutils import Color
+import re
 
 from .utils import (
     get_rig_type, MetarigError, write_metarig, write_widget, unique_name, get_keyed_frames,
@@ -517,7 +518,7 @@ class DevToolsPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in ['EDIT_ARMATURE', 'EDIT_MESH'] and context.preferences.addons['gamerig'].preferences.shows_dev_tools
+        return context.mode in ('EDIT_ARMATURE', 'EDIT_MESH') and context.preferences.addons['gamerig'].preferences.shows_dev_tools
 
     def draw(self, context):
         obj = context.active_object
@@ -778,6 +779,82 @@ class EncodeWidgetOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class RenameBatchOperator(bpy.types.Operator):
+    bl_idname = "gamerig.rename_batch"
+    bl_label = "Rename Bones"
+    bl_description = "Rename bones by regular expression"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode in ('EDIT_ARMATURE', 'EDIT_MESH') or (context.mode == 'POSE' and context.object.animation_data.action) and context.window_manager.gamerig.rename_batch_find
+    
+    def execute(self, context):
+        param = context.window_manager.gamerig
+        if context.mode == 'EDIT_ARMATURE':
+            if param.rename_batch_re:
+                exp = re.compile(param.rename_batch_find)
+                for i in context.object.data.edit_bones:
+                    i.name = exp.sub(param.rename_batch_replace, i.name)
+            else:
+                for i in context.object.data.edit_bones:
+                    i.name = i.name.replace(param.rename_batch_find, param.rename_batch_replace)
+        elif context.mode == 'EDIT_MESH':
+            if param.rename_batch_re:
+                exp = re.compile(param.rename_batch_find)
+                for i in context.object.vertex_groups:
+                    i.name = exp.sub(param.rename_batch_replace, i.name)
+            else:
+                for i in context.object.vertex_groups:
+                    i.name = i.name.replace(param.rename_batch_find, param.rename_batch_replace)
+        else:
+            datapathexp = re.compile(r'^(pose\.bones\[")(.+)("\].*)')
+            if param.rename_batch_re:
+                exp = re.compile(param.rename_batch_find)
+                for i in context.object.animation_data.action.groups:
+                    i.name = exp.sub(param.rename_batch_replace, i.name)
+                for i in context.object.animation_data.action.fcurves:
+                    match = datapathexp.match(i.data_path)
+                    if match:
+                        i.data_path = match.group(1) + exp.sub(param.rename_batch_replace, match.group(2)) + match.group(3)
+            else:
+                for i in context.object.animation_data.action.groups:
+                    i.name = i.name.replace(param.rename_batch_find, param.rename_batch_replace)
+                for i in context.object.animation_data.action.fcurves:
+                    match = datapathexp.match(i.data_path)
+                    if match:
+                        i.data_path = match.group(1) + match.group(2).replace(param.rename_batch_find, param.rename_batch_replace) + match.group(3)
+
+        return {'FINISHED'}
+
+
+class RenameBatchPanel(bpy.types.Panel):
+    bl_idname = "GAMERIG_PT_RenameBatch"
+    bl_space_type  = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label       = "Rename Batch"
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode in ('EDIT_ARMATURE', 'EDIT_MESH') or (context.mode == 'POSE' and context.object.animation_data.action)
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column(align=True)
+
+        texts = {
+            'EDIT_ARMATURE': 'Rename bones',
+            'EDIT_MESH': 'Rename Vertex Groups',
+            'POSE': 'Rename Animation Channels',
+        }
+        col.label(text=texts[context.mode])
+
+        col.prop(context.window_manager.gamerig, 'rename_batch_find')
+        col.prop(context.window_manager.gamerig, 'rename_batch_replace')
+        col.prop(context.window_manager.gamerig, 'rename_batch_re')
+        op = col.operator(RenameBatchOperator.bl_idname, text="Replace")
+
+
 class MigrateOperator(bpy.types.Operator):
     bl_idname = "gamerig.migrate_armature"
     bl_label = "Migrate"
@@ -786,7 +863,7 @@ class MigrateOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in {'OBJECT', 'POSE'}
+        return context.mode in ('OBJECT', 'POSE')
     
     def execute(self, context):
         armature = context.object.data
@@ -865,6 +942,7 @@ register, unregister = bpy.utils.register_classes_factory((
     EncodeMetarigOperator,
     EncodeMetarigSampleOperator,
     EncodeWidgetOperator,
+    RenameBatchOperator,
     MigrateOperator,
     BoneGroupsUIList,
     BoneGroupsSpecialsMenu,
@@ -872,4 +950,5 @@ register, unregister = bpy.utils.register_classes_factory((
     BonePanel,
     UtilityPanel,
     DevToolsPanel,
+    RenameBatchPanel,
 ))

@@ -27,7 +27,7 @@ class Rig(Limb):
 
     def __init__(self, obj, bone_name, params):
         super().__init__(obj, bone_name, params)
-        self.footprint_bone = org(params.footprint_bone)
+        self.footprint_bone = params.footprint_bone
         self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:4]
 
 
@@ -246,7 +246,7 @@ if is_selected( fk_ctrl ):
         })
 
         # Modify rotation mode for ik and tweak controls
-        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZXY'
+        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZYX'
 
         pb_master = pb[ bones['fk']['ctrl'][0] ]
 

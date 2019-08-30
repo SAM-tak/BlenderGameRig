@@ -33,7 +33,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 RIG_DIR = "rigs"  # Name of the directory where rig types are kept
 METARIG_DIR = "metarigs"  # Name of the directory where metarigs are kept
 
-ORG_PREFIX = "ORG-"  # Prefix of original bones.
+CTRL_PREFIX = "c."   # Prefix of controller bones.
 JIG_PREFIX = "JIG-"  # Prefix of jig bones. (delete automatically after generation.)
 MCH_PREFIX = "MCH-"  # Prefix of mechanism bones.
 
@@ -98,12 +98,10 @@ def unique_name(collection, base_name):
 
 
 def basename(name):
-    """ Returns the name with ORG_PREFIX stripped from it.
+    """ Returns the name with CTRL_PREFIX or MCH_PREFIX stripped from it.
         """
-    if name.startswith(ORG_PREFIX):
-        return name[len(ORG_PREFIX):]
-    elif name.startswith(JIG_PREFIX):
-        return name[len(JIG_PREFIX):]
+    if name.startswith(CTRL_PREFIX):
+        return name[len(CTRL_PREFIX):]
     elif name.startswith(MCH_PREFIX):
         return name[len(MCH_PREFIX):]
     else:
@@ -111,7 +109,11 @@ def basename(name):
 
 
 def is_org(name):
-    return name.startswith(ORG_PREFIX) or name.startswith(JIG_PREFIX)
+    return not name.startswith(CTRL_PREFIX) and not name.startswith(MCH_PREFIX)
+
+
+def is_ctrl(name):
+    return name.startswith(CTRL_PREFIX)
 
 
 def is_jig(name):
@@ -122,17 +124,17 @@ def is_mch(name):
     return name.startswith(MCH_PREFIX)
 
 
-def org(name):
-    """ Prepends the ORG_PREFIX to a name if it doesn't already have
+def ctrlname(name):
+    """ Prepends the CTRL_PREFIX to a name if it doesn't already have
         it, and returns it.
     """
-    if is_org(name):
+    if name.startswith(CTRL_PREFIX):
         return name
     else:
-        return ORG_PREFIX + name
+        return CTRL_PREFIX + name
 
 
-def mch(name):
+def mchname(name):
     """ Prepends the MCH_PREFIX to a name if it doesn't already have
         it, and returns it.
     """
@@ -141,12 +143,11 @@ def mch(name):
     else:
         return MCH_PREFIX + name
 
-make_mechanism_name = mch
-
 
 def insert_before_first_period(name, text):
     t = name.split('.', 1)
     return t[0] + text + '.' + t[1] if len(t) > 1 else name + text
+
 
 #=======================
 # Bone manipulation
@@ -538,11 +539,16 @@ def copy_attributes(a, b):
                 pass
 
 
+def rig_module_name(rig_type):
+    """ return a rig module name.
+    """
+    return ".%s.%s" % (RIG_DIR, rig_type)
+
+
 def get_rig_type(rig_type):
     """ Fetches a rig module by name, and returns it.
     """
-    name = ".%s.%s" % (RIG_DIR, rig_type)
-    submod = importlib.import_module(name, package=MODULE_NAME)
+    submod = importlib.import_module(rig_module_name(rig_type), package=MODULE_NAME)
     importlib.reload(submod)
     return submod
 
@@ -582,6 +588,7 @@ def connected_children_names(obj, bone_name):
 
     return names
 
+
 def children_names(obj, bone_name, depth):
     bone = obj.data.bones[bone_name]
     names = []
@@ -598,6 +605,7 @@ def children_names(obj, bone_name, depth):
 
     return names
 
+
 def find_root_bone(obj, bone_name):
     """ Find root rig original bone from all parent.
         This works while initializing (inner rig's __init__ function) only.
@@ -611,6 +619,7 @@ def find_root_bone(obj, bone_name):
                 return bone.name
             bone = bone.parent
     return None
+
 
 def has_connected_children(bone):
     """ Returns true/false whether a bone has connected children or not.

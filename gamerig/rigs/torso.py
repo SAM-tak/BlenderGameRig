@@ -3,7 +3,7 @@ from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     copy_bone, put_bone,
-    org, basename, make_mechanism_name, connected_children_names,
+    ctrlname, basename, mchname, connected_children_names,
     create_widget,
     MetarigError
 )
@@ -57,7 +57,7 @@ class Rig:
         # Report error of user created less than the minimum of 4 bones for rig
         if len(self.org_bones) <= 4 or neck_index < 2 or pivot_index < 1:
             raise MetarigError(
-                "GAMERIG ERROR: %s : invalid rig structure" % basename(bone_name)
+                "GAMERIG ERROR: %s : invalid rig structure" % bone_name
             )
 
 
@@ -107,13 +107,13 @@ class Rig:
         eb = self.obj.data.edit_bones
 
         # Create torso control bone
-        ctrl_name  = copy_bone(self.obj, pivot_name, 'torso')
+        ctrl_name  = copy_bone(self.obj, pivot_name, ctrlname('torso'))
         ctrl_eb    = eb[ ctrl_name ]
 
         self.orient_bone( ctrl_eb, 'y', self.spine_length / 2.5 )
 
         # Create mch_pivot
-        mch_name = make_mechanism_name( 'pivot' )
+        mch_name = mchname('pivot')
         mch_name = copy_bone(self.obj, ctrl_name, mch_name)
         mch_eb   = eb[ mch_name ]
 
@@ -136,26 +136,26 @@ class Rig:
         eb = self.obj.data.edit_bones
 
         # Create neck control
-        neck    = copy_bone( self.obj, org(neck_bones[0]), 'neck' )
+        neck    = copy_bone( self.obj, neck_bones[0], ctrlname('neck') )
         neck_eb = eb[ neck ]
 
         # Neck spans all neck bones (except head)
-        neck_eb.tail[:] = eb[ org(neck_bones[-1]) ].head
+        neck_eb.tail[:] = eb[ neck_bones[-1] ].head
 
         # Create head control
-        head = copy_bone( self.obj, org(neck_bones[-1]), 'head' )
+        head = copy_bone( self.obj, neck_bones[-1], ctrlname('head') )
 
         # MCH bones
         # Neck MCH stretch
-        mch_str = copy_bone( self.obj, neck, make_mechanism_name('STR-neck') )
+        mch_str = copy_bone( self.obj, neck, mchname('STR-neck') )
 
         # Neck MCH rotation
-        mch_neck = copy_bone(self.obj, neck, make_mechanism_name('ROT-neck'))
+        mch_neck = copy_bone(self.obj, neck, mchname('ROT-neck'))
 
         self.orient_bone( eb[mch_neck], 'y', self.spine_length / 10 )
 
         # Head MCH rotation
-        mch_head = copy_bone(self.obj, head, make_mechanism_name('ROT-head'))
+        mch_head = copy_bone(self.obj, head, mchname('ROT-head'))
 
         self.orient_bone( eb[mch_head], 'y', self.spine_length / 10 )
 
@@ -163,7 +163,7 @@ class Rig:
 
         # Intermediary bones
         for b in neck_bones[1:-1]: # All except 1st neck and (last) head
-            mch_name = copy_bone( self.obj, org(b), make_mechanism_name(b) )
+            mch_name = copy_bone( self.obj, b, mchname(b) )
             eb[mch_name].length /= 4
 
             mch.append(mch_name)
@@ -171,7 +171,7 @@ class Rig:
         # Tweak bones
         for b in neck_bones[:-1]: # All except last bone
             twk_name = "tweak_" + b
-            twk_name = copy_bone( self.obj, org(b), twk_name )
+            twk_name = copy_bone( self.obj, b, twk_name )
 
             eb[twk_name].length /= 2
 
@@ -197,24 +197,21 @@ class Rig:
         # get total spine length
 
         # Create chest control bone
-        chest = copy_bone( self.obj, org( chest_bones[0] ), 'chest' )
-        self.orient_bone( eb[chest], 'y', self.spine_length / 3 )
+        chest = copy_bone(self.obj, chest_bones[0], ctrlname('chest'))
+        self.orient_bone(eb[chest], 'y', self.spine_length / 3)
 
         # create chest mch_wgt
-        mch_wgt = copy_bone(
-            self.obj, org( chest_bones[-1] ),
-            make_mechanism_name( 'chest' )
-        )
+        mch_wgt = copy_bone(self.obj, chest_bones[-1], mchname('chest'))
 
         # Create mch and twk bones
         twk,mch = [],[]
 
         for b in chest_bones:
-            mch_name = copy_bone( self.obj, org(b), make_mechanism_name(b) )
-            self.orient_bone( eb[mch_name], 'y', self.spine_length / 10 )
+            mch_name = copy_bone(self.obj, b, mchname(b))
+            self.orient_bone(eb[mch_name], 'y', self.spine_length / 10)
 
             twk_name = "tweak_" + b
-            twk_name = copy_bone( self.obj, org(b), twk_name )
+            twk_name = copy_bone(self.obj, b, ctrlname(twk_name))
             eb[twk_name].length /= 2
 
             mch.append( mch_name )
@@ -235,28 +232,20 @@ class Rig:
         eb = self.obj.data.edit_bones
 
         # Create hips control bone
-        hips = copy_bone( self.obj, org( hip_bones[-1] ), 'hips' )
-        self.orient_bone(
-            eb[hips],
-            'y',
-            self.spine_length / 4,
-            reverse = True
-        )
+        hips = copy_bone(self.obj, hip_bones[-1], ctrlname('hips'))
+        self.orient_bone(eb[hips], 'y', self.spine_length / 4, reverse = True)
 
         # create hips mch_wgt
-        mch_wgt = copy_bone(
-            self.obj, org( hip_bones[0] ),
-            make_mechanism_name( 'hips' )
-        )
+        mch_wgt = copy_bone(self.obj, hip_bones[0], mchname('hips'))
 
         # Create mch and tweak bones
         twk,mch = [],[]
         for b in hip_bones:
-            mch_name = copy_bone( self.obj, org(b), make_mechanism_name(b) )
+            mch_name = copy_bone(self.obj, b, mchname(b))
             self.orient_bone(eb[mch_name], 'y', self.spine_length / 10, reverse = True)
 
             twk_name = "tweak_" + b
-            twk_name = copy_bone( self.obj, org( b ), twk_name )
+            twk_name = copy_bone(self.obj, b, twk_name)
 
             eb[twk_name].length /= 2
 
@@ -278,12 +267,12 @@ class Rig:
         eb = self.obj.data.edit_bones
 
         # Parent deform bones
-        for i,b in enumerate( org_bones ):
+        for i,b in enumerate(org_bones):
             if i == 0:
                 if self.root_bone_parent:
-                    eb[b].parent = eb[ self.root_bone_parent ]
+                    eb[b].parent = eb[self.root_bone_parent]
             else:
-                eb[b].parent      = eb[ org_bones[i-1] ] # to previous
+                eb[b].parent      = eb[org_bones[i-1]] # to previous
                 eb[b].use_connect = True
 
         # Parent control bones

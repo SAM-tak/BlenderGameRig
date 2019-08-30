@@ -1,7 +1,7 @@
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
-    copy_bone, flip_bone, org, mch, basename, children_names,
+    copy_bone, flip_bone, ctrlname, mchname, basename, children_names,
     insert_before_first_period,
     create_widget,
     MetarigError
@@ -27,19 +27,19 @@ class Rig:
 
         if self.chain_length < 2:
             raise MetarigError(
-                "GAMERIG ERROR: invalid chain length : rig '%s'" % basename(bone_name)
+                "GAMERIG ERROR: invalid chain length : rig '%s'" % bone_name
             )
         
         self.org_bones = [bone_name] + children_names(obj, bone_name, self.chain_length - 1)
 
         if len(self.org_bones) <= 1:
             raise MetarigError(
-                "GAMERIG ERROR: invalid rig structure : rig '%s'" % basename(bone_name)
+                "GAMERIG ERROR: invalid rig structure : rig '%s'" % bone_name
             )
 
         if any([x > 0 and x < 2 for x in self.mid_ik_lens]):
             raise MetarigError(
-                "GAMERIG ERROR: invalid mid ik chain length : rig '%s'" % basename(bone_name)
+                "GAMERIG ERROR: invalid mid ik chain length : rig '%s'" % bone_name
             )
 
         # Assign values to FK layers props if opted by user
@@ -56,7 +56,7 @@ class Rig:
 
         fk_ctrl_chain = []
         for name in self.org_bones:
-            ctrl_bone = copy_bone(self.obj, name, insert_before_first_period(basename(name), '_fk'))
+            ctrl_bone = copy_bone(self.obj, name, ctrlname(insert_before_first_period(name, '_fk')))
             eb[ctrl_bone].use_connect = False
             flip_bone(self.obj, ctrl_bone)
             eb[ctrl_bone].length /= 4
@@ -82,7 +82,7 @@ class Rig:
             ik_org_chain = [self.org_bones[0], self.org_bones[-1]]
 
         for i, name in enumerate(ik_org_chain):
-            ctrl_bone = copy_bone(self.obj, name, insert_before_first_period(basename(name), '_ik'))
+            ctrl_bone = copy_bone(self.obj, name, ctrlname(insert_before_first_period(name, '_ik')))
             eb[ctrl_bone].use_connect = False
             flip_bone(self.obj, ctrl_bone)
             eb[ctrl_bone].length /= 4
@@ -110,11 +110,11 @@ class Rig:
 
         fk_chain = []
         for name in self.org_bones:
-            mch_bone = copy_bone(self.obj, name, insert_before_first_period(mch(basename(name)), '_fk'))
+            mch_bone = copy_bone(self.obj, name, mchname(insert_before_first_period(name, '_fk')))
             eb[mch_bone].parent = None
             fk_chain.append( mch_bone )
 
-        mch_bone = copy_bone(self.obj, self.org_bones[-1], insert_before_first_period(mch(basename(name)), '_fk_term'))
+        mch_bone = copy_bone(self.obj, self.org_bones[-1], mchname(insert_before_first_period(name, '_fk_term')))
         eb[mch_bone].parent = None
         flip_bone(self.obj, mch_bone)
         eb[mch_bone].length /= 4
@@ -122,11 +122,11 @@ class Rig:
 
         ik_chain = []
         for name in self.org_bones:
-            mch_bone = copy_bone(self.obj, name, insert_before_first_period(mch(basename(name)), '_ik'))
+            mch_bone = copy_bone(self.obj, name, mchname(insert_before_first_period(name, '_ik')))
             eb[mch_bone].parent = None
             ik_chain.append( mch_bone )
 
-        mch_bone = copy_bone(self.obj, self.org_bones[-1], insert_before_first_period(mch(basename(name)), '_ik_term'))
+        mch_bone = copy_bone(self.obj, self.org_bones[-1], mchname(insert_before_first_period(name, '_ik_term')))
         eb[mch_bone].parent = None
         flip_bone(self.obj, mch_bone)
         eb[mch_bone].length /= 4

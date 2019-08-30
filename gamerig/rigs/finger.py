@@ -3,7 +3,7 @@ from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     copy_bone, connected_children_names,
-    basename, mch,
+    ctrlname, mchname, insert_before_first_period,
     create_widget,
     MetarigError
 )
@@ -17,7 +17,7 @@ class Rig:
         self.params = params
 
         if len(self.org_bones) <= 1:
-            raise MetarigError("GAMERIG ERROR: Bone '%s': listen bro, that finger rig jusaint put tugetha rite. A little hint, use more than one bone!!" % (basename(bone_name)))
+            raise MetarigError("GAMERIG ERROR: Bone '%s': listen bro, that finger rig jusaint put tugetha rite. A little hint, use more than one bone!!" % bone_name)
 
 
     def generate(self, context):
@@ -32,11 +32,8 @@ class Rig:
 
         # Create ctrl master bone
         org_name  = self.org_bones[0]
-        temp_name = basename(org_name)
 
-        suffix = temp_name[-2:]
-        master_name      = temp_name[:-5] + "_master" + suffix
-        master_name      = copy_bone( self.obj, org_name, master_name )
+        master_name = copy_bone( self.obj, org_name, ctrlname(insert_before_first_period(org_name, '_master')) )
         ctrl_bone_master = eb[ master_name ]
 
         ## Parenting bug fix ??
@@ -55,10 +52,10 @@ class Rig:
         # Creating the bone chains
         for name in org_bones:
             # Create control bones
-            ctrl_bone = copy_bone( self.obj, name, basename(name) )
+            ctrl_bone = copy_bone(self.obj, name, ctrlname(name))
 
             # Create mechanism bones
-            mch_bone  = copy_bone( self.obj, name, mch(basename(name)) )
+            mch_bone  = copy_bone(self.obj, name, mchname(name))
 
             # Adding to lists
             ctrl_chain.append(ctrl_bone)

@@ -23,7 +23,7 @@ from math import cos, pi
 
 import bpy
 
-from ..utils import MetarigError, copy_bone, basename
+from ..utils import MetarigError, copy_bone, ctrlname
 from .widgets import create_palm_widget
 
 def bone_siblings(obj, bone):
@@ -67,10 +67,7 @@ class Rig:
         siblings = bone_siblings(obj, bone)
 
         if len(siblings) == 0:
-            raise MetarigError(
-                "GAMERIG ERROR: Bone '%s': must have a parent and at least one sibling" %
-                (basename(bone))
-            )
+            raise MetarigError("GAMERIG ERROR: Bone '%s': must have a parent and at least one sibling" % bone)
 
         # Sort list by name and distance
         siblings.sort()
@@ -91,7 +88,7 @@ class Rig:
 
         # Figure out the name for the control bone (remove the last .##)
         last_bone = self.org_bones[-1:][0]
-        ctrl_name = re.sub("([0-9]+\.)", "", basename(last_bone)[::-1], count=1)[::-1]
+        ctrl_name = re.sub("([0-9]+\.)", "", ctrlname(last_bone)[::-1], count=1)[::-1]
 
         # Make control bone
         ctrl = copy_bone(self.obj, last_bone, ctrl_name)

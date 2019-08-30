@@ -20,7 +20,7 @@
 
 import bpy
 
-from ..utils import copy_bone, basename, create_widget
+from ..utils import copy_bone, ctrlname, create_widget
 
 
 class Rig:
@@ -29,10 +29,9 @@ class Rig:
     def __init__(self, obj, bone, params):
         """ Gather and validate data about the rig.
         """
-        self.obj                 = obj
-        self.org_bone            = bone
-        self.basename            = basename(bone)
-        self.params              = params
+        self.obj      = obj
+        self.org_bone = bone
+        self.params   = params
 
     def generate(self, context):
         """ Generate the rig.
@@ -43,7 +42,7 @@ class Rig:
         bpy.ops.object.mode_set(mode='EDIT')
 
         # Make a control bone (copy of original).
-        bone = copy_bone(self.obj, self.org_bone, self.basename)
+        bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
         
         # Get edit bones
         eb = self.obj.data.edit_bones

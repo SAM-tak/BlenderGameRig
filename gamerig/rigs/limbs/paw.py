@@ -31,7 +31,7 @@ class Rig(Limb):
 
     def __init__(self, obj, bone_name, params):
         super().__init__(obj, bone_name, params)
-        self.footprint_bone = org(params.footprint_bone)
+        self.footprint_bone = params.footprint_bone
         self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:4]
 
 
@@ -73,9 +73,7 @@ if is_selected( fk_ctrl ):
 
 
     def create_paw(self, bones):
-        org_bones = list(
-            [self.org_bones[0]] + connected_children_names(self.obj, self.org_bones[0])
-        )
+        org_bones = [self.org_bones[0]] + connected_children_names(self.obj, self.org_bones[0])
 
         bones['ik']['ctrl']['terminal'] = []
 
@@ -142,7 +140,7 @@ if is_selected( fk_ctrl ):
         pb = self.obj.pose.bones
 
         # Modify rotation mode for ik and tweak controls
-        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZXY'
+        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZYX'
 
         pb_master = pb[ bones['fk']['ctrl'][0] ]
 
