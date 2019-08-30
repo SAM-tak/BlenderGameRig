@@ -283,4 +283,7 @@ class LayersPanel(bpy.types.Panel):
 classes.append(LayersPanel)
 
 register, unregister = bpy.utils.register_classes_factory(classes)
+
+if __name__ == "__main__":
+    register()
 '''

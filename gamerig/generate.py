@@ -405,6 +405,8 @@ def generate_rig(context, metarig):
 
     # Run UI script
     exec(script.as_string(), {})
+    # Register UI script
+    script.as_module().register()
 
     # Create Selection Sets
     create_selection_sets(obj, metarig)
