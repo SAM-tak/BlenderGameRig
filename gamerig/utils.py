@@ -128,10 +128,11 @@ def ctrlname(name):
     """ Prepends the CTRL_PREFIX to a name if it doesn't already have
         it, and returns it.
     """
-    if name.startswith(CTRL_PREFIX):
-        return name
-    else:
-        return CTRL_PREFIX + name
+    if name:
+        if name.startswith(CTRL_PREFIX):
+            return name
+        else:
+            return CTRL_PREFIX + name
 
 
 def mchname(name):

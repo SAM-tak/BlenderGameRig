@@ -36,7 +36,7 @@ class Rig(Limb):
 
 
     def generate(self, context):
-        return super().generate(self.create_paw, """
+        return super().generate(self.create_paw, True, """
 controls = [%s]
 ik_ctrl  = [%s]
 fk_ctrl  = '%s'
@@ -139,9 +139,6 @@ if is_selected( fk_ctrl ):
 
         pb = self.obj.pose.bones
 
-        # Modify rotation mode for ik and tweak controls
-        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZYX'
-
         pb_master = pb[ bones['fk']['ctrl'][0] ]
 
         # Add IK Stretch property and driver
@@ -152,10 +149,6 @@ if is_selected( fk_ctrl ):
 
         # Create paw widget
         create_paw_widget(self.obj, ctrl)
-
-        # Set heel ctrl locks and rotation mode
-        pb[ heel ].lock_location = True, True, True
-        pb[ heel ].rotation_mode = 'ZXY'
 
         # Add ballsocket widget to heel
         create_ballsocket_widget(self.obj, heel)

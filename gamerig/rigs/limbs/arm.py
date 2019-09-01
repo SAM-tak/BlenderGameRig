@@ -28,12 +28,11 @@ class Rig(Limb):
 
     def __init__(self, obj, bone_name, params):
         super().__init__(obj, bone_name, params)
-        self.limb_type = 'arm' # TODO: remove it
         self.org_bones = ([bone_name] + connected_children_names(obj, bone_name))[:3]
 
 
     def generate(self, context):
-        return super().generate(self.create_arm, """
+        return super().generate(self.create_arm, False, """
 controls = [%s]
 ik_ctrl  = [%s]
 fk_ctrl  = '%s'
@@ -105,9 +104,6 @@ if is_selected( fk_ctrl ):
         })
 
         pb = self.obj.pose.bones
-
-        # Modify rotation mode for ik and tweak controls
-        pb[bones['ik']['ctrl']['limb']].rotation_mode = 'ZYX'
 
         pb_master = pb[ bones['fk']['ctrl'][0] ]
 

@@ -438,10 +438,6 @@ class Rig:
 
         pb = self.obj.pose.bones
 
-        for t in tweaks:
-            if t != bones['neck']['ctrl']:
-                pb[t].rotation_mode = 'ZXY'
-
 
     def create_drivers( self, bones ):
         bpy.ops.object.mode_set(mode ='OBJECT')

@@ -15,7 +15,6 @@ class Limb:
         """ Initialize limb rig and key rig properties """
         self.obj       = obj
         self.params    = params
-        self.limb_type = 'limb' # TODO: remove it
 
         self.rot_axis  = params.rotation_axis
         self.allow_ik_stretch = params.allow_ik_stretch
@@ -75,7 +74,7 @@ class Limb:
         return mch
 
 
-    def create_ik( self, parent ):
+    def create_ik( self, parent, has_toe ):
         org_bones = self.org_bones
 
         bpy.ops.object.mode_set(mode ='EDIT')
@@ -98,10 +97,10 @@ class Limb:
             get_bone_name( org_bones[0], 'mch', 'ik_stretch' )
         )
 
-        if self.limb_type == 'arm':
-            eb[ mch_str ].tail = eb[ org_bones[-1] ].head
-        else:
+        if has_toe:
             eb[ mch_str ].tail = eb[ org_bones[-2] ].head
+        else:
+            eb[ mch_str ].tail = eb[ org_bones[-1] ].head
 
         # Parenting
         eb[ ctrl    ].parent = eb[ parent ]
@@ -140,7 +139,7 @@ class Limb:
         }
 
 
-    def create_fk( self, parent ):
+    def create_fk( self, parent, has_toe ):
         org_bones = self.org_bones.copy()
 
         bpy.ops.object.mode_set(mode ='EDIT')
@@ -158,7 +157,7 @@ class Limb:
         eb[ mch ].length /= 4
         
         # Parenting
-        if self.limb_type == 'arm':
+        if not has_toe:
             if len(ctrls) < 3:
                 raise MetarigError("gamerig.limb.arm: rig '%s' have no enough length " % parent)
 
@@ -198,7 +197,7 @@ class Limb:
         create_limb_widget(self.obj, ctrls[0])
         create_limb_widget(self.obj, ctrls[1])
 
-        if self.limb_type == 'arm':
+        if not has_toe:
             create_directed_circle_widget(self.obj, ctrls[2], radius=-0.4, head_tail=0.0) # negative radius is reasonable. to flip xz
         else:
             create_limb_widget(self.obj, ctrls[2])
@@ -282,7 +281,7 @@ class Limb:
             })
 
 
-    def generate(self, create_terminal, script_template):
+    def generate(self, create_terminal, has_toe, script_template):
         bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
@@ -295,8 +294,8 @@ class Limb:
 
         # Create mch limb parent
         bones['parent'] = self.create_parent()
-        bones['fk']     = self.create_fk(bones['parent'])
-        bones['ik']     = self.create_ik(bones['parent'])
+        bones['fk']     = self.create_fk(bones['parent'], has_toe)
+        bones['ik']     = self.create_ik(bones['parent'], has_toe)
 
         self.org_parenting_and_switch(self.org_bones, bones['ik'], bones['fk']['ctrl'], bones['parent'])
 

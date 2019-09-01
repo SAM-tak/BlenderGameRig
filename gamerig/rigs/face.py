@@ -22,43 +22,44 @@ class Rig:
     def __init__(self, obj, bone_name, params):
         self.obj = obj
 
-        self.bone_name_map = { 'face' : bone_name }
+        # Abstruct bone name map
+        self.abs_name_map = { 'face' : bone_name }
 
         root = self.obj.data.bones[bone_name]
-        self.add_chained_to_bone_name_map(root,                 'nose')
-        self.add_chained_to_bone_name_map(root,                 'lip.T.L')
-        self.add_chained_to_bone_name_map(root,                 'lip.T.R')
-        self.add_chained_to_bone_name_map(root,                 'lip.B.L')
-        self.add_chained_to_bone_name_map(root,                 'lip.B.R')
-        c = self.add_chained_to_bone_name_map(root,             'jaw')
-        self.add_chained_to_bone_name_map(c if c else root,     'chin')
-        self.add_chained_to_bone_name_map(root,                 'ear.L')
-        self.add_chained_to_bone_name_map(root,                 'ear.R')
-        c = self.add_chained_to_bone_name_map(root,             'lid.T.L')
-        self.add_chained_to_bone_name_map(c if c else root,     'lid.B.L')
-        c = self.add_chained_to_bone_name_map(root,             'lid.T.R')
-        self.add_chained_to_bone_name_map(c if c else root,     'lid.B.R')
-        self.add_chained_to_bone_name_map(root,                 'brow.B.L')
-        self.add_chained_to_bone_name_map(root,                 'brow.B.R')
-        c = self.add_chained_to_bone_name_map(root,             'temple.L')
-        c = self.add_chained_to_bone_name_map(c if c else root, 'jaw.L')
-        c = self.add_chained_to_bone_name_map(c if c else root, 'chin.L')
-        c = self.add_chained_to_bone_name_map(c if c else root, 'cheek.B.L')
-        self.add_chained_to_bone_name_map(c if c else root,     'brow.T.L')
-        c = self.add_chained_to_bone_name_map(root,             'temple.R')
-        c = self.add_chained_to_bone_name_map(c if c else root, 'jaw.R')
-        c = self.add_chained_to_bone_name_map(c if c else root, 'chin.R')
-        c = self.add_chained_to_bone_name_map(c if c else root, 'cheek.B.R')
-        self.add_chained_to_bone_name_map(c if c else root,     'brow.T.R')
-        self.add_chained_to_bone_name_map(root,                 'eye.L')
-        self.add_chained_to_bone_name_map(root,                 'eye.R')
-        c = self.add_chained_to_bone_name_map(root,             'cheek.T.L')
-        self.add_chained_to_bone_name_map(c if c else root,     'nose.L')
-        c = self.add_chained_to_bone_name_map(root,             'cheek.T.R')
-        self.add_chained_to_bone_name_map(c if c else root,     'nose.R')
-        self.add_chained_to_bone_name_map(root,                 'tongue')
+        self.add_chained_to_abs_name_map(root,                 'nose')
+        self.add_chained_to_abs_name_map(root,                 'lip.T.L')
+        self.add_chained_to_abs_name_map(root,                 'lip.T.R')
+        self.add_chained_to_abs_name_map(root,                 'lip.B.L')
+        self.add_chained_to_abs_name_map(root,                 'lip.B.R')
+        c = self.add_chained_to_abs_name_map(root,             'jaw')
+        self.add_chained_to_abs_name_map(c if c else root,     'chin')
+        self.add_chained_to_abs_name_map(root,                 'ear.L')
+        self.add_chained_to_abs_name_map(root,                 'ear.R')
+        c = self.add_chained_to_abs_name_map(root,             'lid.T.L')
+        self.add_chained_to_abs_name_map(c if c else root,     'lid.B.L')
+        c = self.add_chained_to_abs_name_map(root,             'lid.T.R')
+        self.add_chained_to_abs_name_map(c if c else root,     'lid.B.R')
+        self.add_chained_to_abs_name_map(root,                 'brow.B.L')
+        self.add_chained_to_abs_name_map(root,                 'brow.B.R')
+        c = self.add_chained_to_abs_name_map(root,             'temple.L')
+        c = self.add_chained_to_abs_name_map(c if c else root, 'jaw.L')
+        c = self.add_chained_to_abs_name_map(c if c else root, 'chin.L')
+        c = self.add_chained_to_abs_name_map(c if c else root, 'cheek.B.L')
+        self.add_chained_to_abs_name_map(c if c else root,     'brow.T.L')
+        c = self.add_chained_to_abs_name_map(root,             'temple.R')
+        c = self.add_chained_to_abs_name_map(c if c else root, 'jaw.R')
+        c = self.add_chained_to_abs_name_map(c if c else root, 'chin.R')
+        c = self.add_chained_to_abs_name_map(c if c else root, 'cheek.B.R')
+        self.add_chained_to_abs_name_map(c if c else root,     'brow.T.R')
+        self.add_chained_to_abs_name_map(root,                 'eye.L')
+        self.add_chained_to_abs_name_map(root,                 'eye.R')
+        c = self.add_chained_to_abs_name_map(root,             'cheek.T.L')
+        self.add_chained_to_abs_name_map(c if c else root,     'nose.L')
+        c = self.add_chained_to_abs_name_map(root,             'cheek.T.R')
+        self.add_chained_to_abs_name_map(c if c else root,     'nose.R')
+        self.add_chained_to_abs_name_map(root,                 'tongue')
 
-        self.org_bones   = list(self.bone_name_map.keys())
+        self.org_bones   = list(self.abs_name_map.keys())
         self.face_length = obj.data.edit_bones[ bone_name ].length
         self.params      = params
 
@@ -77,14 +78,14 @@ class Rig:
     def find_child_by_prefix(bone, prefix):
         return next((b for b in bone.children if b.name.startswith(prefix)), None)
 
-    def add_chained_to_bone_name_map(self, root, name, depth=0):
+    def add_chained_to_abs_name_map(self, root, name, depth=0):
         child = self.find_child_by_prefix(root, name)
-        if child is not None:
+        if child:
             if depth == 0:
-                self.bone_name_map[name] = child.name
+                self.abs_name_map[name] = child.name
             else:
-                self.bone_name_map[name + ('.%03d' % depth)] = child.name
-            return self.add_chained_to_bone_name_map(child, name, depth + 1)
+                self.abs_name_map[name + ('.%03d' % depth)] = child.name
+            return self.add_chained_to_abs_name_map(child, name, depth + 1)
         return root
 
     number_suffix_patter = re.compile(r'.+\.(\d\d\d)$')
@@ -95,7 +96,7 @@ class Rig:
         return int(match.group(1)) if match else None
     
     def make_unique_basebonename(self, bonename):
-        if bonename in self.bone_name_map.keys():
+        if bonename in self.abs_name_map.keys():
             num = self.get_number_suffix(bonename)
             return self.make_unique_basebonename(bonename[:-3] + ('%03d' % (num + 1)) if num else bonename + '.001')
         else:
@@ -104,16 +105,33 @@ class Rig:
     def copy_bone(self, obj, bone_name, assign_name):
         assign_name = self.make_unique_basebonename(assign_name) if assign_name else bone_name
         ret = copy_bone(obj, self.rbn(bone_name), assign_name)
-        self.bone_name_map[assign_name] = ret
+        self.abs_name_map[assign_name] = ret
         return assign_name
 
     def rbn(self, bonebasename):
-        """ return created bone name
+        """ return real bone name
         """
-        # if bonebasename not in self.bone_name_map:
+        # if bonebasename not in self.abs_name_map:
         #     raise MetarigError("gamerig.face.rbn(): bone base name '%s' not found" % bonebasename)
-        return self.bone_name_map[bonebasename]
+        return self.abs_name_map[bonebasename]
 
+    def get_chain_length(self, root):
+        name = root
+        length = 0
+        while name in self.abs_name_map:
+            length += 1
+            name = root + ('.%03d' % length)
+        return length
+
+    def get_chain_tail(self, root):
+        name = root
+        ret = name
+        length = 0
+        while name in self.abs_name_map:
+            ret = name
+            length += 1
+            name = root + ('.%03d' % length)
+        return ret
 
     def symmetrical_split( self, bones ):
         # RE pattern match right or left parts
@@ -172,15 +190,20 @@ class Rig:
 
             ## Widget for transforming the both eyes
             for bone in bones['eyes']:
-                if bone in self.bone_name_map:
+                if bone in self.abs_name_map:
                     eye_master = self.copy_bone(self.obj, bone, ctrlname(insert_before_first_period(bone, '_master')))
                     eye_master_names.append( eye_master )
             
             ret['eyes'] = [eyeL_ctrl_name, eyeR_ctrl_name, eyes_ctrl_name] + eye_master_names
 
         ## turbo: adding a nose master for transforming the whole nose
-        if 'nose.003' in self.bone_name_map:
-            nose_master = self.copy_bone(self.obj, 'nose.003', ctrlname('nose_master'))
+        if 'nose' in self.abs_name_map:
+            chain_length = self.get_chain_length('nose')
+            target_name = 'nose'
+            if chain_length / 2 > 0:
+                target_name = 'nose.%03d' % (chain_length / 2)
+
+            nose_master = self.copy_bone(self.obj, target_name, ctrlname('nose_master'))
             eb[rbn(nose_master)].use_connect = False
             eb[rbn(nose_master)].parent = None
             eb[rbn(nose_master)].tail[:] = eb[rbn(nose_master)].head + Vector([0, self.face_length / -5, 0])
@@ -274,16 +297,25 @@ class Rig:
         tweaks = []
 
         primary_tweaks = [
-            "lid.B.L.002", "lid.T.L.002", "lid.B.R.002", "lid.T.R.002",
-            "chin", "brow.T.L.001", "brow.T.L.002", "brow.T.L.003",
-            "brow.T.R.001", "brow.T.R.002", "brow.T.R.003", "lip.B",
-            "lip.B.L.001", "lip.B.R.001", "cheek.B.L.001", "cheek.B.R.001",
-            "lips.L", "lips.R", "lip.T.L.001", "lip.T.R.001", "lip.T",
-            "nose.002", "nose.L.001", "nose.R.001"
+            ctrlname('chin'), ctrlname('lip.B'), ctrlname('lips.L'), ctrlname('lips.R'), ctrlname('lip.T')
         ]
 
+        for i in (
+            'lid.B.L', 'lid.T.L', 'lid.B.R', 'lid.T.R',
+            'brow.T.L', 'brow.B.L', 'brow.T.R', 'brow.B.R',
+            'cheek.B.L', 'cheek.B.R',
+            'lip.B.L', 'lip.T.L', 'lip.B.R', 'lip.T.R',
+            'nose', 'nose.L', 'nose.R'
+        ):
+            if i in self.abs_name_map:
+                chain_length = self.get_chain_length(i)
+                if chain_length / 2 > 0:
+                    primary_tweaks.append(ctrlname(i + ('.%03d' % (chain_length / 2))))
+                else:
+                    primary_tweaks.append(ctrlname(i))
+
         for bone in bones + list( uniques.keys() ):
-            if bone in self.bone_name_map:
+            if bone in self.abs_name_map:
                 tweak_name = ctrlname( bone )
 
                 if tweak_name in primary_tweaks and not self.primary_layers:
@@ -305,9 +337,9 @@ class Rig:
 
                 # create tail bone
                 if bone in tails:
-                    if 'lip.T.L.001' in bone:
+                    if 'lip.T.L' in bone:
                         tweak_name = self.copy_bone( self.obj, bone, ctrlname('lips.L') )
-                    elif 'lip.T.R.001' in bone:
+                    elif 'lip.T.R' in bone:
                         tweak_name = self.copy_bone( self.obj, bone, ctrlname('lips.R') )
                     else:
                         tweak_name = self.copy_bone( self.obj, bone, tweak_name )
@@ -324,7 +356,7 @@ class Rig:
         pb = self.obj.pose.bones
 
         for bone in tweaks:
-            if bone in self.bone_name_map:
+            if bone in self.abs_name_map:
                 if bone in primary_tweaks:
                     if self.primary_layers:
                         pb[rbn(bone)].bone.layers = self.primary_layers
@@ -339,6 +371,7 @@ class Rig:
 
     def all_controls( self ):
         org_bones = self.org_bones
+        tail = self.get_chain_tail
 
         org_tongue_bones  = sorted([ bone for bone in org_bones if 'tongue' in bone ])
 
@@ -361,7 +394,7 @@ class Rig:
 
         tweak_exceptions = [ bone for bone in org_bones if 'temple' in bone ]
 
-        tweak_tail =  [ 'brow.B.L.003', 'brow.B.R.003', 'nose.003', 'chin.001', 'lip.T.L.001', 'lip.T.R.001', 'tongue.002' ]
+        tweak_tail =  [ self.get_chain_tail(i) for i in ('brow.B.L', 'brow.B.R', 'nose', 'chin', 'lip.T.L', 'lip.T.R', 'tongue')]
 
         tweak_exceptions += [ 'lip.T.R', 'lip.B.R', 'ear.L.001', 'ear.R.001' ]
         tweak_exceptions += list(tweak_unique.keys())
@@ -378,8 +411,7 @@ class Rig:
         if 'jaw' in tweak_exceptions:
             tweak_exceptions.pop( tweak_exceptions.index('jaw')    )
 
-        tweak_exceptions = [ bone for bone in tweak_exceptions if bone in org_bones ]
-        tweak_tail       = [ bone for bone in tweak_tail if bone in org_bones       ]
+        tweak_exceptions = [ bone for bone in tweak_exceptions if bone in self.abs_name_map ]
 
         org_to_tweak = sorted( [ bone for bone in org_bones if bone not in tweak_exceptions ] )
 
@@ -437,7 +469,7 @@ class Rig:
         mch_bones['lids'] = []
 
         for i in range( len(eyes) ):
-            if eyes[i] in self.bone_name_map:
+            if eyes[i] in self.abs_name_map:
                 for bone in all_lids[i]:
                     mch_name = self.copy_bone( self.obj, eyes[i], mchname( bone ) )
 
@@ -448,7 +480,7 @@ class Rig:
 
                     mch_bones['lids'].append( mch_name )
 
-        if jaw_ctrl in self.bone_name_map:
+        if jaw_ctrl in self.abs_name_map:
             mch_bones['jaw'] = []
 
             length_subtractor = eb[ rbn(jaw_ctrl) ].length / 6
@@ -469,7 +501,7 @@ class Rig:
                 mch_bones['jaw'].append( mch_name )
 
         # Tongue mch bones
-        if tongue_ctrl in self.bone_name_map:
+        if tongue_ctrl in self.abs_name_map:
             mch_bones['tongue'] = []
 
             # create mch bones for all tongue org_bones except the first one
@@ -482,7 +514,7 @@ class Rig:
                 mch_bones['tongue'].append( mch_name )
 
             # Create the tongue parent mch
-            if jaw_ctrl in self.bone_name_map:
+            if jaw_ctrl in self.abs_name_map:
                 mch_name = self.copy_bone( self.obj, jaw_ctrl, mchname('tongue_parent') )
                 eb[ rbn(mch_name) ].use_connect = False
                 eb[ rbn(mch_name) ].parent      = None
@@ -492,7 +524,7 @@ class Rig:
                 mch_bones['tongue_parent'] = [ mch_name ]
 
         # Create the chin parent mch
-        if chin_ctrl in self.bone_name_map and jaw_ctrl in self.bone_name_map:
+        if chin_ctrl in self.abs_name_map and jaw_ctrl in self.abs_name_map:
             mch_name = self.copy_bone( self.obj, jaw_ctrl, mchname('chin_parent') )
             eb[ rbn(mch_name) ].use_connect = False
             eb[ rbn(mch_name) ].parent      = None
@@ -556,7 +588,7 @@ class Rig:
             # example: 'lip.B' matches 'MCH-target_lip.B.R' and 'MCH-target_lip.B.L' if
             # you cut off the "MCH-target_" [mcht_prefix_len:] and the ".L" or ".R" [:-2]
             for bone in [ bone for bone in mchts if ctrlname( bone[mcht_prefix_len:-2] ) == lip_tweak ]:
-                if lip_tweak in self.bone_name_map:
+                if lip_tweak in self.abs_name_map:
                     eb[ rbn( bone ) ].parent = eb[ rbn( lip_tweak ) ]
 
         # parent cheek bones top respetive tweaks
@@ -566,9 +598,9 @@ class Rig:
         cheekT_defs = [ mch_target('cheek.T.L'), mch_target('cheek.T.R') ]
 
         for lip, brow, cheekB, cheekT in zip( lips, brows, cheekB_defs, cheekT_defs ):
-            if cheekB in self.bone_name_map and lip in self.bone_name_map:
+            if cheekB in self.abs_name_map and lip in self.abs_name_map:
                 eb[ rbn( cheekB ) ].parent = eb[ rbn( lip ) ]
-            if cheekT in self.bone_name_map and brow in self.bone_name_map:
+            if cheekT in self.abs_name_map and brow in self.abs_name_map:
                 eb[ rbn( cheekT ) ].parent = eb[ rbn( brow ) ]
 
         # parent ear deform bones to their controls
@@ -581,19 +613,19 @@ class Rig:
                     eb[ rbn( ear_mt ) ].parent = eb[ rbn( ear_ctrl ) ]
 
         for bone in [ ctrlname('ear.L.002'), ctrlname('ear.L.003'), ctrlname('ear.L.004') ]:
-            if ctrlname('ear.L') in self.bone_name_map and bone in self.bone_name_map:
+            if ctrlname('ear.L') in self.abs_name_map and bone in self.abs_name_map:
                 eb[ rbn( bone ) ].parent = eb[ rbn( ctrlname('ear.L') ) ]
         for bone in [ ctrlname('ear.R.002'), ctrlname('ear.R.003'), ctrlname('ear.R.004') ]:
-            if ctrlname('ear.R') in self.bone_name_map and bone in self.bone_name_map:
+            if ctrlname('ear.R') in self.abs_name_map and bone in self.abs_name_map:
                 eb[ rbn( bone ) ].parent = eb[ rbn( ctrlname('ear.R') ) ]
 
         # Parent eyelid deform bones (each lid def bone is parented to its respective MCH bone)
         for bone in [ bone for bone in mchts if 'lid' in bone ]:
-            if bone in self.bone_name_map and mchname(bone[mcht_prefix_len:]) in self.bone_name_map:
+            if bone in self.abs_name_map and mchname(bone[mcht_prefix_len:]) in self.abs_name_map:
                 eb[ rbn( bone ) ].parent = eb[ rbn( mchname(bone[mcht_prefix_len:]) ) ]
 
         ## Parenting all mch bones
-        if mchname('eyes_parent') in self.bone_name_map:
+        if mchname('eyes_parent') in self.abs_name_map:
             eb[ rbn( mchname('eyes_parent') ) ].parent = None  # eyes_parent will be parented to root
 
         # parent all mch tongue bones to the jaw master control bone
@@ -611,12 +643,12 @@ class Rig:
         ## Parenting the control bones
 
         # eyes
-        if ctrlname('eyes') in self.bone_name_map:
+        if ctrlname('eyes') in self.abs_name_map:
             eb[ rbn( ctrlname('eyes') ) ].parent = eb[ rbn( mchname('eyes_parent') ) ]
             eyes = [bone for bone in all_bones['ctrls']['eyes'] if 'eyes' not in bone][0:2]
 
             for eye in eyes:
-                if eye in self.bone_name_map:
+                if eye in self.abs_name_map:
                     eb[ rbn( eye ) ].parent = eb[ rbn( ctrlname('eyes') ) ]
 
             ## turbo: parent eye master bones to face
@@ -638,17 +670,17 @@ class Rig:
         left, right = self.symmetrical_split( everyone )
 
         for l in left:
-            if l in self.bone_name_map and ctrlname('eye_master.L') in self.bone_name_map:
+            if l in self.abs_name_map and ctrlname('eye_master.L') in self.abs_name_map:
                 eb[ rbn( l ) ].use_connect = False
                 eb[ rbn( l ) ].parent = eb[ rbn( ctrlname('eye_master.L') ) ]
 
         for r in right:
-            if r in self.bone_name_map and ctrlname('eye_master.R') in self.bone_name_map:
+            if r in self.abs_name_map and ctrlname('eye_master.R') in self.abs_name_map:
                 eb[ rbn( r ) ].use_connect = False
                 eb[ rbn( r ) ].parent = eb[ rbn( ctrlname('eye_master.R') ) ]
 
         ## turbo: nose to mch jaw.004
-        if mchname('jaw_master.004') in self.bone_name_map and 'nose' in all_bones['ctrls'] and len(all_bones['ctrls']['nose']) > 0:
+        if mchname('jaw_master.004') in self.abs_name_map and 'nose' in all_bones['ctrls'] and len(all_bones['ctrls']['nose']) > 0:
             nosetop = all_bones['ctrls']['nose'].pop()
             eb[ rbn( nosetop ) ].use_connect = False
             eb[ rbn( nosetop ) ].parent = eb[ rbn( mchname('jaw_master.004') ) ]
@@ -699,38 +731,38 @@ class Rig:
 
         for parent, bones in groups.items():
             for bone in bones:
-                if bone in self.bone_name_map and parent in self.bone_name_map:
+                if bone in self.abs_name_map and parent in self.abs_name_map:
                     eb[ rbn( bone ) ].parent = eb[ rbn( parent ) ]
 
         # if MCH-target_jaw has no parent, parent to jaw_master.
-        if mchname('target_jaw') in self.bone_name_map and ctrlname('jaw_master') in self.bone_name_map and eb[ rbn( mchname('target_jaw') ) ].parent is None:
+        if mchname('target_jaw') in self.abs_name_map and ctrlname('jaw_master') in self.abs_name_map and eb[ rbn( mchname('target_jaw') ) ].parent is None:
             eb[ rbn( mchname('target_jaw') ) ].parent = eb[ rbn( ctrlname('jaw_master') ) ]
 
         # if chin_parent is exist, parent chin to chin_parent
         if 'chin_parent' in all_bones['mch']:
-            if ctrlname('chin') in self.bone_name_map:
+            if ctrlname('chin') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin') ) ].use_connect = False
-            if ctrlname('chin') in self.bone_name_map:
+            if ctrlname('chin') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
-            if ctrlname('chin.L') in self.bone_name_map:
+            if ctrlname('chin.L') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin.L') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
-            if ctrlname('chin.R') in self.bone_name_map:
+            if ctrlname('chin.R') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin.R') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
 
         # Remaining arbitrary relatioships for tweak bone parenting
-        if ctrlname('chin.001') in self.bone_name_map and ctrlname('chin') in self.bone_name_map:
+        if ctrlname('chin.001') in self.abs_name_map and ctrlname('chin') in self.abs_name_map:
             eb[ rbn( ctrlname('chin.001') ) ].parent = eb[ rbn( ctrlname('chin') ) ]
-        if ctrlname('chin.002') in self.bone_name_map and ctrlname('lip.B') in self.bone_name_map:
+        if ctrlname('chin.002') in self.abs_name_map and ctrlname('lip.B') in self.abs_name_map:
             eb[ rbn( ctrlname('chin.002') ) ].parent = eb[ rbn( ctrlname('lip.B') ) ]
-        if ctrlname('nose.001') in self.bone_name_map and ctrlname('nose.002') in self.bone_name_map:
+        if ctrlname('nose.001') in self.abs_name_map and ctrlname('nose.002') in self.abs_name_map:
             eb[ rbn( ctrlname('nose.001') ) ].parent = eb[ rbn( ctrlname('nose.002') ) ]
-        if ctrlname('nose.003') in self.bone_name_map and ctrlname('nose.002') in self.bone_name_map:
+        if ctrlname('nose.003') in self.abs_name_map and ctrlname('nose.002') in self.abs_name_map:
             eb[ rbn( ctrlname('nose.003') ) ].parent = eb[ rbn( ctrlname('nose.002') ) ]
-        if ctrlname('tongue') in self.bone_name_map and ctrlname('tongue_master') in self.bone_name_map:
+        if ctrlname('tongue') in self.abs_name_map and ctrlname('tongue_master') in self.abs_name_map:
             eb[ rbn( ctrlname('tongue') ) ].parent = eb[ rbn( ctrlname('tongue_master') ) ]
-        if ctrlname('tongue.001') in self.bone_name_map and ctrlname('tongue.001') in self.bone_name_map:
+        if ctrlname('tongue.001') in self.abs_name_map and ctrlname('tongue.001') in self.abs_name_map:
             eb[ rbn( ctrlname('tongue.001') ) ].parent = eb[ rbn( mchname('tongue.001') ) ]
-        if ctrlname('tongue.002') in self.bone_name_map and 'tongue.002' in self.bone_name_map:
+        if ctrlname('tongue.002') in self.abs_name_map and 'tongue.002' in self.abs_name_map:
             eb[ rbn( ctrlname('tongue.002') ) ].parent = eb[ rbn( mchname('tongue.002') ) ]
 
         for bone in [ ctrlname('ear.L.002'), ctrlname('ear.L.003'), ctrlname('ear.L.004') ]:
@@ -755,7 +787,7 @@ class Rig:
         bpy.ops.object.mode_set(mode ='OBJECT')
         pb = self.obj.pose.bones
         
-        if not (bone in self.bone_name_map and subtarget in self.bone_name_map):
+        if not (bone in self.abs_name_map and subtarget in self.abs_name_map):
             return
 
         owner_pb = pb[rbn(bone)]

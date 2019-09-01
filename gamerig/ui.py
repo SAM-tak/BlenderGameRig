@@ -102,7 +102,7 @@ class ArmaturePanel(bpy.types.Panel):
                 # buttons
                 col = col2.column()
                 col.label(text="Reserved:")
-                reserved_names = {30: 'MCH', 31: 'ORG'}
+                reserved_names = {30: 'MCH', 31: 'Original'}
                 for i in range(30, 32):
                     row = col.row(align=True)
                     icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
@@ -787,7 +787,9 @@ class RenameBatchOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in ('EDIT_ARMATURE', 'EDIT_MESH') or (context.mode == 'POSE' and context.object.animation_data.action) and context.window_manager.gamerig.rename_batch_find
+        return context.mode in ('EDIT_ARMATURE', 'EDIT_MESH') \
+            or (context.mode == 'POSE' and context.object and context.object.animation_data and context.object.animation_data.action) \
+            and context.window_manager.gamerig.rename_batch_find
     
     def execute(self, context):
         param = context.window_manager.gamerig
@@ -836,7 +838,8 @@ class RenameBatchPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in ('EDIT_ARMATURE', 'EDIT_MESH') or (context.mode == 'POSE' and context.object.animation_data.action)
+        return context.mode in ('EDIT_ARMATURE', 'EDIT_MESH') \
+            or (context.mode == 'POSE' and context.object and context.object.animation_data and context.object.animation_data.action)
 
     def draw(self, context):
         layout = self.layout
