@@ -12,10 +12,11 @@ def mch_target(name):
     """ Prepends the MCH_PREFIX to a name if it doesn't already have
         it, and returns it.
     """
-    if name.startswith(mchname('target_')):
-        return name
-    else:
-        return mchname('target_' + name)
+    if name:
+        if name.startswith(mchname('target_')):
+            return name
+        else:
+            return mchname('target_' + name)
 
 class Rig:
 
@@ -24,6 +25,7 @@ class Rig:
 
         # Abstruct bone name map
         self.abs_name_map = { 'face' : bone_name }
+        self.tail_mid_map = {}
 
         root = self.obj.data.bones[bone_name]
         self.add_chained_to_abs_name_map(root,                 'nose')
@@ -84,8 +86,10 @@ class Rig:
             if depth == 0:
                 self.abs_name_map[name] = child.name
             else:
-                self.abs_name_map[name + ('.%03d' % depth)] = child.name
+                self.abs_name_map[name + '.%03d' % depth] = child.name
             return self.add_chained_to_abs_name_map(child, name, depth + 1)
+        elif depth > 0:
+            self.tail_mid_map[name] = [name + '.%03d' % (depth - 1) if depth > 1 else name, name + '.%03d' % (depth / 2) if depth > 1 else name, depth]
         return root
 
     number_suffix_patter = re.compile(r'.+\.(\d\d\d)$')
@@ -115,23 +119,11 @@ class Rig:
         #     raise MetarigError("gamerig.face.rbn(): bone base name '%s' not found" % bonebasename)
         return self.abs_name_map[bonebasename]
 
-    def get_chain_length(self, root):
-        name = root
-        length = 0
-        while name in self.abs_name_map:
-            length += 1
-            name = root + ('.%03d' % length)
-        return length
+    def midctrlname(self, name):
+        return ctrlname(self.tail_mid_map[name][1]) if name in self.abs_name_map else None
 
-    def get_chain_tail(self, root):
-        name = root
-        ret = name
-        length = 0
-        while name in self.abs_name_map:
-            ret = name
-            length += 1
-            name = root + ('.%03d' % length)
-        return ret
+    def tailctrlname(self, name):
+        return ctrlname(name + '.%03d' % self.tail_mid_map[name][2]) if name in self.abs_name_map else None
 
     def symmetrical_split( self, bones ):
         # RE pattern match right or left parts
@@ -198,15 +190,10 @@ class Rig:
 
         ## turbo: adding a nose master for transforming the whole nose
         if 'nose' in self.abs_name_map:
-            chain_length = self.get_chain_length('nose')
-            target_name = 'nose'
-            if chain_length / 2 > 0:
-                target_name = 'nose.%03d' % (chain_length / 2)
-
-            nose_master = self.copy_bone(self.obj, target_name, ctrlname('nose_master'))
+            nose_master = self.copy_bone(self.obj, self.tail_mid_map['nose'][1], ctrlname('nose_master'))
             eb[rbn(nose_master)].use_connect = False
             eb[rbn(nose_master)].parent = None
-            eb[rbn(nose_master)].tail[:] = eb[rbn(nose_master)].head + Vector([0, self.face_length / -5, 0])
+            eb[rbn(nose_master)].tail = eb[rbn(nose_master)].head + Vector([0, self.face_length / -7, 0])
             ret['nose'] = [nose_master]
 
         # ears ctrls
@@ -231,6 +218,7 @@ class Rig:
                 jaw_org_e  = eb[ rbn(bones['jaw'][2]) ]
 
                 eb[ rbn(jaw_ctrl_name) ].head[:] = ( jawL_org_e.head + jawR_org_e.head ) / 2
+                eb[ rbn(jaw_ctrl_name) ].roll = 0
 
                 ret['jaw'] = [ jaw_ctrl_name ]
             elif len(bones['jaw']) == 1:
@@ -308,11 +296,7 @@ class Rig:
             'nose', 'nose.L', 'nose.R'
         ):
             if i in self.abs_name_map:
-                chain_length = self.get_chain_length(i)
-                if chain_length / 2 > 0:
-                    primary_tweaks.append(ctrlname(i + ('.%03d' % (chain_length / 2))))
-                else:
-                    primary_tweaks.append(ctrlname(i))
+                primary_tweaks.append(self.midctrlname(i))
 
         for bone in bones + list( uniques.keys() ):
             if bone in self.abs_name_map:
@@ -360,18 +344,17 @@ class Rig:
                 if bone in primary_tweaks:
                     if self.primary_layers:
                         pb[rbn(bone)].bone.layers = self.primary_layers
-                    create_face_widget( self.obj, rbn(bone), size = 1.5 )
+                    create_face_widget( self.obj, rbn(bone), size = 0.5 )
                 else:
                     if self.secondary_layers:
                         pb[rbn(bone)].bone.layers = self.secondary_layers
-                    create_face_widget( self.obj, rbn(bone) )
+                    create_face_widget( self.obj, rbn(bone), size = 0.3 )
 
         return { 'all' : tweaks }
 
 
     def all_controls( self ):
         org_bones = self.org_bones
-        tail = self.get_chain_tail
 
         org_tongue_bones  = sorted([ bone for bone in org_bones if 'tongue' in bone ])
 
@@ -394,7 +377,7 @@ class Rig:
 
         tweak_exceptions = [ bone for bone in org_bones if 'temple' in bone ]
 
-        tweak_tail =  [ self.get_chain_tail(i) for i in ('brow.B.L', 'brow.B.R', 'nose', 'chin', 'lip.T.L', 'lip.T.R', 'tongue')]
+        tweak_tail =  [ self.tail_mid_map[i][0] for i in ('brow.B.L', 'brow.B.R', 'nose', 'chin', 'lip.T.L', 'lip.T.R', 'tongue')]
 
         tweak_exceptions += [ 'lip.T.R', 'lip.B.R', 'ear.L.001', 'ear.R.001' ]
         tweak_exceptions += list(tweak_unique.keys())
@@ -572,7 +555,7 @@ class Rig:
                 for bone in all_bones[category][area]:
                     eb[ rbn(bone) ].parent = eb[ rbn(face_name) ]
 
-        mcht_prefix_len = len(mch_target(''))
+        mcht_prefix_len = len(mch_target('_')) - 1
         # Parent all the mch-target bones that have respective tweaks
         for bone in [ bone for bone in mchts if ctrlname( bone[mcht_prefix_len:] ) in all_bones['tweaks']['all'] ]:
             # the def and the matching org bone are parented to their corresponding tweak,
@@ -604,20 +587,10 @@ class Rig:
                 eb[ rbn( cheekT ) ].parent = eb[ rbn( brow ) ]
 
         # parent ear deform bones to their controls
-        ear_mts  = [ mch_target('ear.L'), mch_target('ear.L.001'), mch_target('ear.R'), mch_target('ear.R.001') ]
-        ear_ctrls = [ ctrlname('ear.L'), ctrlname('ear.R') ]
-
-        for ear_ctrl in ear_ctrls:
-            for ear_mt in ear_mts:
-                if ear_ctrl in ear_mt and ear_mt in mchts:
-                    eb[ rbn( ear_mt ) ].parent = eb[ rbn( ear_ctrl ) ]
-
-        for bone in [ ctrlname('ear.L.002'), ctrlname('ear.L.003'), ctrlname('ear.L.004') ]:
-            if ctrlname('ear.L') in self.abs_name_map and bone in self.abs_name_map:
-                eb[ rbn( bone ) ].parent = eb[ rbn( ctrlname('ear.L') ) ]
-        for bone in [ ctrlname('ear.R.002'), ctrlname('ear.R.003'), ctrlname('ear.R.004') ]:
-            if ctrlname('ear.R') in self.abs_name_map and bone in self.abs_name_map:
-                eb[ rbn( bone ) ].parent = eb[ rbn( ctrlname('ear.R') ) ]
+        for ear_ctrl in ( 'ear.L', 'ear.R' ):
+            for ear_mt in ( ear_ctrl, ear_ctrl + '.001' ):
+                if ctrlname( ear_ctrl ) in self.abs_name_map and mch_target( ear_mt ) in mchts:
+                    eb[ rbn( mch_target(ear_mt) ) ].parent = eb[ rbn( ctrlname( ear_ctrl ) ) ]
 
         # Parent eyelid deform bones (each lid def bone is parented to its respective MCH bone)
         for bone in [ bone for bone in mchts if 'lid' in bone ]:
@@ -687,46 +660,31 @@ class Rig:
 
         ## Parenting the tweak bones
         
+        def interctrlnames(name):
+            if name in self.tail_mid_map:
+                return [ctrlname(name + '.%03d' % i) for i in range(1, self.tail_mid_map[name][2])]
+
+        midctrlname = self.midctrlname
+        tailctrlname = self.tailctrlname
+
         # Jaw children (values) groups and their parents (keys)
         groups = {
             ctrlname('jaw_master'): [
                 ctrlname('jaw'),
-                ctrlname('jaw.R.001'),
-                ctrlname('jaw.L.001'),
+                tailctrlname('jaw.R'),
+                tailctrlname('jaw.L'),
                 ctrlname('chin.L'),
                 ctrlname('chin.R'),
                 ctrlname('chin'),
                 mchname('chin'),
-                ctrlname('tongue.003')
+                tailctrlname('tongue')
             ],
-            mchname('jaw_master'): [
-                ctrlname('lip.B')
-            ],
-            mchname('jaw_master.001'): [
-                ctrlname('lip.B.L.001'),
-                ctrlname('lip.B.R.001')
-            ],
-            mchname('jaw_master.002'): [
-                ctrlname('lips.L'),
-                ctrlname('lips.R'),
-                ctrlname('cheek.B.L.001'),
-                ctrlname('cheek.B.R.001')
-            ],
-            mchname('jaw_master.003'): [
-                ctrlname('lip.T'),
-                ctrlname('lip.T.L.001'),
-                ctrlname('lip.T.R.001')
-            ],
-            mchname('jaw_master.004'): [
-                ctrlname('cheek.T.L.001'),
-                ctrlname('cheek.T.R.001')
-            ],
-            ctrlname('nose_master'): [
-                ctrlname('nose.002'),
-                ctrlname('nose.003'),
-                ctrlname('nose.L.001'),
-                ctrlname('nose.R.001')
-            ]
+            mchname('jaw_master'): [ ctrlname('lip.B') ],
+            mchname('jaw_master.001'): interctrlnames('lip.B.L') + interctrlnames('lip.B.R'),
+            mchname('jaw_master.002'): [ ctrlname('lips.L'), ctrlname('lips.R') ] + interctrlnames('cheek.B.L') + interctrlnames('cheek.B.R'),
+            mchname('jaw_master.003'): [ ctrlname('lip.T') ] + interctrlnames('lip.T.L') + interctrlnames('lip.T.R'),
+            mchname('jaw_master.004'): interctrlnames('cheek.T.L') + interctrlnames('cheek.T.R'),
+            ctrlname('nose_master'): interctrlnames('nose') + [ tailctrlname('nose') ] + interctrlnames('nose.L') + interctrlnames('nose.R'),
         }
 
         for parent, bones in groups.items():
@@ -742,7 +700,6 @@ class Rig:
         if 'chin_parent' in all_bones['mch']:
             if ctrlname('chin') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin') ) ].use_connect = False
-            if ctrlname('chin') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
             if ctrlname('chin.L') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin.L') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
@@ -752,23 +709,27 @@ class Rig:
         # Remaining arbitrary relatioships for tweak bone parenting
         if ctrlname('chin.001') in self.abs_name_map and ctrlname('chin') in self.abs_name_map:
             eb[ rbn( ctrlname('chin.001') ) ].parent = eb[ rbn( ctrlname('chin') ) ]
-        if ctrlname('chin.002') in self.abs_name_map and ctrlname('lip.B') in self.abs_name_map:
-            eb[ rbn( ctrlname('chin.002') ) ].parent = eb[ rbn( ctrlname('lip.B') ) ]
+        if tailctrlname('chin') in self.abs_name_map and ctrlname('lip.B') in self.abs_name_map:
+            eb[ rbn( tailctrlname('chin') ) ].parent = eb[ rbn( ctrlname('lip.B') ) ]
         if ctrlname('nose.001') in self.abs_name_map and ctrlname('nose.002') in self.abs_name_map:
             eb[ rbn( ctrlname('nose.001') ) ].parent = eb[ rbn( ctrlname('nose.002') ) ]
         if ctrlname('nose.003') in self.abs_name_map and ctrlname('nose.002') in self.abs_name_map:
             eb[ rbn( ctrlname('nose.003') ) ].parent = eb[ rbn( ctrlname('nose.002') ) ]
+        if tailctrlname('nose') in self.abs_name_map and ctrlname('lip.T') in self.abs_name_map:
+            eb[ rbn( tailctrlname('nose') ) ].parent = eb[ rbn( ctrlname('lip.T') ) ]
         if ctrlname('tongue') in self.abs_name_map and ctrlname('tongue_master') in self.abs_name_map:
             eb[ rbn( ctrlname('tongue') ) ].parent = eb[ rbn( ctrlname('tongue_master') ) ]
-        if ctrlname('tongue.001') in self.abs_name_map and ctrlname('tongue.001') in self.abs_name_map:
-            eb[ rbn( ctrlname('tongue.001') ) ].parent = eb[ rbn( mchname('tongue.001') ) ]
-        if ctrlname('tongue.002') in self.abs_name_map and 'tongue.002' in self.abs_name_map:
-            eb[ rbn( ctrlname('tongue.002') ) ].parent = eb[ rbn( mchname('tongue.002') ) ]
-
-        for bone in [ ctrlname('ear.L.002'), ctrlname('ear.L.003'), ctrlname('ear.L.004') ]:
-            if bone in mchts:
-                eb[ rbn( bone )                       ].parent = eb[ rbn( ctrlname('ear.L') ) ]
-                eb[ rbn( bone.replace( '.L', '.R' ) ) ].parent = eb[ rbn( ctrlname('ear.R') ) ]
+        if 'tongue' in self.tail_mid_map:
+            for i in range(self.tail_mid_map['tongue'][2]):
+                b = 'tongue.%03d' % i
+                if ctrlname(b) in self.abs_name_map and b in self.abs_name_map:
+                    eb[ rbn( ctrlname(b) ) ].parent = eb[ rbn( mchname(b) ) ]
+        if 'ear.L' in self.tail_mid_map:
+            for bone in [ctrlname('ear.L.%03d' % i) for i in range(2, self.tail_mid_map['ear.L'][2])]:
+                eb[ rbn( bone )].parent = eb[ rbn( ctrlname('ear.L') ) ]
+        if 'ear.R' in self.tail_mid_map:
+            for bone in [ctrlname('ear.R.%03d' % i) for i in range(2, self.tail_mid_map['ear.R'][2])]:
+                eb[ rbn( bone )].parent = eb[ rbn( ctrlname('ear.R') ) ]
 
         # Parent all rest of mch-target bones to the face as default
         for bone in mchts:
@@ -826,6 +787,10 @@ class Rig:
         elif constraint_type == 'mch_eyes':
 
             const = owner_pb.constraints.new( 'DAMPED_TRACK' )
+            const.target    = self.obj
+            const.subtarget = rbn(subtarget)
+
+            const = owner_pb.constraints.new( 'STRETCH_TO' )
             const.target    = self.obj
             const.subtarget = rbn(subtarget)
 
@@ -917,37 +882,43 @@ class Rig:
 
     def constraints( self, all_bones, mchts ):
         ## Def bone constraints
+        def mid_mch_target(name):
+            return mch_target(self.tail_mid_map[name][1])
+        def tail_mch_target(name):
+            return mch_target(self.tail_mid_map[name][0])
+        tailctrlname = self.tailctrlname
+        midctrlname = self.midctrlname
 
         def_specials = {
-            # 'bone'             : 'target'
-            mch_target('jaw')               : mchname('chin'),
-            mch_target('chin.L')            : ctrlname('lips.L'),
-            mch_target('jaw.L.001')         : ctrlname('chin.L'),
-            mch_target('chin.R')            : ctrlname('lips.R'),
-            mch_target('jaw.R.001')         : ctrlname('chin.R'),
-            mch_target('brow.T.L.003')      : ctrlname('nose'),
-            mch_target('ear.L.003')         : ctrlname('ear.L.004'),
-            mch_target('ear.L.004')         : ctrlname('ear.L'),
-            mch_target('ear.R.003')         : ctrlname('ear.R.004'),
-            mch_target('ear.R.004')         : ctrlname('ear.R'),
-            mch_target('lip.B.L.001')       : ctrlname('lips.L'),
-            mch_target('lip.B.R.001')       : ctrlname('lips.R'),
-            mch_target('cheek.B.L.001')     : ctrlname('brow.T.L'),
-            mch_target('cheek.B.R.001')     : ctrlname('brow.T.R'),
-            mch_target('lip.T.L.001')       : ctrlname('lips.L'),
-            mch_target('lip.T.R.001')       : ctrlname('lips.R'),
-            mch_target('cheek.T.L.001')     : ctrlname('nose.L'),
-            mch_target('nose.L.001')        : ctrlname('nose.002'),
-            mch_target('cheek.T.R.001')     : ctrlname('nose.R'),
-            mch_target('nose.R.001')        : ctrlname('nose.002'),
-            mch_target('temple.L')          : ctrlname('jaw.L'),
-            mch_target('brow.T.R.003')      : ctrlname('nose'),
-            mch_target('temple.R')          : ctrlname('jaw.R')
+            # 'bone'                     : 'target'
+            mch_target('jaw')            : mchname('chin'),
+            mch_target('chin.L')         : ctrlname('lips.L'),
+            tail_mch_target('jaw.L')     : ctrlname('chin.L'),
+            mch_target('chin.R')         : ctrlname('lips.R'),
+            tail_mch_target('jaw.R')     : ctrlname('chin.R'),
+            tail_mch_target('ear.L')     : tailctrlname('ear.L') if self.tail_mid_map['ear.L'][2] > 1 else None,
+            tail_mch_target('ear.L')     : ctrlname('ear.L') if self.tail_mid_map['ear.L'][2] > 2 else None,
+            tail_mch_target('ear.R')     : tailctrlname('ear.R') if self.tail_mid_map['ear.R'][2] > 1 else None,
+            tail_mch_target('ear.R')     : ctrlname('ear.R') if self.tail_mid_map['ear.R'][2] > 2 else None,
+            tail_mch_target('cheek.B.L') : ctrlname('brow.T.L'),
+            tail_mch_target('cheek.B.R') : ctrlname('brow.T.R'),
+            tail_mch_target('cheek.T.L') : ctrlname('nose.L'),
+            tail_mch_target('cheek.T.R') : ctrlname('nose.R'),
+            tail_mch_target('nose.L')    : midctrlname('nose'),
+            tail_mch_target('nose.R')    : midctrlname('nose'),
+            mch_target('temple.L')       : ctrlname('jaw.L'),
+            mch_target('temple.R')       : ctrlname('jaw.R'),
+            tail_mch_target('brow.T.L')  : ctrlname('nose'),
+            tail_mch_target('brow.T.R')  : ctrlname('nose'),
+            tail_mch_target('lip.B.L')   : ctrlname('lips.L'),
+            tail_mch_target('lip.B.R')   : ctrlname('lips.R'),
+            tail_mch_target('lip.T.L')   : ctrlname('lips.L'),
+            tail_mch_target('lip.T.R')   : ctrlname('lips.R'),
         }
 
         pattern = re.compile(r'^'+mch_target(r'(\w+\.?\w?\.?\w?)(\.?)(\d*?)(\d?)$'))
 
-        for bone in [ bone for bone in mchts if 'lid' not in bone ]:
+        for bone in [ bone for bone in mchts if 'lid.' not in bone ]:
             if bone in def_specials.keys():
                 self.make_constraits('def_tweak', bone, def_specials[bone] )
             else:
@@ -990,7 +961,7 @@ class Rig:
 
         for bone in [ mchname('eye.L.001'), mchname('eye.R.001') ]:
             target = bone[:-4] # remove number from the end of the name
-            self.make_constraits('mch_eyes_lids_follow', bone, target )
+            self.make_constraits('mch_eyes_lids_follow', bone, target ) 
 
         # mch eyes parent constraints
         self.make_constraits('mch_eyes_parent', mchname('eyes_parent'), 'face' )
@@ -1012,65 +983,70 @@ class Rig:
         ## Tweak bones constraints
 
         # copy location constraints for tweak bones of both sides
-        tweak_copyloc_L = {
-            ctrlname('brow.T.L.002')  : [ [ ctrlname('brow.T.L.001'), ctrlname('brow.T.L.003') ], [ 0.5, 0.5  ] ],
-            ctrlname('ear.L.003')     : [ [ ctrlname('ear.L.004'), ctrlname('ear.L.002')       ], [ 0.5, 0.5  ] ],
-            ctrlname('brow.B.L.001')  : [ [ ctrlname('brow.B.L.002')                           ], [ 0.6       ] ],
-            ctrlname('brow.B.L.002')  : [ [ ctrlname('lid.T.L.001'),                           ], [ 0.25      ] ],
-            ctrlname('brow.B.L.002')  : [ [ ctrlname('brow.T.L.002'),                          ], [ 0.25      ] ],
-            ctrlname('lid.T.L.001')   : [ [ ctrlname('lid.T.L.002')                            ], [ 0.6       ] ],
-            ctrlname('lid.T.L.003')   : [ [ ctrlname('lid.T.L.002'),                           ], [ 0.6       ] ],
-            ctrlname('lid.T.L.002')   : [ [ mchname('eye.L.001'),                              ], [ 0.5       ] ],
-            ctrlname('lid.B.L.001')   : [ [ ctrlname('lid.B.L.002'),                           ], [ 0.6       ] ],
-            ctrlname('lid.B.L.003')   : [ [ ctrlname('lid.B.L.002'),                           ], [ 0.6       ] ],
-            ctrlname('lid.B.L.002')   : [ [ mchname('eye.L.001'), ctrlname('cheek.T.L.001')    ], [ 0.5, 0.1  ] ],
-            ctrlname('cheek.T.L.001') : [ [ ctrlname('cheek.B.L.001'),                         ], [ 0.5       ] ],
-            ctrlname('nose.L')        : [ [ ctrlname('nose.L.001'),                            ], [ 0.25      ] ],
-            ctrlname('nose.L.001')    : [ [ ctrlname('lip.T.L.001'),                           ], [ 0.2       ] ],
-            ctrlname('cheek.B.L.001') : [ [ ctrlname('lips.L'),                                ], [ 0.5       ] ],
-            ctrlname('lip.T.L.001')   : [ [ ctrlname('lips.L'), ctrlname('lip.T')              ], [ 0.25, 0.5 ] ],
-            ctrlname('lip.B.L.001')   : [ [ ctrlname('lips.L'), ctrlname('lip.B')              ], [ 0.25, 0.5 ] ]
+        tweak_copyloc = {
+            midctrlname('brow.B.L')   : [ [ midctrlname('brow.T.L'),                       ], [ 0.25      ] ],
+            midctrlname('brow.B.R')   : [ [ midctrlname('brow.T.R'),                       ], [ 0.25      ] ],
+            midctrlname('lid.T.L')    : [ [ mchname('eye.L.001'),                          ], [ 0.5       ] ],
+            midctrlname('lid.T.R')    : [ [ mchname('eye.R.001'),                          ], [ 0.5       ] ],
+            midctrlname('lid.B.L')    : [ [ mchname('eye.L.001'), midctrlname('cheek.T.L') ], [ 0.5, 0.1  ] ],
+            midctrlname('lid.B.R')    : [ [ mchname('eye.R.001'), midctrlname('cheek.T.R') ], [ 0.5, 0.1  ] ],
+            midctrlname('cheek.T.L')  : [ [ midctrlname('cheek.B.L'),                      ], [ 0.5       ] ],
+            midctrlname('cheek.T.R')  : [ [ midctrlname('cheek.B.R'),                      ], [ 0.5       ] ],
+            tailctrlname('nose.L')    : [ [ tailctrlname('lip.T.L'),                       ], [ 0.2       ] ],
+            tailctrlname('nose.R')    : [ [ tailctrlname('lip.T.R'),                       ], [ 0.2       ] ],
+            tailctrlname('cheek.B.L') : [ [ ctrlname('lips.L'),                            ], [ 0.5       ] ],
+            tailctrlname('cheek.B.R') : [ [ ctrlname('lips.R'),                            ], [ 0.5       ] ],
+            midctrlname('lip.T.L')    : [ [ ctrlname('lips.L'), ctrlname('lip.T')          ], [ 0.25, 0.5 ] ],
+            midctrlname('lip.T.R')    : [ [ ctrlname('lips.R'), ctrlname('lip.T')          ], [ 0.25, 0.5 ] ],
+            midctrlname('lip.B.L')    : [ [ ctrlname('lips.L'), ctrlname('lip.B')          ], [ 0.25, 0.5 ] ],
+            midctrlname('lip.B.R')    : [ [ ctrlname('lips.R'), ctrlname('lip.B')          ], [ 0.25, 0.5 ] ],
         }
+        # top to tail
+        for name in ('nose.L', 'nose.R'):
+            if name in self.tail_mid_map and self.tail_mid_map[name][2] > 1:
+                l = self.tail_mid_map[name][2]
+                for i in range(1, l):
+                    tweak_copyloc[ ctrlname(name + '.%03d' % i) ] = [ [ ctrlname(name) ], [ 0.25 / i ] ]
+        # mid to other
+        for name in (
+            'brow.T.L', 'brow.T.R', 'brow.B.L', 'brow.B.R',
+            'lid.T.L', 'lid.T.R', 'lid.B.L', 'lid.B.R',
+            'lip.T.L', 'lip.T.R', 'lip.B.L', 'lip.B.R',
+            'ear.L', 'ear.R'
+        ):
+            if name in self.tail_mid_map and self.tail_mid_map[name][2] > 2:
+                l = self.tail_mid_map[name][2]
+                for i in filter(lambda x: x != int(l / 2), range(1, l)):
+                    tweak_copyloc[ ctrlname(name + '.%03d' % i) ] = [ [ midctrlname(name) ], [ (l / 2 - i) / (l / 2) if i < l / 2 else (l - i) / (l - l / 2) ] ]
 
-        for owner in list( tweak_copyloc_L.keys() ):
-
-            targets, influences = tweak_copyloc_L[owner]
-            for target, influence in zip( targets, influences ):
-
-                # Left side constraints
-                self.make_constraits( 'tweak_copyloc', owner, target, influence )
-
-                # create constraints for the right side too
-                ownerR  = owner.replace(  '.L', '.R' )
-                targetR = target.replace( '.L', '.R' )
-                self.make_constraits( 'tweak_copyloc', ownerR, targetR, influence )
+        for k, v in tweak_copyloc.items():
+            if k:
+                for target, influence in zip( v[0], v[1] ):
+                    if target:
+                        self.make_constraits( 'tweak_copyloc', k, target, influence )
 
         # copy rotation & scale constraints for tweak bones of both sides
-        tweak_copy_rot_scl_L = {
-            ctrlname('lip.T.L.001'): ctrlname('lip.T'),
-            ctrlname('lip.B.L.001'): ctrlname('lip.B')
+        tweak_copy_rot_scl = {
+            midctrlname('lip.T.L'): ctrlname('lip.T'),
+            midctrlname('lip.T.R'): ctrlname('lip.T'),
+            midctrlname('lip.B.L'): ctrlname('lip.B'),
+            midctrlname('lip.B.R'): ctrlname('lip.B'),
         }
 
-        for owner in list( tweak_copy_rot_scl_L.keys() ):
-            target    = tweak_copy_rot_scl_L[owner]
-            influence = tweak_copy_rot_scl_L[owner]
-            self.make_constraits( 'tweak_copy_rot_scl', owner, target )
-
-            # create constraints for the right side too
-            owner = owner.replace( '.L', '.R' )
-            self.make_constraits( 'tweak_copy_rot_scl', owner, target )
+        for k, v in tweak_copy_rot_scl.items():
+            self.make_constraits( 'tweak_copy_rot_scl', k, v )
 
         # inverted tweak bones constraints
-        tweak_nose = {
-            ctrlname('nose.001'): [ ctrlname('nose.002'), 0.35 ],
-            ctrlname('nose.003'): [ ctrlname('nose.002'), 0.5  ],
-        }
+        tweak_nose = [
+            [ ctrlname('nose.001'),     ctrlname('nose.002'), 0.35 ],
+            [ ctrlname('nose.003'),     ctrlname('nose.002'), 0.5  ],
+            [ tailctrlname('nose'),     ctrlname('lip.T'),    0.5  ],
+            [ tailctrlname('chin.002'), ctrlname('lip.B'),    0.5  ],
+        ]
 
-        for owner in list( tweak_nose.keys() ):
-            target    = tweak_nose[owner][0]
-            influence = tweak_nose[owner][1]
+        for owner, target, influence in tweak_nose:
             self.make_constraits( 'tweak_copyloc_inv', owner, target, influence )
-
+        
         # MCH tongue constraints
         if 'tongue' in all_bones['mch']:
             divider = len( all_bones['mch']['tongue'] ) + 1
@@ -2504,4 +2480,3 @@ def create_square_widget(rig, bone_name, size=1.0, bone_transform_name=None):
         return obj
     else:
         return None
-
