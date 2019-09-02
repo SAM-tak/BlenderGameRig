@@ -570,7 +570,7 @@ def report_exception(operator, exception):
 
     message.reverse()  # XXX - stupid! menu's are upside down!
 
-    operator.report({'INFO'}, '\n'.join(message))
+    operator.report({'ERROR'}, '\n'.join(message))
 
 
 class InitLayerOperator(bpy.types.Operator):
@@ -632,8 +632,8 @@ class GenerateOperator(bpy.types.Operator):
             report_exception(self, rig_exception)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
-
-        return {'FINISHED'}
+        
+        return { 'FINISHED' }
 
 
 class ToggleArmatureReferenceOperator(bpy.types.Operator):

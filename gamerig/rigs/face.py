@@ -62,6 +62,10 @@ class Rig:
         self.add_chained_to_abs_name_map(root,                 'tongue')
 
         self.org_bones   = list(self.abs_name_map.keys())
+
+        if len(self.org_bones) < 2:
+            raise MetarigError("GAMERIG ERROR: Bone '%s': Face rig has no valid child bones. face rig require specific name for child bones." % bone_name)
+
         self.face_length = obj.data.edit_bones[ bone_name ].length
         self.params      = params
 
@@ -344,11 +348,11 @@ class Rig:
                 if bone in primary_tweaks:
                     if self.primary_layers:
                         pb[rbn(bone)].bone.layers = self.primary_layers
-                    create_face_widget( self.obj, rbn(bone), size = 0.5 )
+                    create_face_widget( self.obj, rbn(bone), size = 0.8 )
                 else:
                     if self.secondary_layers:
                         pb[rbn(bone)].bone.layers = self.secondary_layers
-                    create_face_widget( self.obj, rbn(bone), size = 0.3 )
+                    create_face_widget( self.obj, rbn(bone), size = 0.5 )
 
         return { 'all' : tweaks }
 

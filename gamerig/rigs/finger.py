@@ -1,4 +1,5 @@
 import bpy
+import re
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
@@ -33,7 +34,7 @@ class Rig:
         # Create ctrl master bone
         org_name  = self.org_bones[0]
 
-        master_name = copy_bone( self.obj, org_name, ctrlname(insert_before_first_period(org_name, '_master')) )
+        master_name = copy_bone( self.obj, org_name, ctrlname(insert_before_first_period(re.sub(r'^(\w+)\.\d+\.(.+)$', r'\1.\2', org_name), '_master')) )
         ctrl_bone_master = eb[ master_name ]
 
         ## Parenting bug fix ??

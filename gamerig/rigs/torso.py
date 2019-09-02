@@ -170,8 +170,7 @@ class Rig:
 
         # Tweak bones
         for b in neck_bones[:-1]: # All except last bone
-            twk_name = "tweak_" + b
-            twk_name = copy_bone( self.obj, b, twk_name )
+            twk_name = copy_bone( self.obj, b, ctrlname("tweak_" + b) )
 
             eb[twk_name].length /= 2
 
@@ -210,8 +209,7 @@ class Rig:
             mch_name = copy_bone(self.obj, b, mchname(b))
             self.orient_bone(eb[mch_name], 'y', self.spine_length / 10)
 
-            twk_name = "tweak_" + b
-            twk_name = copy_bone(self.obj, b, ctrlname(twk_name))
+            twk_name = copy_bone(self.obj, b, ctrlname("tweak_" + b))
             eb[twk_name].length /= 2
 
             mch.append( mch_name )
@@ -244,8 +242,7 @@ class Rig:
             mch_name = copy_bone(self.obj, b, mchname(b))
             self.orient_bone(eb[mch_name], 'y', self.spine_length / 10, reverse = True)
 
-            twk_name = "tweak_" + b
-            twk_name = copy_bone(self.obj, b, twk_name)
+            twk_name = copy_bone(self.obj, b, ctrlname("tweak_" + b))
 
             eb[twk_name].length /= 2
 
