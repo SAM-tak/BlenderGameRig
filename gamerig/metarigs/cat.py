@@ -51,15 +51,15 @@ def create(obj):
     arm.gamerig.layers[0].name = "Face"
     arm.gamerig.layers[0].row = 1
     arm.gamerig.layers[0].selset = False
-    arm.gamerig.layers[0].group = 5
+    arm.gamerig.layers[0].group = 3
     arm.gamerig.layers[1].name = "Face (Primary)"
     arm.gamerig.layers[1].row = 2
     arm.gamerig.layers[1].selset = False
-    arm.gamerig.layers[1].group = 2
+    arm.gamerig.layers[1].group = 6
     arm.gamerig.layers[2].name = "Face (Secondary)"
     arm.gamerig.layers[2].row = 2
     arm.gamerig.layers[2].selset = False
-    arm.gamerig.layers[2].group = 3
+    arm.gamerig.layers[2].group = 4
     arm.gamerig.layers[3].name = "Torso"
     arm.gamerig.layers[3].row = 3
     arm.gamerig.layers[3].selset = False
@@ -467,7 +467,7 @@ def create(obj):
     bone.parent = arm.edit_bones[bones['head']]
     bones['lip.B.L'] = bone.name
     bone = arm.edit_bones.new('jaw')
-    bone.head[:] = 0.0000, -0.2126, 0.2262
+    bone.head[:] = -0.0000, -0.2279, 0.2027
     bone.tail[:] = 0.0000, -0.2524, 0.1977
     bone.roll = 0.0000
     bone.use_connect = False

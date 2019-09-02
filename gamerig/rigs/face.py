@@ -377,7 +377,7 @@ class Rig:
 
         tweak_exceptions = [ bone for bone in org_bones if 'temple' in bone ]
 
-        tweak_tail =  [ self.tail_mid_map[i][0] for i in ('brow.B.L', 'brow.B.R', 'nose', 'chin', 'lip.T.L', 'lip.T.R', 'tongue')]
+        tweak_tail =  [ self.tail_mid_map[i][0] for i in ('brow.B.L', 'brow.B.R', 'nose', 'chin', 'lip.T.L', 'lip.T.R', 'tongue') if i in self.tail_mid_map ]
 
         tweak_exceptions += [ 'lip.T.R', 'lip.B.R', 'ear.L.001', 'ear.R.001' ]
         tweak_exceptions += list(tweak_unique.keys())
@@ -663,6 +663,7 @@ class Rig:
         def interctrlnames(name):
             if name in self.tail_mid_map:
                 return [ctrlname(name + '.%03d' % i) for i in range(1, self.tail_mid_map[name][2])]
+            return []
 
         midctrlname = self.midctrlname
         tailctrlname = self.tailctrlname
@@ -883,9 +884,11 @@ class Rig:
     def constraints( self, all_bones, mchts ):
         ## Def bone constraints
         def mid_mch_target(name):
-            return mch_target(self.tail_mid_map[name][1])
+            if name in self.tail_mid_map:
+                return mch_target(self.tail_mid_map[name][1])
         def tail_mch_target(name):
-            return mch_target(self.tail_mid_map[name][0])
+            if name in self.tail_mid_map:
+                return mch_target(self.tail_mid_map[name][0])
         tailctrlname = self.tailctrlname
         midctrlname = self.midctrlname
 
@@ -896,10 +899,10 @@ class Rig:
             tail_mch_target('jaw.L')     : ctrlname('chin.L'),
             mch_target('chin.R')         : ctrlname('lips.R'),
             tail_mch_target('jaw.R')     : ctrlname('chin.R'),
-            tail_mch_target('ear.L')     : tailctrlname('ear.L') if self.tail_mid_map['ear.L'][2] > 1 else None,
-            tail_mch_target('ear.L')     : ctrlname('ear.L') if self.tail_mid_map['ear.L'][2] > 2 else None,
-            tail_mch_target('ear.R')     : tailctrlname('ear.R') if self.tail_mid_map['ear.R'][2] > 1 else None,
-            tail_mch_target('ear.R')     : ctrlname('ear.R') if self.tail_mid_map['ear.R'][2] > 2 else None,
+            tail_mch_target('ear.L')     : tailctrlname('ear.L') if 'ear.L' in self.tail_mid_map and self.tail_mid_map['ear.L'][2] > 1 else None,
+            tail_mch_target('ear.L')     : ctrlname('ear.L') if 'ear.L' in self.tail_mid_map and self.tail_mid_map['ear.L'][2] > 2 else None,
+            tail_mch_target('ear.R')     : tailctrlname('ear.R') if 'ear.R' in self.tail_mid_map and self.tail_mid_map['ear.R'][2] > 1 else None,
+            tail_mch_target('ear.R')     : ctrlname('ear.R') if 'ear.R' in self.tail_mid_map and self.tail_mid_map['ear.R'][2] > 2 else None,
             tail_mch_target('cheek.B.L') : ctrlname('brow.T.L'),
             tail_mch_target('cheek.B.R') : ctrlname('brow.T.R'),
             tail_mch_target('cheek.T.L') : ctrlname('nose.L'),
