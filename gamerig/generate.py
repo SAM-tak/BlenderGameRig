@@ -25,7 +25,7 @@ import traceback
 import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
-    rig_module_name, get_rig_type, create_widget, assign_and_unlink_all_widgets,
+    rig_module_name, get_rig_type, create_widget, assign_all_widgets,
     is_org, is_mch, is_jig, get_wgt_name, random_id,
     copy_attributes, gamma_correct, get_rig_name,
     MetarigError
@@ -53,9 +53,6 @@ def generate_rig(context, metarig):
     """ Generates a rig from a metarig.
     """
     t = Timer()
-
-    # clear created widget list
-    create_widget.created_widgets = None
 
     # Find overwrite target rig if exists
     rig_name = get_rig_name(metarig)
@@ -345,7 +342,7 @@ def generate_rig(context, metarig):
             obj.data.bones[bone].layers = MCH_LAYER
 
     # Assign shapes to bones
-    assign_and_unlink_all_widgets(collection, obj)
+    assign_all_widgets(obj)
     # Reveal all the layers with control bones on them
     vis_layers = [False for n in range(0, 32)]
     for bone in bones:

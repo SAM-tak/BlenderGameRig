@@ -340,13 +340,11 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         bone_transform_name = bone_name
 
     obj_name = get_wgt_name(rig.name, bone_name)
-    view_layer = bpy.context.view_layer
-    collection = bpy.context.collection
 
     # Check if it already exists in the scene
-    if obj_name in view_layer.objects:
+    if obj_name in bpy.context.view_layer.objects:
         # Move object to bone position, in case it changed
-        obj = view_layer.objects[obj_name]
+        obj = bpy.context.view_layer.objects[obj_name]
         obj_to_bone(obj, rig, bone_transform_name)
 
         return None
@@ -361,7 +359,12 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         # Create mesh object
         mesh = bpy.data.meshes.new(obj_name)
         obj = bpy.data.objects.new(obj_name, mesh)
-        collection.objects.link(obj)
+        widget_collection_name = rig.name + ' widgets'
+        if not widget_collection_name in bpy.data.collections:
+            bpy.data.collections.new(widget_collection_name)
+        if not widget_collection_name in bpy.context.scene.collection.children:
+            bpy.context.scene.collection.children.link(bpy.data.collections[widget_collection_name])
+        bpy.data.collections[widget_collection_name].objects.link(obj)
         if not hasattr(create_widget, 'created_widgets') or create_widget.created_widgets is None:
             create_widget.created_widgets = []
         create_widget.created_widgets.append((obj, bone_name))
@@ -372,13 +375,12 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         return obj
 
 
-def assign_and_unlink_all_widgets(collection, armature):
+def assign_all_widgets(armature):
     """ Unlink all created widget objects from current scene for cleanup.
     """
     if hasattr(create_widget, 'created_widgets') and create_widget.created_widgets is not None:
         for obj, bone_name in create_widget.created_widgets:
             armature.pose.bones[bone_name].custom_shape = obj
-            collection.objects.unlink(obj)
         create_widget.created_widgets = None
 
 
