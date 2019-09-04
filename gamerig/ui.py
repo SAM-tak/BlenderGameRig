@@ -158,6 +158,7 @@ class ArmaturePanel(bpy.types.Panel):
                     row = row.split()
                     row.operator(ToggleArmatureReferenceOperator.bl_idname, text="Toggle armature metarig/generated", icon='ARROW_LEFTRIGHT')
             else:
+                rig_name = unique_name(bpy.data.objects.keys(), rig_name)
                 layout.row().box().label(text="Create new armature '%s'" % rig_name, icon='INFO')
                 layout.row().operator(GenerateOperator.bl_idname, text="Generate New Rig", icon='POSE_HLT')
 
