@@ -28,38 +28,38 @@ class Rig:
         self.tail_mid_map = {}
 
         root = self.obj.data.bones[bone_name]
-        self.add_chained_to_abs_name_map(root,                 'nose')
-        self.add_chained_to_abs_name_map(root,                 'lip.T.L')
-        self.add_chained_to_abs_name_map(root,                 'lip.T.R')
-        self.add_chained_to_abs_name_map(root,                 'lip.B.L')
-        self.add_chained_to_abs_name_map(root,                 'lip.B.R')
-        c = self.add_chained_to_abs_name_map(root,             'jaw')
-        self.add_chained_to_abs_name_map(c if c else root,     'chin')
-        self.add_chained_to_abs_name_map(root,                 'ear.L')
-        self.add_chained_to_abs_name_map(root,                 'ear.R')
-        c = self.add_chained_to_abs_name_map(root,             'lid.T.L')
-        self.add_chained_to_abs_name_map(c if c else root,     'lid.B.L')
-        c = self.add_chained_to_abs_name_map(root,             'lid.T.R')
-        self.add_chained_to_abs_name_map(c if c else root,     'lid.B.R')
-        self.add_chained_to_abs_name_map(root,                 'brow.B.L')
-        self.add_chained_to_abs_name_map(root,                 'brow.B.R')
-        c = self.add_chained_to_abs_name_map(root,             'temple.L')
-        c = self.add_chained_to_abs_name_map(c if c else root, 'jaw.L')
-        c = self.add_chained_to_abs_name_map(c if c else root, 'chin.L')
-        c = self.add_chained_to_abs_name_map(c if c else root, 'cheek.B.L')
-        self.add_chained_to_abs_name_map(c if c else root,     'brow.T.L')
-        c = self.add_chained_to_abs_name_map(root,             'temple.R')
-        c = self.add_chained_to_abs_name_map(c if c else root, 'jaw.R')
-        c = self.add_chained_to_abs_name_map(c if c else root, 'chin.R')
-        c = self.add_chained_to_abs_name_map(c if c else root, 'cheek.B.R')
-        self.add_chained_to_abs_name_map(c if c else root,     'brow.T.R')
-        self.add_chained_to_abs_name_map(root,                 'eye.L')
-        self.add_chained_to_abs_name_map(root,                 'eye.R')
-        c = self.add_chained_to_abs_name_map(root,             'cheek.T.L')
-        self.add_chained_to_abs_name_map(c if c else root,     'nose.L')
-        c = self.add_chained_to_abs_name_map(root,             'cheek.T.R')
-        self.add_chained_to_abs_name_map(c if c else root,     'nose.R')
-        self.add_chained_to_abs_name_map(root,                 'tongue')
+        self.add_chain_to_abs_name_map(root,                 'nose')
+        self.add_chain_to_abs_name_map(root,                 'lip.T.L')
+        self.add_chain_to_abs_name_map(root,                 'lip.T.R')
+        self.add_chain_to_abs_name_map(root,                 'lip.B.L')
+        self.add_chain_to_abs_name_map(root,                 'lip.B.R')
+        c = self.add_chain_to_abs_name_map(root,             'jaw')
+        self.add_chain_to_abs_name_map(c if c else root,     'chin')
+        self.add_chain_to_abs_name_map(root,                 'ear.L')
+        self.add_chain_to_abs_name_map(root,                 'ear.R')
+        c = self.add_chain_to_abs_name_map(root,             'lid.T.L')
+        self.add_chain_to_abs_name_map(c if c else root,     'lid.B.L')
+        c = self.add_chain_to_abs_name_map(root,             'lid.T.R')
+        self.add_chain_to_abs_name_map(c if c else root,     'lid.B.R')
+        self.add_chain_to_abs_name_map(root,                 'brow.B.L')
+        self.add_chain_to_abs_name_map(root,                 'brow.B.R')
+        c = self.add_chain_to_abs_name_map(root,             'temple.L')
+        c = self.add_chain_to_abs_name_map(c if c else root, 'jaw.L')
+        c = self.add_chain_to_abs_name_map(c if c else root, 'chin.L')
+        c = self.add_chain_to_abs_name_map(c if c else root, 'cheek.B.L')
+        self.add_chain_to_abs_name_map(c if c else root,     'brow.T.L')
+        c = self.add_chain_to_abs_name_map(root,             'temple.R')
+        c = self.add_chain_to_abs_name_map(c if c else root, 'jaw.R')
+        c = self.add_chain_to_abs_name_map(c if c else root, 'chin.R')
+        c = self.add_chain_to_abs_name_map(c if c else root, 'cheek.B.R')
+        self.add_chain_to_abs_name_map(c if c else root,     'brow.T.R')
+        self.add_chain_to_abs_name_map(root,                 'eye.L')
+        self.add_chain_to_abs_name_map(root,                 'eye.R')
+        c = self.add_chain_to_abs_name_map(root,             'cheek.T.L')
+        self.add_chain_to_abs_name_map(c if c else root,     'nose.L')
+        c = self.add_chain_to_abs_name_map(root,             'cheek.T.R')
+        self.add_chain_to_abs_name_map(c if c else root,     'nose.R')
+        self.add_chain_to_abs_name_map(root,                 'tongue')
 
         self.org_bones   = list(self.abs_name_map.keys())
 
@@ -79,28 +79,23 @@ class Rig:
         else:
             self.secondary_layers = None
 
-
-    @staticmethod
-    def find_child_by_prefix(bone, prefix):
-        return next((b for b in bone.children if b.name.startswith(prefix)), None)
-
-    def add_chained_to_abs_name_map(self, root, name, depth=0):
-        child = self.find_child_by_prefix(root, name)
+    def add_chain_to_abs_name_map(self, root, name, depth=0):
+        child = next((b for b in root.children if b.name.startswith(name)), None)
         if child:
             if depth == 0:
                 self.abs_name_map[name] = child.name
             else:
                 self.abs_name_map[name + '.%03d' % depth] = child.name
-            return self.add_chained_to_abs_name_map(child, name, depth + 1)
+            return self.add_chain_to_abs_name_map(child, name, depth + 1)
         elif depth > 0:
             self.tail_mid_map[name] = [name + '.%03d' % (depth - 1) if depth > 1 else name, name + '.%03d' % (depth / 2) if depth > 1 else name, depth]
         return root
 
     number_suffix_patter = re.compile(r'.+\.(\d\d\d)$')
 
-    @staticmethod
-    def get_number_suffix(bonename):
-        match = Rig.number_suffix_patter.match(bonename)
+    @classmethod
+    def get_number_suffix(cls, bonename):
+        match = cls.number_suffix_patter.match(bonename)
         return int(match.group(1)) if match else None
     
     def make_unique_basebonename(self, bonename):
@@ -116,12 +111,12 @@ class Rig:
         self.abs_name_map[assign_name] = ret
         return assign_name
 
-    def rbn(self, bonebasename):
+    def rbn(self, absname):
         """ return real bone name
         """
-        # if bonebasename not in self.abs_name_map:
-        #     raise MetarigError("gamerig.face.rbn(): bone base name '%s' not found" % bonebasename)
-        return self.abs_name_map[bonebasename]
+        # if absname not in self.abs_name_map:
+        #     raise MetarigError("gamerig.face.rbn(): bone base name '%s' not found" % absname)
+        return self.abs_name_map[absname]
 
     def midctrlname(self, name):
         return ctrlname(self.tail_mid_map[name][1]) if name in self.abs_name_map else None
@@ -789,13 +784,19 @@ class Rig:
             const.subtarget = rbn(subtarget)
             const.head_tail = 1.0
 
-        elif constraint_type == 'mch_eyes':
+        elif constraint_type == 'mch_lids':
 
             const = owner_pb.constraints.new( 'DAMPED_TRACK' )
             const.target    = self.obj
             const.subtarget = rbn(subtarget)
 
             const = owner_pb.constraints.new( 'STRETCH_TO' )
+            const.target    = self.obj
+            const.subtarget = rbn(subtarget)
+        
+        elif constraint_type == 'mch_eyes':
+
+            const = owner_pb.constraints.new( 'DAMPED_TRACK' )
             const.target    = self.obj
             const.subtarget = rbn(subtarget)
 
@@ -959,7 +960,7 @@ class Rig:
         # mch lids constraints
         for bone in all_bones['mch']['lids']:
             tweak = ctrlname(basename(bone))
-            self.make_constraits('mch_eyes', bone, tweak )
+            self.make_constraits('mch_lids', bone, tweak )
 
         # mch eyes constraints
         for bone in [ mchname('eye.L'), mchname('eye.R') ]:
@@ -1071,7 +1072,7 @@ class Rig:
         if 'chin_parent' in all_bones['mch']:
             self.make_constraits('mch_chin_parent', mchname('chin_parent'), mchname('jaw_master') )
 
-        # org bones constraints
+        # orginal bones constraints
         for bone in self.org_bones:
             self.make_constraits( 'mch_target', bone, mch_target( bone ) )
 
