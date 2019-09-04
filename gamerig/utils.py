@@ -341,11 +341,26 @@ def create_widget(rig, bone_name, bone_transform_name=None):
 
     obj_name = get_wgt_name(rig.name, bone_name)
 
-    # Check if it already exists in the scene
-    if obj_name in bpy.context.view_layer.objects:
+    widget_collection_name = rig.name + ' widgets'
+
+    if widget_collection_name in bpy.data.collections:
+        collection = bpy.data.collections[widget_collection_name]
+    else:
+        collection = bpy.data.collections.new(widget_collection_name)
+    
+    if not widget_collection_name in bpy.context.scene.collection.children:
+        bpy.context.scene.collection.children.link(collection)
+        collection.hide_viewport = True
+
+    if not create_widget.created_widgets:
+        create_widget.created_widgets = {}
+
+    # Check if it already exists in the collection
+    if obj_name in collection.objects:
         # Move object to bone position, in case it changed
-        obj = bpy.context.view_layer.objects[obj_name]
+        obj = collection.objects[obj_name]
         obj_to_bone(obj, rig, bone_transform_name)
+        create_widget.created_widgets[bone_name] = obj
 
         return None
     else:
@@ -353,33 +368,28 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         # This is necessary so we can then create the object without
         # name conflicts.
         if obj_name in bpy.data.objects:
-            bpy.data.objects[obj_name].user_clear()
-            bpy.data.objects.remove(bpy.data.objects[obj_name])
+            obj = bpy.data.objects[obj_name]
+            obj.user_clear()
+            bpy.data.objects.remove(obj)
 
         # Create mesh object
         mesh = bpy.data.meshes.new(obj_name)
         obj = bpy.data.objects.new(obj_name, mesh)
-        widget_collection_name = rig.name + ' widgets'
-        if not widget_collection_name in bpy.data.collections:
-            bpy.data.collections.new(widget_collection_name)
-        if not widget_collection_name in bpy.context.scene.collection.children:
-            bpy.context.scene.collection.children.link(bpy.data.collections[widget_collection_name])
-        bpy.data.collections[widget_collection_name].objects.link(obj)
-        if not hasattr(create_widget, 'created_widgets') or create_widget.created_widgets is None:
-            create_widget.created_widgets = []
-        create_widget.created_widgets.append((obj, bone_name))
+        collection.objects.link(obj)
 
-        # Move object to bone position and set layers
-        obj_to_bone(obj, rig, bone_transform_name)
+    # Move object to bone position and set layers
+    obj_to_bone(obj, rig, bone_transform_name)
 
-        return obj
+    create_widget.created_widgets[bone_name] = obj
+
+    return obj
 
 
 def assign_all_widgets(armature):
     """ Unlink all created widget objects from current scene for cleanup.
     """
-    if hasattr(create_widget, 'created_widgets') and create_widget.created_widgets is not None:
-        for obj, bone_name in create_widget.created_widgets:
+    if create_widget.created_widgets:
+        for bone_name, obj in create_widget.created_widgets.items():
             armature.pose.bones[bone_name].custom_shape = obj
         create_widget.created_widgets = None
 

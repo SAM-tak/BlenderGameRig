@@ -54,6 +54,9 @@ def generate_rig(context, metarig):
     """
     t = Timer()
 
+    # clear created widget list
+    create_widget.created_widgets = None
+
     # Find overwrite target rig if exists
     rig_name = get_rig_name(metarig)
 
