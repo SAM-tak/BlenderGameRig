@@ -189,7 +189,7 @@ if is_selected( fk_ctrl ):
 
         bones = self.bones
         
-        ctrl = bones['ik']['ctrl']['terminal'][0]
+        ctrl = bones['ik']['ctrl']['terminal'][-1]
 
         roll1_mch = bones['ik']['roll1_mch']
         roll2_mch = bones['ik']['roll2_mch']

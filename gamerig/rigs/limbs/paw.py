@@ -115,8 +115,6 @@ if is_selected( fk_ctrl ):
         # add IK Follow feature
         mch_ik_socket = self.make_ik_follow_bone( eb, ctrl )
 
-        bones['ik']['roll1_mch'] = roll1_mch
-        bones['ik']['roll2_mch'] = roll2_mch
         bones['ik']['heel'] = heel
         bones['ik']['mch_ik_socket'] = mch_ik_socket
 
@@ -128,6 +126,8 @@ if is_selected( fk_ctrl ):
             eb[ toes_mch ].use_connect = False
             eb[ toes_mch ].parent      = eb[ ctrl ]
 
+            bones['ik']['toes_mch'] = toes_mch
+
         bones['ik']['ctrl']['terminal'] += [ heel, toes_mch, ctrl ]
 
         return bones
@@ -138,12 +138,13 @@ if is_selected( fk_ctrl ):
 
         bones = self.bones
 
-        ctrl = bones['ik']['ctrl']['terminal'][0]
+        ctrl = bones['ik']['ctrl']['terminal'][-1]
 
-        roll1_mch = bones['ik']['roll1_mch']
-        roll2_mch = bones['ik']['roll2_mch']
         heel = bones['ik']['heel']
         mch_ik_socket = bones['ik']['mch_ik_socket']
+        toes_mch = bones['ik']['toes_mch']
+
+        org_bones = self.org_bones
 
         # Set up constraints
         # Constrain mch target bone to the ik control and mch stretch
@@ -181,9 +182,6 @@ if is_selected( fk_ctrl ):
 
         # Add ballsocket widget to heel
         create_ballsocket_widget(self.obj, heel)
-
-        bpy.ops.object.mode_set(mode='EDIT')
-        eb = self.obj.data.edit_bones
 
         if len( org_bones ) >= 4:
             # Constrain toe bone to toes_mch
