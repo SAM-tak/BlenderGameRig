@@ -25,10 +25,10 @@ from .limb import *
 
 class Rig(Limb):
 
-    def __init__(self, obj, bone_name, params):
-        super().__init__(obj, bone_name, params)
-        self.footprint_bone = params.footprint_bone
-        self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:4]
+    def __init__(self, obj, bone_name, metabone):
+        super().__init__(obj, bone_name, metabone)
+        self.footprint_bone = self.params.footprint_bone
+        self.org_bones = ([bone_name] + connected_children_names(obj, bone_name))[:4]
 
 
     def generate(self, context):
@@ -69,11 +69,10 @@ if is_selected( fk_ctrl ):
 
 
     def create_leg( self, bones ):
-        org_bones = list([self.org_bones[0]] + connected_children_names(self.obj, self.org_bones[0]))
+        org_bones = self.org_bones
 
         bones['ik']['ctrl']['terminal'] = []
 
-        bpy.ops.object.mode_set(mode='EDIT')
         eb = self.obj.data.edit_bones
 
         # Create IK leg control
@@ -157,8 +156,49 @@ if is_selected( fk_ctrl ):
         eb[ rock1_mch ].parent = eb[ rock2_mch ]
         eb[ rock2_mch ].parent = eb[ ctrl ]
 
+        bones['ik']['roll1_mch'] = roll1_mch
+        bones['ik']['roll2_mch'] = roll2_mch
+        bones['ik']['rock1_mch'] = rock1_mch
+        bones['ik']['rock2_mch'] = rock2_mch
+        bones['ik']['heel'] = heel
+
+        if len( org_bones ) >= 4:
+            # Create toes control bone
+            toeik = get_bone_name( org_bones[3], 'ctrl', 'ik' )
+            toeik = copy_bone( self.obj, org_bones[3], toeik )
+
+            eb[ toeik ].use_connect = False
+            eb[ toeik ].parent      = eb[ roll2_mch ]
+
+            bones['ik']['toe'] = toeik
+
+            bones['ik']['ctrl']['terminal'].append(toeik)
+
+        bones['ik']['ctrl']['terminal'] += [ heel, ctrl ]
+
+
         # add IK Follow feature
         mch_ik_socket = self.make_ik_follow_bone( eb, ctrl )
+        bones['ik']['mch_ik_socket'] = mch_ik_socket
+
+        return bones
+
+
+    def postprocess(self, context):
+        super().postprocess(True)
+
+        bones = self.bones
+        
+        ctrl = bones['ik']['ctrl']['terminal'][0]
+
+        roll1_mch = bones['ik']['roll1_mch']
+        roll2_mch = bones['ik']['roll2_mch']
+        rock1_mch = bones['ik']['rock1_mch']
+        rock2_mch = bones['ik']['rock2_mch']
+        heel = bones['ik']['heel']
+        mch_ik_socket = bones['ik']['mch_ik_socket']
+
+        org_bones = self.org_bones
 
         # Constrain rock and roll MCH bones
         self.make_constraint(roll1_mch, {
@@ -259,17 +299,8 @@ if is_selected( fk_ctrl ):
         # Add ballsocket widget to heel
         create_ballsocket_widget(self.obj, heel)
 
-        bpy.ops.object.mode_set(mode='EDIT')
-        eb = self.obj.data.edit_bones
-
         if len( org_bones ) >= 4:
-            # Create toes control bone
-            toeik = get_bone_name( org_bones[3], 'ctrl', 'ik' )
-            toeik = copy_bone( self.obj, org_bones[3], toeik )
-
-            eb[ toeik ].use_connect = False
-            eb[ toeik ].parent      = eb[ roll2_mch ]
-
+            toeik = bones['ik']['toe']
             # Constrain toeik
             self.make_constraint(org_bones[3], {
                 'constraint'  : 'COPY_TRANSFORMS',
@@ -283,7 +314,6 @@ if is_selected( fk_ctrl ):
                 'head_tail'   : 0.0
             })
 
-            pb   = self.obj.pose.bones
             #pb[ toeik ].lock_location = True, True, True
 
             # Find IK/FK switch property
@@ -309,12 +339,6 @@ if is_selected( fk_ctrl ):
 
             # Create toe circle widget
             create_toe_widget(self.obj, toeik)
-
-            bones['ik']['ctrl']['terminal'].append(toeik)
-
-        bones['ik']['ctrl']['terminal'] += [ heel, ctrl ]
-
-        return bones
 
 
 def operator_script(rig_id):

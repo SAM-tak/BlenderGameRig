@@ -26,12 +26,12 @@ from ..utils import copy_bone, ctrlname, create_widget
 class Rig:
     """ root rig.
     """
-    def __init__(self, obj, bone, params):
+    def __init__(self, obj, bone, metabone):
         """ Gather and validate data about the rig.
         """
         self.obj      = obj
         self.org_bone = bone
-        self.params   = params
+        self.params   = metabone.gamerig
 
     def generate(self, context):
         """ Generate the rig.
@@ -39,25 +39,19 @@ class Rig:
             The main armature should be selected and active before this is called.
 
         """
-        bpy.ops.object.mode_set(mode='EDIT')
-
         # Make a control bone (copy of original).
-        bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
-        
-        # Get edit bones
-        eb = self.obj.data.edit_bones
-
-        bpy.ops.object.mode_set(mode='OBJECT')
+        self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
+    
+    def postprocess(self, context):
         pb = self.obj.pose.bones
-
         # Constrain the original bone.
         con = pb[self.org_bone].constraints.new('COPY_TRANSFORMS')
         con.name = "copy_transforms"
         con.target = self.obj
-        con.subtarget = bone
+        con.subtarget = self.bone
 
         # Create control widget
-        create_root_widget(self.obj, bone)
+        create_root_widget(self.obj, self.bone)
 
 
 def create_root_widget(rig, bone_name, bone_transform_name=None):

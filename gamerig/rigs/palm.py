@@ -58,11 +58,11 @@ class Rig:
         This is a control and deformation rig.
 
     """
-    def __init__(self, obj, bone, params):
+    def __init__(self, obj, bone, metabone):
         """ Gather and validate data about the rig.
         """
         self.obj = obj
-        self.params = params
+        self.params = metabone.gamerig
 
         siblings = bone_siblings(obj, bone)
 
@@ -76,7 +76,7 @@ class Rig:
         self.org_bones = [bone] + siblings
 
         # Get rig parameters
-        self.palm_rotation_axis = params.palm_rotation_axis
+        self.palm_rotation_axis = self.params.palm_rotation_axis
 
     def generate(self, context):
         """ Generate the rig.
@@ -84,8 +84,6 @@ class Rig:
             The main armature should be selected and active before this is called.
 
         """
-        bpy.ops.object.mode_set(mode='EDIT')
-
         # Figure out the name for the control bone (remove the last .##)
         last_bone = self.org_bones[-1:][0]
         ctrl_name = re.sub("([0-9]+\.)", "", ctrlname(last_bone)[::-1], count=1)[::-1]
@@ -113,11 +111,15 @@ class Rig:
             eb[o].parent = eb[org_parent]
         eb[ctrl].parent = eb[org_parent]
 
+        self.ctrl = ctrl
+        self.org_parent = org_parent
+
+
+    def postprocess(self, context):
         # Constraints
-        bpy.ops.object.mode_set(mode='OBJECT')
         pb = self.obj.pose.bones
 
-        ctrlbone = pb[ctrl]
+        ctrlbone = pb[self.ctrl]
         ctrlbone.lock_rotation = (False, False, True)
         ctrlbone.rotation_mode = 'XYZ'
 
@@ -127,7 +129,7 @@ class Rig:
             con = pb[b].constraints.new('COPY_TRANSFORMS')
             con.name = "copy_transforms"
             con.target = self.obj
-            con.subtarget = ctrl
+            con.subtarget = self.ctrl
             con.target_space = 'LOCAL'
             con.owner_space = 'LOCAL'
             con.influence = i / div
@@ -135,7 +137,7 @@ class Rig:
             con = pb[b].constraints.new('COPY_SCALE')
             con.name = "copy_scale"
             con.target = self.obj
-            con.subtarget = org_parent
+            con.subtarget = self.org_parent
             con.target_space = 'WORLD'
             con.owner_space = 'WORLD'
             con.influence = 1
@@ -143,7 +145,7 @@ class Rig:
             con = pb[b].constraints.new('COPY_ROTATION')
             con.name = "copy_rotation"
             con.target = self.obj
-            con.subtarget = ctrl
+            con.subtarget = self.ctrl
             con.target_space = 'LOCAL'
             con.owner_space = 'LOCAL'
             if 'X' in self.palm_rotation_axis:
@@ -161,7 +163,7 @@ class Rig:
             i += 1
 
         # Create control widget
-        create_palm_widget(self.obj, ctrl, 'Z' in self.palm_rotation_axis)
+        create_palm_widget(self.obj, self.ctrl, 'Z' in self.palm_rotation_axis)
 
 
 def add_parameters(params):

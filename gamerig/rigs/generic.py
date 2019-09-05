@@ -29,79 +29,22 @@ class Rig:
         This is a control and deformation rig.
 
     """
-    def __init__(self, obj, bone, params):
+    def __init__(self, obj, bone, metabone):
         """ Gather and validate data about the rig.
         """
-        self.obj                 = obj
-        self.org_bone            = bone
-        self.params              = params
-        self.control_widget_type = params.control_widget_type
+        self.obj      = obj
+        self.org_bone = bone
+        self.metabone = metabone
 
     def generate(self, context):
         """ Generate the rig.
             Do NOT modify any of the original bones, except for adding constraints.
             The main armature should be selected and active before this is called.
-
         """
-        bpy.ops.object.mode_set(mode='EDIT')
-
         # Make a control bone (copy of original).
-        if self.control_widget_type != 'None':
-            bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
-        
-        # Get edit bones
-        eb = self.obj.data.edit_bones
+        self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
 
-        bpy.ops.object.mode_set(mode='OBJECT')
-        pb = self.obj.pose.bones
-
-        if self.control_widget_type != 'None':
-            stashed = self.stash_constraint()
-
-            # Constrain the original bone.
-            con = pb[self.org_bone].constraints.new('COPY_TRANSFORMS')
-            con.name = "copy_transforms"
-            con.target = self.obj
-            con.subtarget = bone
-
-            self.unstash_constraint(stashed)
-
-            if len(pb[self.org_bone].constraints) > 1:
-                if not 'Rig/Phy' in pb[bone]:
-                    # Create Rig/Physics switch property
-                    pb[bone]['Rig/Phy'] = 0.0
-                    prop = rna_idprop_ui_prop_get( pb[bone], 'Rig/Phy', create=True )
-                    prop["min"]         = 0.0
-                    prop["max"]         = 1.0
-                    prop["soft_min"]    = 0.0
-                    prop["soft_max"]    = 1.0
-                    prop["description"] = 'Rig/Phy Switch'
-                
-                # Add driver to relevant constraint
-                drv = pb[self.org_bone].constraints[-1].driver_add("influence").driver
-                drv.type = 'AVERAGE'
-
-                var = drv.variables.new()
-                var.name = 'rig_phy_switch'
-                var.type = "SINGLE_PROP"
-                var.targets[0].id = self.obj
-                var.targets[0].data_path = pb[bone].path_from_id() + '["Rig/Phy"]'
-
-                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-
-                drv_modifier.mode            = 'POLYNOMIAL'
-                drv_modifier.poly_order      = 1
-                drv_modifier.coefficients[0] = 0.0
-                drv_modifier.coefficients[1] = 1.0
-
-            # Create control widget
-            if self.control_widget_type == 'Circle':
-                create_circle_widget(self.obj, bone, radius = 0.5)
-            else:
-                create_bone_widget(self.obj, bone)
-        
-        if self.control_widget_type != 'None' and 'Rig/Phy' in pb[bone]:
-            return ["""
+        return """
 control = '%s'
 
 # Rig/Phy Switch on all Control Bones
@@ -110,7 +53,54 @@ if is_selected( control ):
     props = layout.operator(Generic_Snap.bl_idname, text="Snap to Target (" + control + ")", icon='SNAP_ON')
     props.ctrl = control
     props.target  = "%s"
-""" % (bone, self.org_bone)]
+""" % (self.bone, self.org_bone) if len(self.metabone.constraints) > 0 else None
+
+    def postprocess(self, context):
+        pb = self.obj.pose.bones
+        bone = self.bone
+        if len(self.metabone.constraints) > 0:
+            if not 'Rig/Phy' in pb[bone]:
+                # Create Rig/Physics switch property
+                pb[bone]['Rig/Phy'] = 0.0
+                prop = rna_idprop_ui_prop_get( pb[bone], 'Rig/Phy', create=True )
+                prop["min"]         = 0.0
+                prop["max"]         = 1.0
+                prop["soft_min"]    = 0.0
+                prop["soft_max"]    = 1.0
+                prop["description"] = 'Rig/Phy Switch'
+            
+            stashed = self.stash_constraint()
+
+            # Constrain the original bone.
+            con = pb[self.org_bone].constraints.new('COPY_TRANSFORMS')
+            con.name = "copy_transforms"
+            con.target = self.obj
+            con.subtarget = self.bone
+
+            self.unstash_constraint(stashed)
+            
+            # Add driver to relevant constraint
+            drv = pb[self.org_bone].constraints[-1].driver_add("influence").driver
+            drv.type = 'AVERAGE'
+
+            var = drv.variables.new()
+            var.name = 'rig_phy_switch'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb[bone].path_from_id() + '["Rig/Phy"]'
+
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+
+            drv_modifier.mode            = 'POLYNOMIAL'
+            drv_modifier.poly_order      = 1
+            drv_modifier.coefficients[0] = 0.0
+            drv_modifier.coefficients[1] = 1.0
+
+        # Create control widget
+        if self.metabone.gamerig.control_widget_type == 'Circle':
+            create_circle_widget(self.obj, self.bone, radius = 0.5)
+        else:
+            create_bone_widget(self.obj, self.bone)
 
 
     def stash_constraint( self ):
@@ -200,7 +190,7 @@ def add_parameters(params):
         name        = "Control Widget Type",
         default     = 'Frustum',
         description = "Choose a widget for the bone control",
-        items = [('None', 'None', ''), ('Frustum', 'Frustum', ''), ('Circle', 'Circle', '')]
+        items = [('Frustum', 'Frustum', ''), ('Circle', 'Circle', '')]
     )
 
 

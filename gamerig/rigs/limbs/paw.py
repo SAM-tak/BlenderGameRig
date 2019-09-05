@@ -29,10 +29,10 @@ from .limb import *
 
 class Rig(Limb):
 
-    def __init__(self, obj, bone_name, params):
-        super().__init__(obj, bone_name, params)
-        self.footprint_bone = params.footprint_bone
-        self.org_bones = list([bone_name] + connected_children_names(obj, bone_name))[:4]
+    def __init__(self, obj, bone_name, metabone):
+        super().__init__(obj, bone_name, metabone)
+        self.footprint_bone = self.params.footprint_bone
+        self.org_bones = ([bone_name] + connected_children_names(obj, bone_name))[:4]
 
 
     def generate(self, context):
@@ -73,11 +73,10 @@ if is_selected( fk_ctrl ):
 
 
     def create_paw(self, bones):
-        org_bones = [self.org_bones[0]] + connected_children_names(self.obj, self.org_bones[0])
+        org_bones = self.org_bones
 
         bones['ik']['ctrl']['terminal'] = []
 
-        bpy.ops.object.mode_set(mode='EDIT')
         eb = self.obj.data.edit_bones
 
         # Create IK paw control
@@ -115,6 +114,36 @@ if is_selected( fk_ctrl ):
 
         # add IK Follow feature
         mch_ik_socket = self.make_ik_follow_bone( eb, ctrl )
+
+        bones['ik']['roll1_mch'] = roll1_mch
+        bones['ik']['roll2_mch'] = roll2_mch
+        bones['ik']['heel'] = heel
+        bones['ik']['mch_ik_socket'] = mch_ik_socket
+
+        if len( org_bones ) >= 4:
+            # Create toes mch bone
+            toes_mch = get_bone_name( org_bones[3], 'mch' )
+            toes_mch = copy_bone( self.obj, org_bones[3], toes_mch )
+
+            eb[ toes_mch ].use_connect = False
+            eb[ toes_mch ].parent      = eb[ ctrl ]
+
+        bones['ik']['ctrl']['terminal'] += [ heel, toes_mch, ctrl ]
+
+        return bones
+
+
+    def postprocess(self, context):
+        super().postprocess(True)
+
+        bones = self.bones
+
+        ctrl = bones['ik']['ctrl']['terminal'][0]
+
+        roll1_mch = bones['ik']['roll1_mch']
+        roll2_mch = bones['ik']['roll2_mch']
+        heel = bones['ik']['heel']
+        mch_ik_socket = bones['ik']['mch_ik_socket']
 
         # Set up constraints
         # Constrain mch target bone to the ik control and mch stretch
@@ -157,13 +186,6 @@ if is_selected( fk_ctrl ):
         eb = self.obj.data.edit_bones
 
         if len( org_bones ) >= 4:
-            # Create toes mch bone
-            toes_mch = get_bone_name( org_bones[3], 'mch' )
-            toes_mch = copy_bone( self.obj, org_bones[3], toes_mch )
-
-            eb[ toes_mch ].use_connect = False
-            eb[ toes_mch ].parent      = eb[ ctrl ]
-
             # Constrain toe bone to toes_mch
             self.make_constraint(org_bones[3], {
                 'constraint'  : 'COPY_TRANSFORMS',
@@ -171,7 +193,6 @@ if is_selected( fk_ctrl ):
             })
 
             # Find IK/FK switch property
-            pb   = self.obj.pose.bones
             prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
 
             # Add driver to limit scale constraint influence
@@ -191,10 +212,6 @@ if is_selected( fk_ctrl ):
             drv_modifier.poly_order      = 1
             drv_modifier.coefficients[0] = 1.0
             drv_modifier.coefficients[1] = -1.0
-
-        bones['ik']['ctrl']['terminal'] += [ heel, toes_mch, ctrl ]
-
-        return bones
 
 
 def operator_script(rig_id):

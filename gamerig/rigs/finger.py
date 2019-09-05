@@ -12,10 +12,10 @@ from .widgets import create_circle_widget, create_sphere_widget
 
 class Rig:
 
-    def __init__(self, obj, bone_name, params):
+    def __init__(self, obj, bone_name, metabone):
         self.obj = obj
         self.org_bones = [bone_name] + connected_children_names(obj, bone_name)
-        self.params = params
+        self.params = metabone.gamerig
 
         if len(self.org_bones) <= 1:
             raise MetarigError("GAMERIG ERROR: Bone '%s': listen bro, that finger rig jusaint put tugetha rite. A little hint, use more than one bone!!" % bone_name)
@@ -24,7 +24,6 @@ class Rig:
     def generate(self, context):
         org_bones = self.org_bones
 
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         # Bone name lists
@@ -46,10 +45,6 @@ class Rig:
         ## workaround for parenting bug
         root_parent_name = eb[org_name].parent.name
 
-        for bone in org_bones:
-            eb[bone].use_connect = False
-            eb[bone].parent = None
-
         # Creating the bone chains
         for name in org_bones:
             # Create control bones
@@ -62,10 +57,13 @@ class Rig:
             ctrl_chain.append(ctrl_bone)
             mch_chain.append(mch_bone)
 
-        # Restoring org chain parenting
-        eb[ org_bones[0] ].parent = eb[ root_parent_name ]
-        for bone in org_bones[1:]:
-            eb[bone].parent = eb[ org_bones[ org_bones.index(bone) - 1 ] ]
+        # Clear parenting
+        for bone in ctrl_chain:
+            eb[bone].use_connect = False
+            eb[bone].parent = None
+        for bone in mch_chain:
+            eb[bone].use_connect = False
+            eb[bone].parent = None
 
         # Parenting the master bone to the first org's parent
         ctrl_bone_master = eb[ master_name ]
@@ -91,34 +89,38 @@ class Rig:
                 # The rest
                 ctrl_bone_e.parent         = mch_bone_e
                 ctrl_bone_e.use_connect    = False
+        
+        self.ctrl_chain = ctrl_chain
+        self.mch_chain = mch_chain
+        self.master_name = master_name
 
-        bpy.ops.object.mode_set(mode ='OBJECT')
 
+    def postprocess(self, context):
         pb = self.obj.pose.bones
 
         # Setting pose bones locks
-        pb_master = pb[master_name]
+        pb_master = pb[self.master_name]
         pb_master.lock_location = True,True,True
         pb_master.lock_scale = True,False,True
 
         # Pose settings
-        for org, ctrl, mcha in zip(self.org_bones, ctrl_chain, mch_chain):
+        for org, ctrl, mcha in zip(self.org_bones, self.ctrl_chain, self.mch_chain):
             # Constraining the org bones
             con           = pb[org].constraints.new('COPY_TRANSFORMS')
             con.target    = self.obj
             con.subtarget = ctrl
 
             # Constraining the mch bones
-            if mch_chain.index(mcha) == 0:
+            if self.mch_chain.index(mcha) == 0:
                 con              = pb[mcha].constraints.new('COPY_ROTATION')
                 con.target       = self.obj
-                con.subtarget    = master_name
+                con.subtarget    = self.master_name
                 con.target_space = 'LOCAL'
                 con.owner_space  = 'LOCAL'
             else:
                 con              = pb[mcha].constraints.new('COPY_ROTATION')
                 con.target       = self.obj
-                con.subtarget    = master_name
+                con.subtarget    = self.master_name
                 for i, prop in enumerate( [ 'use_x', 'use_y', 'use_z' ] ):
                     if self.params.primary_rotation_axis == ['X', 'Y', 'Z'][i]:
                         setattr( con, prop, True )
@@ -131,7 +133,7 @@ class Rig:
             create_circle_widget(self.obj, ctrl, radius=0.3, head_tail=0.5)
 
         # Create ctrl master widget
-        w = create_widget(self.obj, master_name)
+        w = create_widget(self.obj, self.master_name)
         if w is not None:
             mesh = w.data
             verts = [(0, 0, 0), (0, 1, 0), (0.05, 1, 0), (0.05, 1.1, 0), (-0.05, 1.1, 0), (-0.05, 1, 0)]

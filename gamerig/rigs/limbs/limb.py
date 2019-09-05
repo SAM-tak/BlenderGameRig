@@ -11,17 +11,17 @@ from ...utils import (
 from ..widgets import create_sphere_widget, create_limb_widget, create_ikarrow_widget, create_directed_circle_widget
 
 class Limb:
-    def __init__(self, obj, bone_name, params):
+    def __init__(self, obj, bone_name, metabone):
         """ Initialize limb rig and key rig properties """
         self.obj       = obj
-        self.params    = params
+        self.params    = metabone.gamerig
 
-        self.rot_axis  = params.rotation_axis
-        self.allow_ik_stretch = params.allow_ik_stretch
+        self.rot_axis  = self.params.rotation_axis
+        self.allow_ik_stretch = self.params.allow_ik_stretch
 
         # Assign values to FK layers props if opted by user
-        if params.fk_extra_layers:
-            self.fk_layers = list(params.fk_layers)
+        if self.params.fk_extra_layers:
+            self.fk_layers = list(self.params.fk_layers)
         else:
             self.fk_layers = None
         
@@ -31,7 +31,6 @@ class Limb:
     def create_parent( self ):
         org_bones = self.org_bones
 
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         name = get_bone_name( org_bones[0], 'mch', 'parent' )
@@ -43,6 +42,12 @@ class Limb:
         eb[ mch ].parent = eb[ org_bones[0] ].parent
 
         eb[ mch ].roll = 0.0
+
+        return mch
+
+    def postprocess_parent(self):
+
+        mch = self.bones['parent']
 
         # Constraints
         if self.root_bone:
@@ -70,21 +75,18 @@ class Limb:
                 'target_space' : 'WORLD',
                 'owner_space'  : 'WORLD'
             })
-
-        return mch
-
+            
 
     def create_ik( self, parent, has_toe ):
         org_bones = self.org_bones
 
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         ctrl       = get_bone_name( org_bones[0], 'ctrl', 'ik'        )
-        mch_ik     = get_bone_name( org_bones[0], 'mch',  'ik'        )
+        mch        = get_bone_name( org_bones[0], 'mch',  'ik'        )
         mch_target = get_bone_name( org_bones[0], 'mch',  'ik_target' )
 
-        for o, ik in zip( org_bones, [ ctrl, mch_ik, mch_target ] ):
+        for o, ik in zip( org_bones, [ ctrl, mch, mch_target ] ):
             bone = copy_bone( self.obj, o, ik )
 
             if org_bones.index(o) == len( org_bones ) - 1:
@@ -105,9 +107,23 @@ class Limb:
         # Parenting
         eb[ ctrl    ].parent = eb[ parent ]
         eb[ mch_str ].parent = eb[ parent ]
-        eb[ mch_ik  ].parent = eb[ ctrl   ]
+        eb[ mch     ].parent = eb[ ctrl   ]
         
-        self.make_constraint( mch_ik, {
+        return {
+            'ctrl'          : { 'limb' : ctrl },
+            'mch'           : mch,
+            'mch_target'    : mch_target,
+            'mch_str'       : mch_str
+        }
+
+
+    def postprocess_ik( self, has_toe ):
+        ctrl = self.bones['ik']['ctrl']['limb']
+        mch_str = self.bones['ik']['mch_str']
+        mch = self.bones['ik']['mch']
+        mch_target = self.bones['ik']['mch_target']
+
+        self.make_constraint( mch, {
             'constraint'  : 'IK',
             'subtarget'   : mch_target,
             'chain_count' : 2,
@@ -115,15 +131,15 @@ class Limb:
         })
 
         pb = self.obj.pose.bones
-        pb[ mch_ik ].ik_stretch = 0.1
-        pb[ ctrl   ].ik_stretch = 0.1
+        pb[ mch  ].ik_stretch = 0.1
+        pb[ ctrl ].ik_stretch = 0.1
 
         # IK constraint Rotation locks
         for axis in ['x','y','z']:
             if axis != self.rot_axis:
-               setattr( pb[ mch_ik ], 'lock_ik_' + axis, True )
+               setattr( pb[ mch ], 'lock_ik_' + axis, True )
         if self.rot_axis == 'automatic':
-            pb[ mch_ik ].lock_ik_x = False
+            pb[ mch ].lock_ik_x = False
 
         # Locks and Widget
         pb[ ctrl ].lock_location = True, True, True
@@ -131,18 +147,10 @@ class Limb:
         pb[ ctrl ].lock_scale = True, True, True
         create_ikarrow_widget( self.obj, ctrl )
 
-        return {
-            'ctrl'          : { 'limb' : ctrl },
-            'mch_ik'        : mch_ik,
-            'mch_target'    : mch_target,
-            'mch_str'       : mch_str
-        }
-
 
     def create_fk( self, parent, has_toe ):
         org_bones = self.org_bones.copy()
 
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         ctrls = []
@@ -180,14 +188,19 @@ class Limb:
             eb[ mch      ].parent      = eb[ ctrls[2] ]
             eb[ mch      ].use_connect = True
 
+        return { 'ctrl' : ctrls, 'mch' : mch }
+
+
+    def postprocess_fk(self, has_toe):
+        ctrls = self.bones['fk']['ctrl']
+        mch = self.bones['fk']['mch']
+
         # Constrain MCH's scale to root
         if self.root_bone:
             self.make_constraint( mch, {
                 'constraint'  : 'COPY_SCALE',
                 'subtarget'   : self.root_bone
             })
-        else:
-            bpy.ops.object.mode_set(mode ='OBJECT')
 
         # Locks and widgets
         pb = self.obj.pose.bones
@@ -207,11 +220,8 @@ class Limb:
             if self.fk_layers:
                 pb[c].bone.layers = self.fk_layers
 
-        return { 'ctrl' : ctrls, 'mch' : mch }
 
-
-    def org_parenting_and_switch( self, org, ik, fk, parent ):
-        bpy.ops.object.mode_set(mode ='EDIT')
+    def org_parenting( self, org ):
         eb = self.obj.data.edit_bones
         # re-parent ORGs in a connected chain
         for i,o in enumerate(org):
@@ -220,7 +230,8 @@ class Limb:
                 if i <= len(org)-1:
                     eb[o].use_connect = True
 
-        bpy.ops.object.mode_set(mode ='OBJECT')
+
+    def setup_switch( self, org, ik, fk, parent ):
         pb = self.obj.pose.bones
 
         # Limb Follow Driver
@@ -253,7 +264,7 @@ class Limb:
 
         # Constrain org to IK and FK bones
         iks =  [ ik['ctrl']['limb'] ]
-        iks += [ ik[k] for k in [ 'mch_ik', 'mch_target'] ]
+        iks += [ ik[k] for k in [ 'mch', 'mch_target'] ]
 
         for o, i, f in itertools.zip_longest( org, iks, fk ):
             if i is not None:
@@ -282,7 +293,6 @@ class Limb:
 
 
     def generate(self, create_terminal, has_toe, script_template):
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         # Clear parents for org bones
@@ -297,17 +307,25 @@ class Limb:
         bones['fk']     = self.create_fk(bones['parent'], has_toe)
         bones['ik']     = self.create_ik(bones['parent'], has_toe)
 
-        self.org_parenting_and_switch(self.org_bones, bones['ik'], bones['fk']['ctrl'], bones['parent'])
+        self.org_parenting(self.org_bones)
 
-        bones = create_terminal( bones )
+        self.bones = create_terminal( bones )
 
-        return [ self.create_script( bones, script_template ) ]
+        return self.create_script( bones, script_template )
+
+
+    def postprocess(self, has_toe):
+        self.postprocess_parent()
+        self.postprocess_fk(has_toe)
+        self.postprocess_ik(has_toe)
+        bones = self.bones
+        self.setup_switch(self.org_bones, bones['ik'], bones['fk']['ctrl'], bones['parent'])
 
 
     def orient_bone( self, eb, axis, scale = 1.0, reverse = False ):
         v = Vector((0,0,0))
 
-        setattr(v,axis,scale)
+        setattr(v, axis, scale)
 
         if reverse:
             tail_vec = v @ self.obj.matrix_world
@@ -321,7 +339,6 @@ class Limb:
 
 
     def make_constraint( self, bone, constraint ):
-        bpy.ops.object.mode_set(mode = 'OBJECT')
         pb = self.obj.pose.bones
 
         owner_pb = pb[bone]
@@ -431,7 +448,7 @@ class Limb:
         # IK ctrl has IK stretch
         ik_ctrl = [
             bones['ik']['ctrl']['terminal'][-1],
-            bones['ik']['mch_ik'],
+            bones['ik']['mch'],
             bones['ik']['mch_target']
         ]
 

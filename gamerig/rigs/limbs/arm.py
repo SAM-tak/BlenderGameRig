@@ -26,8 +26,8 @@ from .limb import *
 
 class Rig(Limb):
 
-    def __init__(self, obj, bone_name, params):
-        super().__init__(obj, bone_name, params)
+    def __init__(self, obj, bone_name, metabone):
+        super().__init__(obj, bone_name, metabone)
         self.org_bones = ([bone_name] + connected_children_names(obj, bone_name))[:3]
 
 
@@ -65,7 +65,6 @@ if is_selected( fk_ctrl ):
     def create_arm(self, bones):
         org_bones = self.org_bones
 
-        bpy.ops.object.mode_set(mode='EDIT')
         eb = self.obj.data.edit_bones
 
         ctrl = get_bone_name( org_bones[2], 'ctrl', 'ik' )
@@ -83,6 +82,20 @@ if is_selected( fk_ctrl ):
 
         # add IK Follow feature
         mch_ik_socket = self.make_ik_follow_bone(eb, ctrl)
+
+        bones['ik']['ctrl']['terminal'] = [ ctrl ]
+        bones['ik']['mch_ik_socket'] = mch_ik_socket
+
+        return bones
+
+
+    def postprocess(self, context):
+        super().postprocess(False)
+
+        bones = self.bones
+        
+        ctrl = bones['ik']['ctrl']['terminal'][0]
+        mch_ik_socket = bones['ik']['mch_ik_socket']
 
         # Set up constraints
         # Constrain mch target bone to the ik control and mch stretch
@@ -115,10 +128,6 @@ if is_selected( fk_ctrl ):
 
         # Create hand widget
         create_hand_widget(self.obj, ctrl)
-
-        bones['ik']['ctrl']['terminal'] = [ ctrl ]
-
-        return bones
 
 
 def operator_script(rig_id):

@@ -12,10 +12,10 @@ from .widgets import create_circle_widget, create_sphere_widget, create_thumb_wi
 
 class Rig:
 
-    def __init__(self, obj, bone_name, params):
+    def __init__(self, obj, bone_name, metabone):
         self.obj = obj
         self.org_bones = [bone_name] + connected_children_names(obj, bone_name)
-        self.params = params
+        self.params = metabone.gamerig
 
         if len(self.org_bones) <= 2:
             raise MetarigError("GAMERIG ERROR: Bone '%s': listen bro, that finger rig jusaint put tugetha rite. A little hint, use more than one bone!!" % (basename(bone_name)))
@@ -24,7 +24,6 @@ class Rig:
     def generate(self, context):
         org_bones = self.org_bones
 
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         # Bone name lists
@@ -95,36 +94,40 @@ class Rig:
         ctrl_bone_master = eb[ master_name ]
         ctrl_bone_master.parent = eb[ ctrl_chain[0] ]
 
-        bpy.ops.object.mode_set(mode ='OBJECT')
+        self.ctrl_chain = ctrl_chain
+        self.mch_chain = mch_chain
+        self.master_name = master_name
 
+
+    def postprocess(self, context):
         pb = self.obj.pose.bones
 
         # Setting pose bones locks
-        pb_master = pb[master_name]
+        pb_master = pb[self.master_name]
         pb_master.lock_scale = True,False,True
 
         # Pose settings
-        for org, ctrl, mcha in zip(self.org_bones, ctrl_chain, mch_chain):
+        for org, ctrl, mcha in zip(self.org_bones, self.ctrl_chain, self.mch_chain):
             # Constraining the org bones
             con           = pb[org].constraints.new('COPY_TRANSFORMS')
             con.target    = self.obj
             con.subtarget = ctrl
 
-            if mch_chain.index(mcha) == 0:
+            if self.mch_chain.index(mcha) == 0:
                 # Assigning shapes to control bones
                 create_thumb_widget(self.obj, ctrl, 'Z' in self.params.primary_rotation_axis)
             else:
                 # Constraining the mch bones
-                if mch_chain.index(mcha) == 1:
+                if self.mch_chain.index(mcha) == 1:
                     con              = pb[mcha].constraints.new('COPY_ROTATION')
                     con.target       = self.obj
-                    con.subtarget    = master_name
+                    con.subtarget    = self.master_name
                     con.target_space = 'LOCAL'
                     con.owner_space  = 'LOCAL'
                 else:
                     con              = pb[mcha].constraints.new('COPY_ROTATION')
                     con.target       = self.obj
-                    con.subtarget    = master_name
+                    con.subtarget    = self.master_name
                     for i, prop in enumerate( [ 'use_x', 'use_y', 'use_z' ] ):
                         if self.params.primary_rotation_axis == ['X', 'Y', 'Z'][i]:
                             setattr( con, prop, True )
@@ -137,7 +140,7 @@ class Rig:
                 create_circle_widget(self.obj, ctrl, radius=0.3, head_tail=0.5)
 
         # Create ctrl master widget
-        w = create_widget(self.obj, master_name)
+        w = create_widget(self.obj, self.master_name)
         if w is not None:
             mesh = w.data
             verts = [(0, 0, 0), (0, 1, 0), (0.05, 1, 0), (0.05, 1.1, 0), (-0.05, 1.1, 0), (-0.05, 1, 0)]
@@ -184,27 +187,27 @@ def create_sample(obj):
     bone.roll = -2.5155
     bone.use_connect = False
     bones['palm.04.L'] = bone.name
-    bone = arm.edit_bones.new('f_pinky.01.L')
+    bone = arm.edit_bones.new('thumb.01.L')
     bone.head[:] = 0.0642, 0.0030, -0.0469
     bone.tail[:] = 0.0825, 0.0039, -0.0679
     bone.roll = -2.3110
     bone.use_connect = False
     bone.parent = arm.edit_bones[bones['palm.04.L']]
-    bones['f_pinky.01.L'] = bone.name
-    bone = arm.edit_bones.new('f_pinky.02.L')
+    bones['thumb.01.L'] = bone.name
+    bone = arm.edit_bones.new('thumb.02.L')
     bone.head[:] = 0.0825, 0.0039, -0.0679
     bone.tail[:] = 0.0958, 0.0044, -0.0862
     bone.roll = -2.2257
     bone.use_connect = True
-    bone.parent = arm.edit_bones[bones['f_pinky.01.L']]
-    bones['f_pinky.02.L'] = bone.name
-    bone = arm.edit_bones.new('f_pinky.03.L')
+    bone.parent = arm.edit_bones[bones['thumb.01.L']]
+    bones['thumb.02.L'] = bone.name
+    bone = arm.edit_bones.new('thumb.03.L')
     bone.head[:] = 0.0958, 0.0044, -0.0862
     bone.tail[:] = 0.1023, 0.0046, -0.0997
     bone.roll = -2.0532
     bone.use_connect = True
-    bone.parent = arm.edit_bones[bones['f_pinky.02.L']]
-    bones['f_pinky.03.L'] = bone.name
+    bone.parent = arm.edit_bones[bones['thumb.02.L']]
+    bones['thumb.03.L'] = bone.name
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['palm.04.L']]
@@ -214,7 +217,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'YXZ'
-    pbone = obj.pose.bones[bones['f_pinky.01.L']]
+    pbone = obj.pose.bones[bones['thumb.01.L']]
     pbone.gamerig.name = 'finger'
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
@@ -233,14 +236,14 @@ def create_sample(obj):
         pbone.gamerig.tweak_extra_layers = False
     except AttributeError:
         pass
-    pbone = obj.pose.bones[bones['f_pinky.02.L']]
+    pbone = obj.pose.bones[bones['thumb.02.L']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    pbone = obj.pose.bones[bones['f_pinky.03.L']]
+    pbone = obj.pose.bones[bones['thumb.03.L']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)

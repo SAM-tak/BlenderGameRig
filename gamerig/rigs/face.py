@@ -20,8 +20,10 @@ def mch_target(name):
 
 class Rig:
 
-    def __init__(self, obj, bone_name, params):
+    def __init__(self, obj, bone_name, metabone):
         self.obj = obj
+
+        params = metabone.gamerig
 
         # Abstruct bone name map
         self.abs_name_map = { 'face' : bone_name }
@@ -144,7 +146,6 @@ class Rig:
         ret = {}
 
         ## create control bones
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         # eyes ctrls
@@ -237,10 +238,20 @@ class Rig:
             flip_bone( self.obj, rbn(tongue_ctrl_name) )
             
             ret['tongue'] = [ tongue_ctrl_name ]
+        
+        self.eye_master_names = eye_master_names
+        self.nose_master = nose_master
+        self.earL_ctrl_name = earL_ctrl_name
+        self.earR_ctrl_name = earR_ctrl_name
+        self.jaw_ctrl_name = jaw_ctrl_name
+        self.tongue_ctrl_name = tongue_ctrl_name
+
+        return ret
+
+    def create_ctrl_widget(self, ret):
+        rbn = self.rbn
 
         ## Assign widgets
-        bpy.ops.object.mode_set(mode ='OBJECT')
-
         # Assign each eye widgets
         if 'eyes' in ret:
             create_eye_widget( self.obj, rbn(ret['eyes'][0]) )
@@ -250,42 +261,39 @@ class Rig:
             create_eyes_widget( self.obj, rbn(ret['eyes'][2]) )
 
         # Assign each eye_master widgets
-        for master in eye_master_names:
+        for master in self.eye_master_names:
             create_square_widget(self.obj, rbn(master))
 
         # Assign nose_master widget
         if 'nose' in ret:
-            create_square_widget( self.obj, rbn(nose_master), size = 1 )
+            create_square_widget( self.obj, rbn(self.nose_master), size = 1 )
 
         # Assign ears widget
         if 'ears' in ret:
-            create_ear_widget( self.obj, rbn(earL_ctrl_name) )
-            create_ear_widget( self.obj, rbn(earR_ctrl_name) )
+            create_ear_widget( self.obj, rbn(self.earL_ctrl_name) )
+            create_ear_widget( self.obj, rbn(self.earR_ctrl_name) )
 
         # Assign jaw widget
         if 'jaw' in ret:
-            create_jaw_widget( self.obj, rbn(jaw_ctrl_name) )
+            create_jaw_widget( self.obj, rbn(self.jaw_ctrl_name) )
 
         # Assign tongue widget ( using the jaw widget )
         if 'tongue' in ret:
-            create_jaw_widget( self.obj, rbn(tongue_ctrl_name) )
+            create_jaw_widget( self.obj, rbn(self.tongue_ctrl_name) )
 
-        return ret
 
+    primary_tweaks = [
+        ctrlname('chin'), ctrlname('lip.B'), ctrlname('lips.L'), ctrlname('lips.R'), ctrlname('lip.T')
+    ]
 
     def create_tweak( self, bones, uniques, tails ):
         org_bones = self.org_bones
         rbn = self.rbn
 
         ## create tweak bones
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         tweaks = []
-
-        primary_tweaks = [
-            ctrlname('chin'), ctrlname('lip.B'), ctrlname('lips.L'), ctrlname('lips.R'), ctrlname('lip.T')
-        ]
 
         for i in (
             'lid.B.L', 'lid.T.L', 'lid.B.R', 'lid.T.R',
@@ -295,15 +303,15 @@ class Rig:
             'nose', 'nose.L', 'nose.R'
         ):
             if i in self.abs_name_map:
-                primary_tweaks.append(self.midctrlname(i))
+                self.primary_tweaks.append(self.midctrlname(i))
 
         for bone in bones + list( uniques.keys() ):
             if bone in self.abs_name_map:
                 tweak_name = ctrlname( bone )
 
-                if tweak_name in primary_tweaks and not self.primary_layers:
+                if tweak_name in self.primary_tweaks and not self.primary_layers:
                     continue
-                if not tweak_name in primary_tweaks and not self.secondary_layers:
+                if not tweak_name in self.primary_tweaks and not self.secondary_layers:
                     continue
 
                 # pick name for unique bone from the uniques dictionary
@@ -335,12 +343,16 @@ class Rig:
 
                     tweaks.append( tweak_name )
 
-        bpy.ops.object.mode_set(mode ='OBJECT')
+        return { 'all' : tweaks }
+
+
+    def create_tweak_widget( self, tweaks ):
         pb = self.obj.pose.bones
+        rbn = self.rbn
 
         for bone in tweaks:
             if bone in self.abs_name_map:
-                if bone in primary_tweaks:
+                if bone in self.primary_tweaks:
                     if self.primary_layers:
                         pb[rbn(bone)].bone.layers = self.primary_layers
                     create_face_widget( self.obj, rbn(bone), size = 0.8 )
@@ -348,8 +360,6 @@ class Rig:
                     if self.secondary_layers:
                         pb[rbn(bone)].bone.layers = self.secondary_layers
                     create_face_widget( self.obj, rbn(bone), size = 0.5 )
-
-        return { 'all' : tweaks }
 
 
     def all_controls( self ):
@@ -406,7 +416,6 @@ class Rig:
     def create_mch( self, jaw_ctrl, tongue_ctrl, chin_ctrl ):
         org_bones = self.org_bones
         rbn = self.rbn
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         # Create eyes mch bones
@@ -527,7 +536,6 @@ class Rig:
     def create_mch_targets( self ):
         org_bones = self.org_bones
         rbn = self.rbn
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         mchts = []
@@ -543,7 +551,6 @@ class Rig:
 
     def parent_bones( self, all_bones, tweak_unique, mchts ):
         rbn = self.rbn
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         face_name = 'face'
@@ -745,7 +752,6 @@ class Rig:
 
     def make_constraits( self, constraint_type, bone, subtarget, influence = 1 ):
         rbn = self.rbn
-        bpy.ops.object.mode_set(mode ='OBJECT')
         pb = self.obj.pose.bones
         
         if not (bone in self.abs_name_map and subtarget in self.abs_name_map):
@@ -1079,7 +1085,6 @@ class Rig:
 
     def drivers_and_props( self, all_bones ):
         rbn = self.rbn
-        bpy.ops.object.mode_set(mode ='OBJECT')
         pb = self.obj.pose.bones
 
         # Mouse Lock
@@ -1218,8 +1223,9 @@ class Rig:
 
         all_bones, tweak_unique, mchts = self.create_bones()
         self.parent_bones( all_bones, tweak_unique, mchts )
-        self.constraints( all_bones, mchts )
-        self.drivers_and_props( all_bones )
+
+        self.all_bones = all_bones
+        self.mchts = mchts
 
         # Create UI
         all_controls =  [ bone for bone in [ bgroup for bgroup in [ all_bones['ctrls'][group]  for group in list( all_bones['ctrls' ].keys() ) ] ] ]
@@ -1236,19 +1242,26 @@ class Rig:
         tongue_ctrl = all_bones['ctrls']['tongue'][0] if 'tongue' in all_bones['ctrls'] else None
         chin_ctrl = self.rbn(ctrlname('chin')) if ctrlname('chin') in all_bones['tweaks']['all'] else None
 
-        return ["""
+        return """
 # Face properties
 controls   = [%s]
 if is_selected(controls):
-""" % controls_string + 
+""" % controls_string + \
 ("""    layout.prop(pose_bones['%s'],  '["Mouth Lock"]', text='Mouth Lock (%s)', slider=True)
-""" % (jaw_ctrl, jaw_ctrl) if jaw_ctrl else "") +
+""" % (jaw_ctrl, jaw_ctrl) if jaw_ctrl else "") + \
 ("""    layout.prop(pose_bones['%s'],  '["Eyes Follow"]', text='Eyes Follow (%s)', slider=True)
-""" % (eyes_ctrl, eyes_ctrl) if eyes_ctrl else "") + 
+""" % (eyes_ctrl, eyes_ctrl) if eyes_ctrl else "") + \
 ("""    layout.prop(pose_bones['%s'], '["Tongue Follow"]', text='Tongue Follow (%s)', slider=True)
-""" % (tongue_ctrl, tongue_ctrl) if tongue_ctrl else "") + 
+""" % (tongue_ctrl, tongue_ctrl) if tongue_ctrl else "") + \
 ("""    layout.prop(pose_bones['%s'], '["Chin Follow"]', text='Chin Follow (%s)', slider=True)
-""" % (chin_ctrl, chin_ctrl) if chin_ctrl else "")]
+""" % (chin_ctrl, chin_ctrl) if chin_ctrl else "")
+
+
+    def postprocess(self, context):
+        self.constraints( self.all_bones, self.mchts )
+        self.drivers_and_props( self.all_bones )
+        self.create_ctrl_widget(self.all_bones['ctrls'])
+        self.create_tweak_widget(self.all_bones['tweaks']['all'])
 
 
 def add_parameters(params):

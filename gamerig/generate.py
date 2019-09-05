@@ -48,7 +48,6 @@ class Timer:
         self.timez = t
 
 
-# TODO: generalize to take a group as input instead of an armature.
 def generate_rig(context, metarig):
     """ Generates a rig from a metarig.
     """
@@ -184,31 +183,12 @@ def generate_rig(context, metarig):
         bone_gen.lock_location = tuple(bone.lock_location)
         bone_gen.lock_scale = tuple(bone.lock_scale)
 
-        # gamerig type and parameters
-        bone_gen.gamerig.name = bone.gamerig.name
-        for prop in dir(bone_gen.gamerig):
-            if (not prop.startswith("_")) and (not prop.startswith("bl_")) and (prop != "rna_type") and (prop != "type"):
-                try:
-                    setattr(bone_gen.gamerig, prop, getattr(bone.gamerig, prop))
-                except AttributeError:
-                    print("FAILED TO COPY PARAMETER: " + str(prop))
-
         # Custom properties
         for prop in bone.keys():
             try:
                 bone_gen[prop] = bone[prop]
             except KeyError:
                 pass
-
-        # Constraints
-        for con1 in bone.constraints:
-            con2 = bone_gen.constraints.new(type=con1.type)
-            copy_attributes(con1, con2)
-
-            # Set metarig target to rig target
-            if "target" in dir(con2):
-                if con2.target == metarig:
-                    con2.target = obj
 
     # Clear drivers
     if obj.animation_data:
@@ -217,47 +197,6 @@ def generate_rig(context, metarig):
                 obj.driver_remove(d.data_path)
             except expression as TypeError:
                 pass
-
-    # Copy drivers
-    if metarig.animation_data:
-        for d1 in metarig.animation_data.drivers:
-            d2 = obj.driver_add(d1.data_path)
-            copy_attributes(d1, d2)
-            copy_attributes(d1.driver, d2.driver)
-
-            # Remove default modifiers, variables, etc.
-            for m in d2.modifiers:
-                d2.modifiers.remove(m)
-            for v in d2.driver.variables:
-                d2.driver.variables.remove(v)
-
-            # Copy modifiers
-            for m1 in d1.modifiers:
-                m2 = d2.modifiers.new(type=m1.type)
-                copy_attributes(m1, m2)
-
-            # Copy variables
-            for v1 in d1.driver.variables:
-                v2 = d2.driver.variables.new()
-                copy_attributes(v1, v2)
-                for i in range(len(v1.targets)):
-                    copy_attributes(v1.targets[i], v2.targets[i])
-                    # Switch metarig targets to rig targets
-                    if v2.targets[i].id == metarig:
-                        v2.targets[i].id = obj
-
-                    # Mark targets that may need to be altered after rig generation
-                    target = v2.targets[i]
-                    # If a custom property
-                    if v2.type == 'SINGLE_PROP' and re.match('^pose.bones\["[^"\]]*"\]\["[^"\]]*"\]$', tar.data_path):
-                        target.data_path = "GAMERIG-" + target.data_path
-
-            # Copy key frames
-            for i in range(len(d1.keyframe_points)):
-                d2.keyframe_points.add()
-                k1 = d1.keyframe_points[i]
-                k2 = d2.keyframe_points[i]
-                copy_attributes(k1, k2)
     
     t.tick("Duplicate rig: ")
     #----------------------------------
@@ -281,24 +220,84 @@ def generate_rig(context, metarig):
         rigtypes = set()
         for bone in bones_sorted:
             bpy.ops.object.mode_set(mode='EDIT')
-            rig = get_bone_rig(obj, bone, rigtypes)
+            rig = get_bone_rig(metarig, obj, bone, rigtypes)
             if rig:
                 rigs[bone] = rig
         t.tick("Initialize rigs: ")
 
         # Generate all the rigs.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
         tt = Timer()
         ui_scripts = []
+
+        # Go into editmode in the rig armature
+        bpy.ops.object.mode_set(mode='EDIT')
         for bone, rig in rigs.items():
-            # Go into editmode in the rig armature
-            bpy.ops.object.mode_set(mode='OBJECT')
-            context.view_layer.objects.active = obj
-            obj.select_set(True)
-            bpy.ops.object.mode_set(mode='EDIT')
-            scripts = rig.generate(context)
-            if scripts is not None:
-                ui_scripts.append(scripts[0])
+            script = rig.generate(context)
+            if script and len(script) > 0:
+                ui_scripts.append(script)
             tt.tick("Generate rig : %s (%s): " % (bone, rig.__class__.__module__))
+
+        # Go into objectmode in the rig armature
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Copy Constraints
+        for bone in metarig.pose.bones:
+            for con1 in bone.constraints:
+                con2 = bone_gen.constraints.new(type=con1.type)
+                copy_attributes(con1, con2)
+
+                # Set metarig target to rig target
+                if "target" in dir(con2):
+                    if con2.target == metarig:
+                        con2.target = obj
+
+        # Copy drivers
+        if metarig.animation_data:
+            for d1 in metarig.animation_data.drivers:
+                d2 = obj.driver_add(d1.data_path)
+                copy_attributes(d1, d2)
+                copy_attributes(d1.driver, d2.driver)
+
+                # Remove default modifiers, variables, etc.
+                for m in d2.modifiers:
+                    d2.modifiers.remove(m)
+                for v in d2.driver.variables:
+                    d2.driver.variables.remove(v)
+
+                # Copy modifiers
+                for m1 in d1.modifiers:
+                    m2 = d2.modifiers.new(type=m1.type)
+                    copy_attributes(m1, m2)
+
+                # Copy variables
+                for v1 in d1.driver.variables:
+                    v2 = d2.driver.variables.new()
+                    copy_attributes(v1, v2)
+                    for i in range(len(v1.targets)):
+                        copy_attributes(v1.targets[i], v2.targets[i])
+                        # Switch metarig targets to rig targets
+                        if v2.targets[i].id == metarig:
+                            v2.targets[i].id = obj
+
+                        # Mark targets that may need to be altered after rig generation
+                        target = v2.targets[i]
+                        # If a custom property
+                        if v2.type == 'SINGLE_PROP' and re.match('^pose.bones\["[^"\]]*"\]\["[^"\]]*"\]$', tar.data_path):
+                            target.data_path = "GAMERIG-" + target.data_path
+
+                # Copy key frames
+                for i in range(len(d1.keyframe_points)):
+                    d2.keyframe_points.add()
+                    k1 = d1.keyframe_points[i]
+                    k2 = d2.keyframe_points[i]
+                    copy_attributes(k1, k2)
+        
+        for bone, rig in rigs.items():
+            rig.postprocess(context)
+            tt.tick("PostProcess rig : %s (%s): " % (bone, rig.__class__.__module__))
         t.tick("Generate rigs: ")
     except Exception as e:
         # Cleanup if something goes wrong
@@ -309,19 +308,6 @@ def generate_rig(context, metarig):
 
         # Continue the exception
         raise e
-
-    #----------------------------------
-    bpy.ops.object.mode_set(mode='OBJECT')
-
-    # Get a list of all the bones in the armature
-    bones = [bone.name for bone in obj.data.bones]
-    metabones = [bone.name for bone in metarig.data.bones]
-
-    # All the others make non-deforming.
-    for bone in bones:
-        if not (is_org(bone) or bone in metabones):
-            b = obj.data.bones[bone]
-            b.use_deform = False
 
     # Alter marked driver targets
     if obj.animation_data:
@@ -334,6 +320,16 @@ def generate_rig(context, metarig):
                             target.data_path = target.data_path[7:]
                         else:
                             target.data_path = 'pose.bones["%s"]["%s"]' % (basename(bone), prop) #?
+
+    # Get a list of all the bones in the armature
+    bones = [bone.name for bone in obj.data.bones]
+    metabones = [bone.name for bone in metarig.data.bones]
+
+    # All the others make non-deforming.
+    for bone in bones:
+        if not (is_org(bone) or bone in metabones):
+            b = obj.data.bones[bone]
+            b.use_deform = False
 
     # Move all the original bones to their layer.
     for bone in original_bones:
@@ -540,10 +536,10 @@ def create_persistent_rig_ui(obj, script):
         variable.targets[0].id = script
 
 
-def get_bone_rig(obj, bone_name, rigtypes, halt_on_missing=False):
+def get_bone_rig(metarig, obj, bone_name, rigtypes, halt_on_missing=False):
     """ Fetch all the rigs specified on a bone.
     """
-    rig_type = obj.pose.bones[bone_name].gamerig.name
+    rig_type = metarig.pose.bones[bone_name].gamerig.name
     rig_type = rig_type.replace(" ", "")
 
     if rig_type == "":
@@ -554,7 +550,7 @@ def get_bone_rig(obj, bone_name, rigtypes, halt_on_missing=False):
             rigt = next((rigt.__name__ == rig_module_name(rig_type) for rigt in rigtypes), None)
             if not rigt:
                 rigt = get_rig_type(rig_type)
-            rig = rigt.Rig(obj, bone_name, obj.pose.bones[bone_name].gamerig)
+            rig = rigt.Rig(obj, bone_name, metarig.pose.bones[bone_name])
         except ImportError:
             message = "Rig Type Missing: python module for type '%s' not found (bone: %s)" % (rig_type, bone_name)
             if halt_on_missing:

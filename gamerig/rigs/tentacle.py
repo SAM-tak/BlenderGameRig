@@ -11,47 +11,42 @@ from .widgets import create_sphere_widget, create_cube_widget
 
 class Rig:
 
-    def __init__(self, obj, bone_name, params):
+    def __init__(self, obj, bone_name, metabone):
         self.obj = obj
-        self.params = params
-
-        self.chain_length = params.chain_length
-        self.mid_ik_lens = params.mid_ik_lens
-        self.stretchable = params.stretchable
+        self.params = metabone.gamerig
+        self.switchable_rig = len(metabone.constraints) > 0
 
         # Assign values to tweak layers props if opted by user
-        if params.tweak_extra_layers:
-            self.tweak_layers = list(params.tweak_layers)
+        if self.params.tweak_extra_layers:
+            self.tweak_layers = list(self.params.tweak_layers)
         else:
             self.tweak_layers = None
 
-        if self.chain_length < 2:
+        if self.params.chain_length < 2:
             raise MetarigError(
                 "GAMERIG ERROR: invalid chain length : rig '%s'" % bone_name
             )
         
-        self.org_bones = [bone_name] + children_names(obj, bone_name, self.chain_length - 1)
+        self.org_bones = [bone_name] + children_names(obj, bone_name, self.params.chain_length - 1)
 
         if len(self.org_bones) <= 1:
             raise MetarigError(
                 "GAMERIG ERROR: invalid rig structure : rig '%s'" % bone_name
             )
 
-        if any([x > 0 and x < 2 for x in self.mid_ik_lens]):
+        if any([x > 0 and x < 2 for x in self.params.mid_ik_lens]):
             raise MetarigError(
                 "GAMERIG ERROR: invalid mid ik chain length : rig '%s'" % bone_name
             )
 
         # Assign values to FK layers props if opted by user
-        if params.fk_extra_layers:
-            self.fk_layers = list(params.fk_layers)
+        if self.params.fk_extra_layers:
+            self.fk_layers = list(self.params.fk_layers)
         else:
             self.fk_layers = None
 
 
     def make_controls( self ):
-
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         fk_ctrl_chain = []
@@ -67,7 +62,7 @@ class Rig:
         ik_ctrl_chain = []
         ik_org_chain = []
         cur_ik_len = 0
-        for i in self.mid_ik_lens:
+        for i in self.params.mid_ik_lens:
             if i > 0:
                 ik_org_chain.append(self.org_bones[cur_ik_len])
                 ik_org_chain.append(self.org_bones[cur_ik_len + i - 1])
@@ -90,22 +85,10 @@ class Rig:
 
             ik_ctrl_chain.append( ctrl_bone )
 
-        # Make widgets
-        bpy.ops.object.mode_set(mode ='OBJECT')
-
-        for ctrl in fk_ctrl_chain:
-            if self.fk_layers:
-                self.obj.pose.bones[ctrl].bone.layers = self.fk_layers
-            create_sphere_widget(self.obj, ctrl)
-        for ctrl in ik_ctrl_chain:
-            create_cube_widget(self.obj, ctrl)
-
         return (fk_ctrl_chain, ik_ctrl_chain)
 
 
     def make_mchs( self ):
-
-        bpy.ops.object.mode_set(mode ='EDIT')
         eb = self.obj.data.edit_bones
 
         fk_chain = []
@@ -149,7 +132,6 @@ class Rig:
 
     def make_constraints( self, context, all_bones ):
 
-        bpy.ops.object.mode_set(mode ='OBJECT')
         org_bones = self.org_bones
         pb        = self.obj.pose.bones
 
@@ -159,15 +141,6 @@ class Rig:
         fk_chain = all_bones['fk_chain']
         ik_chain = all_bones['ik_chain']
 
-        # Create IK/FK switch property
-        pb[fk_ctrls[0]]['IK/FK'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb[fk_ctrls[0]], 'IK/FK', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'IK/FK Switch'
-
         # fk chain
         for mchb, ctrl in zip( fk_chain, fk_ctrls ):
             self.make_constraint( mchb, {
@@ -175,7 +148,7 @@ class Rig:
                 'subtarget'   : ctrl,
             })
 
-            if self.stretchable:
+            if self.params.stretchable:
                 self.make_constraint( mchb, {
                     'constraint'  : 'STRETCH_TO',
                     'subtarget'   : ctrl,
@@ -190,7 +163,7 @@ class Rig:
         ik_chain_target = []
         ik_lens = []
         cur_ik_len = 0
-        for i in self.mid_ik_lens:
+        for i in self.params.mid_ik_lens:
             if i > 0:
                 if cur_ik_len + i >= len(self.org_bones) - 2:
                     break
@@ -207,7 +180,7 @@ class Rig:
             ik_chain_target = [ik_chain[0], ik_chain[-2]]
         
         if len(ik_lens) == 0:
-            ik_lens.append(self.chain_length)
+            ik_lens.append(self.params.chain_length)
         
         for mchb, ctrl in zip( ik_chain_target[0::2], ik_ctrls[0::2] ):
             self.make_constraint( mchb, {
@@ -215,7 +188,7 @@ class Rig:
                 'subtarget'   : ctrl,
             })
 
-            if self.stretchable:
+            if self.params.stretchable:
                 self.make_constraint( mchb, {
                     'constraint'  : 'STRETCH_TO',
                     'subtarget'   : ctrl,
@@ -231,7 +204,7 @@ class Rig:
                 'constraint'  : 'IK',
                 'subtarget'   : ctrl,
                 'chain_count' : l,
-                'use_stretch' : self.stretchable,
+                'use_stretch' : self.params.stretchable,
             })
 
         # bind original bone
@@ -266,7 +239,7 @@ class Rig:
 
             self.unstash_constraint( org, stashed )
 
-            if len(pb[org].constraints) > 2:
+            if self.switchable_rig:
                 if not 'Rig/Phy' in pb[fk_ctrls[0]]:
                     # Create Rig/Physics switch property
                     pb[fk_ctrls[0]]['Rig/Phy'] = 0.0
@@ -336,7 +309,6 @@ class Rig:
 
 
     def make_constraint( self, bone, constraint ):
-        bpy.ops.object.mode_set(mode = 'OBJECT')
         pb = self.obj.pose.bones
 
         owner_pb = pb[bone]
@@ -351,57 +323,76 @@ class Rig:
 
 
     def generate(self, context):
-        bpy.ops.object.mode_set(mode ='EDIT')
-        eb = self.obj.data.edit_bones
-
         # Creating all bones
-        ctrls  = self.make_controls()
-        mchs  = self.make_mchs()
-
-        all_bones = {
-            'fk_ctrls' : ctrls[0],
-            'ik_ctrls' : ctrls[1],
-            'fk_chain' : mchs[0],
-            'ik_chain' : mchs[1],
-        }
+        self.ctrls  = self.make_controls()
+        self.mchs  = self.make_mchs()
 
         ik_fk_snap_target = []
         cur_ik_len = 0
-        for i in self.mid_ik_lens:
+        for i in self.params.mid_ik_lens:
             if i > 0:
                 if cur_ik_len + i >= len(self.org_bones) - 2:
                     break
-                ik_fk_snap_target.append(mchs[0][cur_ik_len + 1])
-                ik_fk_snap_target.append(mchs[0][cur_ik_len + i])
+                ik_fk_snap_target.append(self.mchs[0][cur_ik_len + 1])
+                ik_fk_snap_target.append(self.mchs[0][cur_ik_len + i])
                 cur_ik_len += i
         
         if len(ik_fk_snap_target) > 0:
-            ik_fk_snap_target.append(mchs[0][cur_ik_len + 1])
-            ik_fk_snap_target.append(mchs[0][-1])
+            ik_fk_snap_target.append(self.mchs[0][cur_ik_len + 1])
+            ik_fk_snap_target.append(self.mchs[0][-1])
         else:
-            ik_fk_snap_target = [mchs[0][1], mchs[0][-1]]
+            ik_fk_snap_target = [self.mchs[0][1], self.mchs[0][-1]]
 
-        self.make_constraints(context, all_bones)
-
-        return ["""
+        return """
 controls = %s
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
-    if 'Rig/Phy' in pose_bones[ controls[0] ]:
-        layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
+""" % (self.ctrls[0] + self.ctrls[1]) + ("""
+    layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
+""" if self.switchable_rig else '') + """
     props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK (" + controls[0] + ")", icon='SNAP_ON')
     props.fk_ctrls = "%s"
     props.ik_chain = "%s"
     props = layout.operator(Tentacle_IK2FK.bl_idname, text="Snap IK->FK (" + controls[0] + ")", icon='SNAP_ON')
     props.ik_ctrls = "%s"
     props.fk_chain = "%s"
-    if 'Rig/Phy' in pose_bones[ controls[0] ]:
-        props = layout.operator(Tentacle_FK2Target.bl_idname, text="Snap FK->Target (" + controls[0] + ")", icon='SNAP_ON')
-        props.fk_ctrls = "%s"
-        props.targets  = "%s"
-""" % (ctrls[0] + ctrls[1], ctrls[0], mchs[1][1:], ctrls[1], ik_fk_snap_target, ctrls[0], self.org_bones[1:])]
+""" % (self.ctrls[0], self.mchs[1][1:], self.ctrls[1], ik_fk_snap_target) + ("""
+    props = layout.operator(Tentacle_FK2Target.bl_idname, text="Snap FK->Target (" + controls[0] + ")", icon='SNAP_ON')
+    props.fk_ctrls = "%s"
+    props.targets  = "%s"
+""" % (self.ctrls[0], self.org_bones[1:]) if self.switchable_rig else '')
+
+    def postprocess(self, context):
+        pb = self.obj.pose.bones
+
+        # Make widgets
+        for ctrl in self.ctrls[0]:
+            if self.fk_layers:
+                pb[ctrl].bone.layers = self.fk_layers
+            create_sphere_widget(self.obj, ctrl)
+        for ctrl in self.ctrls[1]:
+            create_cube_widget(self.obj, ctrl)
+
+        # Create IK/FK switch property
+        pb[self.ctrls[0][0]]['IK/FK'] = 1.0
+        prop = rna_idprop_ui_prop_get( pb[self.ctrls[0][0]], 'IK/FK', create=True )
+        prop["min"]         = 0.0
+        prop["max"]         = 1.0
+        prop["soft_min"]    = 0.0
+        prop["soft_max"]    = 1.0
+        prop["description"] = 'IK/FK Switch'
+
+        all_bones = {
+            'fk_ctrls' : self.ctrls[0],
+            'ik_ctrls' : self.ctrls[1],
+            'fk_chain' : self.mchs[0],
+            'ik_chain' : self.mchs[1],
+        }
+
+        self.make_constraints(context, all_bones)
+
 
 def operator_script(rig_id):
     return '''
