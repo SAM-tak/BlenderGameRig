@@ -1,7 +1,7 @@
 import bpy, itertools
 from rna_prop_ui import rna_idprop_ui_prop_get
-from math import trunc
-from mathutils import Vector
+from math import ( trunc, radians )
+from mathutils import ( Vector, Quaternion )
 from ...utils import (
     copy_bone, ctrlname, mchname, insert_before_first_period,
     connected_children_names, find_root_bone,
@@ -140,6 +140,12 @@ class Limb:
                setattr( pb[ mch ], 'lock_ik_' + axis, True )
         if self.rot_axis == 'automatic':
             pb[ mch ].lock_ik_x = False
+        else:
+            pb[ ctrl ].rotation_quaternion = pb[ ctrl ].rotation_quaternion @ \
+                Quaternion(
+                    (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0)
+                    , radians(-90.0)
+                )
 
         # Locks and Widget
         pb[ ctrl ].lock_location = True, True, True
