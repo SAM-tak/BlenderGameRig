@@ -178,65 +178,15 @@ def end_progress():
 # Bone manipulation
 #=======================
 
-def new_bone(obj, bone_name):
-    """ Adds a new bone to the given armature object.
-        Returns the resulting bone's name.
-    """
-    tick_progress()
-    if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
-        edit_bone = obj.data.edit_bones.new(bone_name)
-        name = edit_bone.name
-        edit_bone.head = (0, 0, 0)
-        edit_bone.tail = (0, 1, 0)
-        edit_bone.roll = 0
-        bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.object.mode_set(mode='EDIT')
-        return name
-    else:
-        raise MetarigError("Can't add new bone '%s' outside of edit mode" % bone_name)
-
-
-def copy_bone_simple(obj, bone_name, assign_name=''):
-    """ Makes a copy of the given bone in the given armature object.
-        but only copies head, tail positions and roll. Does not
-        address parenting either.
-    """
-    tick_progress()
-    #if bone_name not in obj.data.bones:
-    if bone_name not in obj.data.edit_bones:
-        raise MetarigError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)
-
-    if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
-        if assign_name == '':
-            assign_name = bone_name
-        # Copy the edit bone
-        edit_bone_1 = obj.data.edit_bones[bone_name]
-        edit_bone_2 = obj.data.edit_bones.new(assign_name)
-        bone_name_1 = bone_name
-        bone_name_2 = edit_bone_2.name
-
-        # Copy edit bone attributes
-        edit_bone_2.layers = list(edit_bone_1.layers)
-
-        edit_bone_2.head = Vector(edit_bone_1.head)
-        edit_bone_2.tail = Vector(edit_bone_1.tail)
-        edit_bone_2.roll = edit_bone_1.roll
-
-        return bone_name_2
-    else:
-        raise MetarigError("Cannot copy bones outside of edit mode")
-
-
 def copy_bone(obj, bone_name, assign_name=''):
     """ Makes a copy of the given bone in the given armature object.
         Returns the resulting bone's name.
     """
     tick_progress()
-    #if bone_name not in obj.data.bones:
-    if bone_name not in obj.data.edit_bones:
-        raise MetarigError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)
-
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
+        if bone_name not in obj.data.edit_bones:
+            raise MetarigError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)
+
         if assign_name == '':
             assign_name = bone_name
         # Copy the edit bone
@@ -246,7 +196,8 @@ def copy_bone(obj, bone_name, assign_name=''):
         bone_name_2 = edit_bone_2.name
 
         edit_bone_2.parent = edit_bone_1.parent
-        edit_bone_2.use_connect = edit_bone_1.use_connect
+        #edit_bone_2.use_connect = edit_bone_1.use_connect
+        edit_bone_2.use_connect = False
 
         # Copy edit bone attributes
         edit_bone_2.layers = list(edit_bone_1.layers)
@@ -264,48 +215,56 @@ def copy_bone(obj, bone_name, assign_name=''):
         edit_bone_2.bbone_easein = edit_bone_1.bbone_easein
         edit_bone_2.bbone_easeout = edit_bone_1.bbone_easeout
 
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Get the pose bones
-        pose_bone_1 = obj.pose.bones[bone_name_1]
-        pose_bone_2 = obj.pose.bones[bone_name_2]
-
-        # Copy pose bone attributes
-        pose_bone_2.rotation_mode = pose_bone_1.rotation_mode
-        pose_bone_2.rotation_axis_angle = tuple(pose_bone_1.rotation_axis_angle)
-        pose_bone_2.rotation_euler = tuple(pose_bone_1.rotation_euler)
-        pose_bone_2.rotation_quaternion = tuple(pose_bone_1.rotation_quaternion)
-
-        pose_bone_2.lock_location = tuple(pose_bone_1.lock_location)
-        pose_bone_2.lock_scale = tuple(pose_bone_1.lock_scale)
-        pose_bone_2.lock_rotation = tuple(pose_bone_1.lock_rotation)
-        pose_bone_2.lock_rotation_w = pose_bone_1.lock_rotation_w
-        pose_bone_2.lock_rotations_4d = pose_bone_1.lock_rotations_4d
-
-        # Copy custom properties
-        for key in pose_bone_1.keys():
-            if key != "_RNA_UI" and key != "gamerig":
-                prop1 = rna_idprop_ui_prop_get(pose_bone_1, key, create=False)
-                if prop1 is not None:
-                    prop2 = rna_idprop_ui_prop_get(pose_bone_2, key, create=True)
-                    pose_bone_2[key] = pose_bone_1[key]
-                    for key in prop1.keys():
-                        prop2[key] = prop1[key]
-
-        bpy.ops.object.mode_set(mode='EDIT')
+        if not hasattr(copy_bone, 'copied'):
+            copy_bone.copied = []
+        copy_bone.copied.append((bone_name_1, bone_name_2))
 
         return bone_name_2
     else:
         raise MetarigError("Cannot copy bones outside of edit mode")
 
 
+def copy_attr_all_copied_posebone(obj):
+    if hasattr(copy_bone, 'copied'):
+        for i in copy_bone.copied:
+            bone_name_1 = i[0]
+            bone_name_2 = i[1]
+            # Get the pose bones
+            pose_bone_1 = obj.pose.bones[bone_name_1]
+            pose_bone_2 = obj.pose.bones[bone_name_2]
+
+            # Copy pose bone attributes
+            pose_bone_2.rotation_mode = pose_bone_1.rotation_mode
+            pose_bone_2.rotation_axis_angle = tuple(pose_bone_1.rotation_axis_angle)
+            pose_bone_2.rotation_euler = tuple(pose_bone_1.rotation_euler)
+            pose_bone_2.rotation_quaternion = tuple(pose_bone_1.rotation_quaternion)
+
+            pose_bone_2.lock_location = tuple(pose_bone_1.lock_location)
+            pose_bone_2.lock_scale = tuple(pose_bone_1.lock_scale)
+            pose_bone_2.lock_rotation = tuple(pose_bone_1.lock_rotation)
+            pose_bone_2.lock_rotation_w = pose_bone_1.lock_rotation_w
+            pose_bone_2.lock_rotations_4d = pose_bone_1.lock_rotations_4d
+
+            # Copy custom properties
+            for key in pose_bone_1.keys():
+                if key != "_RNA_UI" and key != "gamerig":
+                    prop1 = rna_idprop_ui_prop_get(pose_bone_1, key, create=False)
+                    if prop1 is not None:
+                        prop2 = rna_idprop_ui_prop_get(pose_bone_2, key, create=True)
+                        pose_bone_2[key] = pose_bone_1[key]
+                        for key in prop1.keys():
+                            prop2[key] = prop1[key]
+        
+        del copy_bone.copied
+
+
 def flip_bone(obj, bone_name):
     """ Flips an edit bone.
     """
-    if bone_name not in obj.data.bones:
-        raise MetarigError("flip_bone(): bone '%s' not found, cannot copy it" % bone_name)
-
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
+        if bone_name not in obj.data.edit_bones:
+            raise MetarigError("flip_bone(): bone '%s' not found, cannot momve it" % bone_name)
+
         bone = obj.data.edit_bones[bone_name]
         head = Vector(bone.head)
         tail = Vector(bone.tail)
@@ -319,10 +278,10 @@ def flip_bone(obj, bone_name):
 def put_bone(obj, bone_name, pos):
     """ Places a bone at the given position.
     """
-    if bone_name not in obj.data.bones:
-        raise MetarigError("put_bone(): bone '%s' not found, cannot move it" % bone_name)
-
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
+        if bone_name not in obj.data.edit_bones:
+            raise MetarigError("put_bone(): bone '%s' not found, cannot move it" % bone_name)
+
         bone = obj.data.edit_bones[bone_name]
 
         delta = pos - bone.head
@@ -379,7 +338,7 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         bpy.context.scene.collection.children.link(collection)
         collection.hide_viewport = True
 
-    if not create_widget.created_widgets:
+    if not hasattr(create_widget, 'created_widgets'):
         create_widget.created_widgets = {}
 
     # Check if it already exists in the collection
@@ -415,10 +374,10 @@ def create_widget(rig, bone_name, bone_transform_name=None):
 def assign_all_widgets(armature):
     """ Unlink all created widget objects from current scene for cleanup.
     """
-    if create_widget.created_widgets:
+    if hasattr(create_widget, 'created_widgets'):
         for bone_name, obj in create_widget.created_widgets.items():
             armature.pose.bones[bone_name].custom_shape = obj
-        create_widget.created_widgets = None
+        del create_widget.created_widgets
 
 
 #=============================================

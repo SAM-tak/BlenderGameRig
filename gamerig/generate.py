@@ -27,7 +27,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
     rig_module_name, get_rig_type, create_widget, assign_all_widgets,
     is_org, is_mch, is_jig, get_wgt_name, random_id,
-    copy_attributes, gamma_correct, get_rig_name,
+    copy_attributes, gamma_correct, get_rig_name, copy_bone, copy_attr_all_copied_posebone,
     begin_progress, update_progress, end_progress,
     MetarigError
 )
@@ -55,7 +55,11 @@ def generate_rig(context, metarig):
     t = Timer()
 
     # clear created widget list
-    create_widget.created_widgets = None
+    if hasattr(create_widget, 'created_widgets'):
+        del create_widget.created_widgets
+    # clear copied bone list
+    if hasattr(copy_bone, 'copied'):
+        del copy_bone.copied
 
     # Find overwrite target rig if exists
     rig_name = get_rig_name(metarig)
@@ -246,6 +250,8 @@ def generate_rig(context, metarig):
 
         # Go into objectmode in the rig armature
         bpy.ops.object.mode_set(mode='OBJECT')
+
+        copy_attr_all_copied_posebone(obj)
 
         # Copy Constraints
         for bone in metarig.pose.bones:
