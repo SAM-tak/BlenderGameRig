@@ -151,6 +151,30 @@ def insert_before_first_period(name, text):
 
 
 #=======================
+# Progress Handler
+#=======================
+
+progress = [0, 0]
+
+def begin_progress(max):
+    progress = (0, max)
+    bpy.context.window_manager.progress_begin(progress[0], progress[1])
+    bpy.context.window_manager.gamerig.progress_indicator = 0
+
+def update_progress():
+    progress[0] += 1
+    bpy.context.window_manager.progress_update(progress[0])
+    if progress[1] > 0:
+        bpy.context.window_manager.gamerig.progress_indicator = progress[0] / progress[1] * 100
+
+def tick_progress():
+    bpy.context.window_manager.progress_update(progress[0])
+
+def end_progress():
+    bpy.context.window_manager.progress_end()
+    bpy.context.window_manager.gamerig.progress_indicator = -1
+
+#=======================
 # Bone manipulation
 #=======================
 
@@ -158,6 +182,7 @@ def new_bone(obj, bone_name):
     """ Adds a new bone to the given armature object.
         Returns the resulting bone's name.
     """
+    tick_progress()
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
         edit_bone = obj.data.edit_bones.new(bone_name)
         name = edit_bone.name
@@ -176,6 +201,7 @@ def copy_bone_simple(obj, bone_name, assign_name=''):
         but only copies head, tail positions and roll. Does not
         address parenting either.
     """
+    tick_progress()
     #if bone_name not in obj.data.bones:
     if bone_name not in obj.data.edit_bones:
         raise MetarigError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)
@@ -205,6 +231,7 @@ def copy_bone(obj, bone_name, assign_name=''):
     """ Makes a copy of the given bone in the given armature object.
         Returns the resulting bone's name.
     """
+    tick_progress()
     #if bone_name not in obj.data.bones:
     if bone_name not in obj.data.edit_bones:
         raise MetarigError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)

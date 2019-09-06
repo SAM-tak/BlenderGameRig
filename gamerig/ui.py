@@ -609,6 +609,62 @@ class RevealUnlinkedWidgetOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class GenerateProgressOperator(bpy.types.Operator):
+    bl_idname = "gamerig.show_generation_progress"
+    bl_label = 'Rig Generation Progress'
+    bl_options = {'REGISTER'}  
+
+    def modal(self, context, event):
+        wm = context.window_manager
+        print(self.ticks, wm.gamerig.progress_indicator)
+        if event.type == 'TIMER':
+            self.ticks += 1
+        if self.ticks > 9:
+            wm.gamerig.progress_indicator = 101 # done
+            wm.event_timer_remove(self.timer)
+            print('done')
+            return {'CANCELLED'}
+  
+        wm.gamerig.progress_indicator = self.ticks*10
+  
+        return {'RUNNING_MODAL'}
+    
+    def invoke(self, context, event):
+        self.ticks = 0
+        wm = context.window_manager
+        wm.gamerig.progress_indicator = 0
+        self.timer = wm.event_timer_add(1.0, window=context.window)
+        wm.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+    
+    # a variable where we can store the original draw funtion  
+    prev_draw_f = lambda s,c: None
+    
+    @classmethod
+    def register(cls):
+        # save the original draw method of the Info header
+        cls.prev_draw_f = bpy.types.STATUSBAR_HT_header.draw
+
+        # create a new draw function
+        def draw(self, context):
+            # first call the original stuff
+            cls.prev_draw_f(self, context)
+            # then add the prop that acts as a progress indicator
+            wm = context.window_manager
+            progress = wm.gamerig.progress_indicator
+            if progress >= 0 and progress <= 100:
+                self.layout.separator()
+                self.layout.prop(wm.gamerig, "progress_indicator", slider=True)
+
+        # replace it
+        bpy.types.STATUSBAR_HT_header.draw = draw
+
+    @classmethod
+    def unregister(cls):
+        # recover the saved original draw method to the status bar
+        bpy.types.STATUSBAR_HT_header.draw = cls.prev_draw_f
+
+
 class GenerateOperator(bpy.types.Operator):
     """Generates a rig from the active metarig armature"""
 
@@ -940,6 +996,7 @@ register, unregister = bpy.utils.register_classes_factory((
     RemoveAllBoneGroupOperator,
     InitLayerOperator,
     RevealUnlinkedWidgetOperator,
+    GenerateProgressOperator,
     GenerateOperator,
     AddSampleOperator,
     ToggleArmatureReferenceOperator,

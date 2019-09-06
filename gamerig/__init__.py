@@ -52,6 +52,7 @@ from bpy.types import (
 from bpy.props import (
     BoolProperty,
     IntProperty,
+    FloatProperty,
     EnumProperty,
     StringProperty,
     FloatVectorProperty,
@@ -284,13 +285,25 @@ class GlobalProperties(PropertyGroup):
     rename_batch_replace : StringProperty(name="Replace", description="replace string")
     rename_batch_re : BoolProperty(name="Regular expression", description="Use regular expression")
 
+    # a value between [0,100] will show the slider  
+    progress_indicator : FloatProperty(
+        name="GameRig : Generating",
+        subtype='PERCENTAGE',
+        default=-1,
+        precision=1,
+        soft_min=0,
+        soft_max=100,
+        min=-1,
+        max=101,
+    )
+
     @classmethod
     def register(cls):
+        bpy.types.WindowManager.gamerig = PointerProperty(type=cls)
+
         # Sub-modules.
         ui.register()
         metarig_menu.register()
-
-        bpy.types.WindowManager.gamerig = PointerProperty(type=cls)
 
         # Add rig parameters
         for rig in rig_lists.rig_list:
@@ -300,13 +313,13 @@ class GlobalProperties(PropertyGroup):
     
     @classmethod
     def unregister(cls):
-        del bpy.types.WindowManager.gamerig
-
         clear_parameters()
 
         # Sub-modules.
         metarig_menu.unregister()
         ui.unregister()
+
+        del bpy.types.WindowManager.gamerig
 
 
 ##### REGISTER #####

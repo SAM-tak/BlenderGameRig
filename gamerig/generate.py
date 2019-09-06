@@ -28,6 +28,7 @@ from .utils import (
     rig_module_name, get_rig_type, create_widget, assign_all_widgets,
     is_org, is_mch, is_jig, get_wgt_name, random_id,
     copy_attributes, gamma_correct, get_rig_name,
+    begin_progress, update_progress, end_progress,
     MetarigError
 )
 from . import rig_lists
@@ -225,6 +226,8 @@ def generate_rig(context, metarig):
                 rigs[bone] = rig
         t.tick("Initialize rigs: ")
 
+        begin_progress(len(rigs.keys()) * 2)
+
         # Generate all the rigs.
         bpy.ops.object.mode_set(mode='OBJECT')
         context.view_layer.objects.active = obj
@@ -239,12 +242,15 @@ def generate_rig(context, metarig):
             if script and len(script) > 0:
                 ui_scripts.append(script)
             tt.tick("Generate rig : %s (%s): " % (bone, rig.__class__.__module__))
+            update_progress()
 
         # Go into objectmode in the rig armature
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # Copy Constraints
         for bone in metarig.pose.bones:
+            bone_gen = obj.pose.bones[bone.name]
+            
             for con1 in bone.constraints:
                 con2 = bone_gen.constraints.new(type=con1.type)
                 copy_attributes(con1, con2)
@@ -298,6 +304,7 @@ def generate_rig(context, metarig):
         for bone, rig in rigs.items():
             rig.postprocess(context)
             tt.tick("PostProcess rig : %s (%s): " % (bone, rig.__class__.__module__))
+            update_progress()
         t.tick("Generate rigs: ")
     except Exception as e:
         # Cleanup if something goes wrong
@@ -308,6 +315,8 @@ def generate_rig(context, metarig):
 
         # Continue the exception
         raise e
+    finally:
+        end_progress()
 
     # Alter marked driver targets
     if obj.animation_data:
