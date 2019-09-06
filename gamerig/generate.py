@@ -241,12 +241,16 @@ def generate_rig(context, metarig):
 
         # Go into editmode in the rig armature
         bpy.ops.object.mode_set(mode='EDIT')
+        bone = None
+        rig = None
         for bone, rig in rigs.items():
             script = rig.generate(context)
             if script and len(script) > 0:
                 ui_scripts.append(script)
             tt.tick("Generate rig : %s (%s): " % (bone, rig.__class__.__module__))
             update_progress()
+        bone = None
+        rig = None
 
         # Go into objectmode in the rig armature
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -307,11 +311,26 @@ def generate_rig(context, metarig):
                     k2 = d2.keyframe_points[i]
                     copy_attributes(k1, k2)
         
+        bone = None
+        rig = None
         for bone, rig in rigs.items():
             rig.postprocess(context)
             tt.tick("PostProcess rig : %s (%s): " % (bone, rig.__class__.__module__))
             update_progress()
         t.tick("Generate rigs: ")
+        bone = None
+        rig = None
+    except MetarigError as e:
+        # Cleanup if something goes wrong
+        print("GameRig: failed to generate rig.")
+        if bone and rig:
+            e.message += '\n GameRig: failed at rig %s (%s).' % (bone, rig.__class__.__module__)
+        metarig.data.pose_position = rest_backup
+        obj.data.pose_position = 'POSE'
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Continue the exception
+        raise e
     except Exception as e:
         # Cleanup if something goes wrong
         print("GameRig: failed to generate rig.")

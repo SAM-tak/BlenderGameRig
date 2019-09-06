@@ -180,8 +180,9 @@ def copy_bone(obj, bone_name, assign_name=''):
         Returns the resulting bone's name.
     """
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
+        
         if bone_name not in obj.data.edit_bones:
-            raise MetarigError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)
+            raise RuntimeError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)
 
         if assign_name == '':
             assign_name = bone_name
@@ -216,7 +217,7 @@ def copy_bone(obj, bone_name, assign_name=''):
 
         return bone_name_2
     else:
-        raise MetarigError("Cannot copy bones outside of edit mode")
+        raise RuntimeError("Cannot copy bones outside of edit mode")
 
 
 def copy_attr_all_copied_posebone(obj):
@@ -258,7 +259,7 @@ def flip_bone(obj, bone_name):
     """
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
         if bone_name not in obj.data.edit_bones:
-            raise MetarigError("flip_bone(): bone '%s' not found, cannot momve it" % bone_name)
+            raise RuntimeError("flip_bone(): bone '%s' not found, cannot momve it" % bone_name)
 
         bone = obj.data.edit_bones[bone_name]
         head = Vector(bone.head)
@@ -267,7 +268,7 @@ def flip_bone(obj, bone_name):
         bone.head = tail
         bone.tail = head
     else:
-        raise MetarigError("Cannot flip bones outside of edit mode")
+        raise RuntimeError("Cannot flip bones outside of edit mode")
 
 
 def put_bone(obj, bone_name, pos):
@@ -275,14 +276,14 @@ def put_bone(obj, bone_name, pos):
     """
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
         if bone_name not in obj.data.edit_bones:
-            raise MetarigError("put_bone(): bone '%s' not found, cannot move it" % bone_name)
+            raise RuntimeError("put_bone(): bone '%s' not found, cannot move it" % bone_name)
 
         bone = obj.data.edit_bones[bone_name]
 
         delta = pos - bone.head
         bone.translate(delta)
     else:
-        raise MetarigError("Cannot 'put' bones outside of edit mode")
+        raise RuntimeError("Cannot 'put' bones outside of edit mode")
 
 #=============================================
 # Widget creation
@@ -298,7 +299,7 @@ def obj_to_bone(obj, rig, bone_name):
     """ Places an object at the location/rotation/scale of the given bone.
     """
     if bpy.context.mode == 'EDIT_ARMATURE':
-        raise MetarigError("obj_to_bone(): does not work while in edit mode")
+        raise RuntimeError("obj_to_bone(): does not work while in edit mode")
 
     bone = rig.data.bones[bone_name]
 

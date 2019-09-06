@@ -554,24 +554,10 @@ class UtilityPanel(bpy.types.Panel):
 
 def report_exception(operator, exception):
     import traceback
-    import sys
-    import os
-    # find the module name where the error happened
-    # hint, this is the metarig type!
-    exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
-    fn = traceback.extract_tb(exceptionTraceback)[-1][0]
-    fn = os.path.basename(fn)
-    fn = os.path.splitext(fn)[0]
-    message = []
-    if fn.startswith("__"):
-        message.append("Incorrect armature...")
+    if isinstance(exception, MetarigError):
+        operator.report({'ERROR'}, exception.message)
     else:
-        message.append("Incorrect armature for type '%s'" % fn)
-    message.append(exception.message)
-
-    message.reverse()  # XXX - stupid! menu's are upside down!
-
-    operator.report({'ERROR'}, '\n'.join(message))
+        operator.report({'EXCEPTION'}, traceback.format_exc(exception))
 
 
 class InitLayerOperator(bpy.types.Operator):
