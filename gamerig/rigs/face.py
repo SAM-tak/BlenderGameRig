@@ -4,8 +4,7 @@ from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import (
     MetarigError, copy_bone, flip_bone, connected_children_names, find_root_bone,
     create_widget,
-    basename, ctrlname, mchname, insert_before_first_period,
-    tick_progress
+    basename, ctrlname, mchname, insert_before_first_period
 )
 from .widgets import create_face_widget, create_eye_widget, create_eyes_widget, create_ear_widget, create_jaw_widget
 
@@ -324,7 +323,6 @@ class Rig:
                 eb[ rbn(tweak_name) ].parent      = None
 
                 tweaks.append( tweak_name )
-                tick_progress()
 
                 eb[ rbn(tweak_name) ].tail[:] = eb[ rbn(tweak_name) ].head + Vector(( 0, 0, self.face_length / 7 ))
 
@@ -344,7 +342,6 @@ class Rig:
                     eb[ rbn(tweak_name) ].tail[:] = eb[ rbn(tweak_name) ].head + Vector(( 0, 0, self.face_length / 7 ))
 
                     tweaks.append( tweak_name )
-                    tick_progress()
 
         return { 'all' : tweaks }
 
@@ -563,7 +560,6 @@ class Rig:
             for area in areas:
                 for bone in all_bones[category][area]:
                     eb[ rbn(bone) ].parent = eb[ rbn(face_name) ]
-                    tick_progress()
 
         mcht_prefix_len = len(mch_target('_')) - 1
         # Parent all the mch-target bones that have respective tweaks
@@ -571,12 +567,10 @@ class Rig:
             # the def and the matching org bone are parented to their corresponding tweak,
             # whose name is the same as that of the def bone, without the "MCH-target_" (first 11 chars)
             eb[ rbn(bone) ].parent = eb[ rbn( ctrlname( bone[mcht_prefix_len:] ) ) ]
-            tick_progress()
 
         # Parent MCH-target eyes to corresponding mch bones
         for bone in [ bone for bone in mchts if 'eye' in bone ]:
             eb[ rbn(bone) ].parent = eb[ rbn( mchname( bone[mcht_prefix_len:] ) ) ]
-            tick_progress()
 
         for lip_tweak in tweak_unique.values():
             # find the def bones that match unique lip_tweaks by slicing [4:-2]
@@ -585,7 +579,6 @@ class Rig:
             for bone in [ bone for bone in mchts if ctrlname( bone[mcht_prefix_len:-2] ) == lip_tweak ]:
                 if lip_tweak in self.abs_name_map:
                     eb[ rbn( bone ) ].parent = eb[ rbn( lip_tweak ) ]
-                    tick_progress()
 
         # parent cheek bones top respetive tweaks
         lips  = [ ctrlname('lips.L'),   ctrlname('lips.R')   ]
@@ -596,43 +589,35 @@ class Rig:
         for lip, brow, cheekB, cheekT in zip( lips, brows, cheekB_defs, cheekT_defs ):
             if cheekB in self.abs_name_map and lip in self.abs_name_map:
                 eb[ rbn( cheekB ) ].parent = eb[ rbn( lip ) ]
-                tick_progress()
             if cheekT in self.abs_name_map and brow in self.abs_name_map:
                 eb[ rbn( cheekT ) ].parent = eb[ rbn( brow ) ]
-                tick_progress()
 
         # parent ear deform bones to their controls
         for ear_ctrl in ( 'ear.L', 'ear.R' ):
             for ear_mt in ( ear_ctrl, ear_ctrl + '.001' ):
                 if ctrlname( ear_ctrl ) in self.abs_name_map and mch_target( ear_mt ) in mchts:
                     eb[ rbn( mch_target(ear_mt) ) ].parent = eb[ rbn( ctrlname( ear_ctrl ) ) ]
-                    tick_progress()
 
         # Parent eyelid deform bones (each lid def bone is parented to its respective MCH bone)
         for bone in [ bone for bone in mchts if 'lid' in bone ]:
             if bone in self.abs_name_map and mchname(bone[mcht_prefix_len:]) in self.abs_name_map:
                 eb[ rbn( bone ) ].parent = eb[ rbn( mchname(bone[mcht_prefix_len:]) ) ]
-                tick_progress()
 
         ## Parenting all mch bones
         if mchname('eyes_parent') in self.abs_name_map:
             eb[ rbn( mchname('eyes_parent') ) ].parent = None  # eyes_parent will be parented to root
-            tick_progress()
 
         # parent all mch tongue bones to the jaw master control bone
         if 'tongue' in all_bones['mch']:
             for bone in all_bones['mch']['tongue']:
                 eb[ rbn( bone ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
-                tick_progress()
 
         # parent tongue master to the tongue root mch bone
         if 'tongue' in all_bones['ctrls']:
             if 'tongue_parent' in all_bones['mch']:
                 eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['mch']['tongue_parent'][0] ) ]
-                tick_progress()
             elif 'jaw' in all_bones['ctrls']:
                 eb[ rbn( all_bones['ctrls']['tongue'][0] ) ].parent = eb[ rbn( all_bones['ctrls']['jaw'][0] ) ]
-                tick_progress()
 
         ## Parenting the control bones
 
@@ -644,12 +629,10 @@ class Rig:
             for eye in eyes:
                 if eye in self.abs_name_map:
                     eb[ rbn( eye ) ].parent = eb[ rbn( ctrlname('eyes') ) ]
-                    tick_progress()
 
             ## turbo: parent eye master bones to face
             for eye_master in eyes[2:]:
                 eb[ rbn( eye_master ) ].parent = eb[ rbn( 'face' ) ]
-                tick_progress()
 
         # Parent brow.b, eyes mch and lid tweaks and mch bones to masters
         tweaks = [b for b in all_bones['tweaks']['all'] if 'lid' in b or 'brow.B' in b]
@@ -669,20 +652,17 @@ class Rig:
             if l in self.abs_name_map and ctrlname('eye_master.L') in self.abs_name_map:
                 eb[ rbn( l ) ].use_connect = False
                 eb[ rbn( l ) ].parent = eb[ rbn( ctrlname('eye_master.L') ) ]
-                tick_progress()
 
         for r in right:
             if r in self.abs_name_map and ctrlname('eye_master.R') in self.abs_name_map:
                 eb[ rbn( r ) ].use_connect = False
                 eb[ rbn( r ) ].parent = eb[ rbn( ctrlname('eye_master.R') ) ]
-                tick_progress()
 
         ## turbo: nose to mch jaw.004
         if mchname('jaw_master.004') in self.abs_name_map and 'nose' in all_bones['ctrls'] and len(all_bones['ctrls']['nose']) > 0:
             nosetop = all_bones['ctrls']['nose'].pop()
             eb[ rbn( nosetop ) ].use_connect = False
             eb[ rbn( nosetop ) ].parent = eb[ rbn( mchname('jaw_master.004') ) ]
-            tick_progress()
 
         ## Parenting the tweak bones
         
@@ -718,72 +698,56 @@ class Rig:
             for bone in bones:
                 if bone in self.abs_name_map and parent in self.abs_name_map:
                     eb[ rbn( bone ) ].parent = eb[ rbn( parent ) ]
-                    tick_progress()
 
         # if MCH-target_jaw has no parent, parent to jaw_master.
         if mchname('target_jaw') in self.abs_name_map and ctrlname('jaw_master') in self.abs_name_map and eb[ rbn( mchname('target_jaw') ) ].parent is None:
             eb[ rbn( mchname('target_jaw') ) ].parent = eb[ rbn( ctrlname('jaw_master') ) ]
-            tick_progress()
 
         # if chin_parent is exist, parent chin to chin_parent
         if 'chin_parent' in all_bones['mch']:
             if ctrlname('chin') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin') ) ].use_connect = False
                 eb[ rbn( ctrlname('chin') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
-                tick_progress()
             if ctrlname('chin.L') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin.L') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
-                tick_progress()
             if ctrlname('chin.R') in self.abs_name_map:
                 eb[ rbn( ctrlname('chin.R') ) ].parent = eb[ rbn( all_bones['mch']['chin_parent'][0] ) ]
-                tick_progress()
 
         # Remaining arbitrary relatioships for tweak bone parenting
         if ctrlname('chin.001') in self.abs_name_map and ctrlname('chin') in self.abs_name_map:
             eb[ rbn( ctrlname('chin.001') ) ].parent = eb[ rbn( ctrlname('chin') ) ]
-            tick_progress()
         if tailctrlname('chin') in self.abs_name_map and ctrlname('lip.B') in self.abs_name_map:
             eb[ rbn( tailctrlname('chin') ) ].parent = eb[ rbn( ctrlname('lip.B') ) ]
-            tick_progress()
         if ctrlname('nose.001') in self.abs_name_map and ctrlname('nose.002') in self.abs_name_map:
             eb[ rbn( ctrlname('nose.001') ) ].parent = eb[ rbn( ctrlname('nose.002') ) ]
-            tick_progress()
         if ctrlname('nose.003') in self.abs_name_map and ctrlname('nose.002') in self.abs_name_map:
             eb[ rbn( ctrlname('nose.003') ) ].parent = eb[ rbn( ctrlname('nose.002') ) ]
-            tick_progress()
         if tailctrlname('nose') in self.abs_name_map and ctrlname('lip.T') in self.abs_name_map:
             eb[ rbn( tailctrlname('nose') ) ].parent = eb[ rbn( ctrlname('lip.T') ) ]
-            tick_progress()
         if ctrlname('tongue') in self.abs_name_map and ctrlname('tongue_master') in self.abs_name_map:
             eb[ rbn( ctrlname('tongue') ) ].parent = eb[ rbn( ctrlname('tongue_master') ) ]
-            tick_progress()
         if 'tongue' in self.tail_mid_map:
             for i in range(self.tail_mid_map['tongue'][2]):
                 b = 'tongue.%03d' % i
                 if ctrlname(b) in self.abs_name_map and b in self.abs_name_map:
                     eb[ rbn( ctrlname(b) ) ].parent = eb[ rbn( mchname(b) ) ]
-                    tick_progress()
         if 'ear.L' in self.tail_mid_map:
             for bone in [ctrlname('ear.L.%03d' % i) for i in range(2, self.tail_mid_map['ear.L'][2])]:
                 eb[ rbn( bone )].parent = eb[ rbn( ctrlname('ear.L') ) ]
-                tick_progress()
         if 'ear.R' in self.tail_mid_map:
             for bone in [ctrlname('ear.R.%03d' % i) for i in range(2, self.tail_mid_map['ear.R'][2])]:
                 eb[ rbn( bone )].parent = eb[ rbn( ctrlname('ear.R') ) ]
-                tick_progress()
 
         # Parent all rest of mch-target bones to the face as default
         for bone in mchts:
             mcht_eb = eb[ rbn( bone ) ]
             if mcht_eb.parent is None:
                 mcht_eb.parent = eb[ rbn(face_name) ]
-                tick_progress()
 
         # Parent all org bones to the face
         for bone in self.org_bones:
             if bone != face_name and eb[ rbn(bone) ].parent is None:
                 eb[ rbn(bone) ].parent = eb[ rbn(face_name) ]
-                tick_progress()
 
 
     def make_constraits( self, constraint_type, bone, subtarget, influence = 1 ):

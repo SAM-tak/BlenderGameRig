@@ -996,7 +996,7 @@ register, unregister = bpy.utils.register_classes_factory((
     RemoveAllBoneGroupOperator,
     InitLayerOperator,
     RevealUnlinkedWidgetOperator,
-    GenerateProgressOperator,
+    # GenerateProgressOperator,
     GenerateOperator,
     AddSampleOperator,
     ToggleArmatureReferenceOperator,

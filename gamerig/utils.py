@@ -167,9 +167,6 @@ def update_progress():
     if progress[1] > 0:
         bpy.context.window_manager.gamerig.progress_indicator = progress[0] / progress[1] * 100
 
-def tick_progress():
-    bpy.context.window_manager.progress_update(progress[0])
-
 def end_progress():
     bpy.context.window_manager.progress_end()
     bpy.context.window_manager.gamerig.progress_indicator = -1
@@ -182,7 +179,6 @@ def copy_bone(obj, bone_name, assign_name=''):
     """ Makes a copy of the given bone in the given armature object.
         Returns the resulting bone's name.
     """
-    tick_progress()
     if obj == bpy.context.active_object and bpy.context.mode == 'EDIT_ARMATURE':
         if bone_name not in obj.data.edit_bones:
             raise MetarigError("copy_bone(): bone '%s' not found, cannot copy it" % bone_name)
@@ -196,8 +192,7 @@ def copy_bone(obj, bone_name, assign_name=''):
         bone_name_2 = edit_bone_2.name
 
         edit_bone_2.parent = edit_bone_1.parent
-        #edit_bone_2.use_connect = edit_bone_1.use_connect
-        edit_bone_2.use_connect = False
+        edit_bone_2.use_connect = edit_bone_1.use_connect
 
         # Copy edit bone attributes
         edit_bone_2.layers = list(edit_bone_1.layers)
