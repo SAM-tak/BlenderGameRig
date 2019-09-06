@@ -148,6 +148,12 @@ class Rig:
         ## create control bones
         eb = self.obj.data.edit_bones
 
+        nose_master = None
+        earL_ctrl_name = None
+        earR_ctrl_name = None
+        jaw_ctrl_name = None
+        tongue_ctrl_name = None
+
         # eyes ctrls
         eye_master_names = []
         if 'eyes' in bones and len(bones['eyes']) > 1:
