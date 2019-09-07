@@ -32,6 +32,7 @@ from .utils import (
     MetarigError
 )
 from . import rig_lists
+from mathutils import Vector
 
 
 RIG_MODULE = "rigs"
@@ -119,6 +120,25 @@ def generate_rig(context, metarig):
         # Put the rig_name in the armature custom properties
         rna_idprop_ui_prop_get(obj.data, "gamerig_id", create=True)
         obj.data["gamerig_id"] = rig_id
+        obj.location            = metarig.location
+        obj.rotation_mode       = metarig.rotation_mode
+        obj.rotation_euler      = metarig.rotation_euler
+        obj.rotation_quaternion = metarig.rotation_quaternion
+        obj.rotation_axis_angle = metarig.rotation_axis_angle
+        obj.scale               = metarig.scale
+
+    # apply rotation for metarig / rig
+    bpy.ops.object.select_all(action='DESELECT')
+    metarig.select_set(True)
+    obj.select_set(True)
+    obj.hide_viewport = False
+    metarig_rotation_euler_backup      = metarig.rotation_euler.copy()
+    metarig_rotation_quaternion_backup = metarig.rotation_quaternion.copy()
+    metarig_rotation_axis_angle_backup = Vector(metarig.rotation_axis_angle)
+    rig_rotation_euler_backup      = obj.rotation_euler.copy()
+    rig_rotation_quaternion_backup = obj.rotation_quaternion.copy()
+    rig_rotation_axis_angle_backup = Vector(obj.rotation_axis_angle)
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
 
     obj.data.pose_position = 'POSE'
 
@@ -450,7 +470,51 @@ def generate_rig(context, metarig):
     #----------------------------------
     # Deconfigure
     bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Restore original rotation
+
+    metarig_rotation_euler_inverted = metarig_rotation_euler_backup.copy()
+    metarig_rotation_euler_inverted.x *= -1
+    metarig_rotation_euler_inverted.y *= -1
+    metarig_rotation_euler_inverted.z *= -1
+
+    metarig_rotation_axis_angle_inverted = metarig_rotation_axis_angle_backup.copy()
+    metarig_rotation_axis_angle_inverted.w *= -1
+
+    metarig.rotation_euler      = metarig_rotation_euler_inverted
+    metarig.rotation_quaternion = metarig_rotation_quaternion_backup.inverted()
+    metarig.rotation_axis_angle = metarig_rotation_axis_angle_inverted
+
+    rig_rotation_euler_inverted = rig_rotation_euler_backup.copy()
+    rig_rotation_euler_inverted.x *= -1
+    rig_rotation_euler_inverted.y *= -1
+    rig_rotation_euler_inverted.z *= -1
+
+    rig_rotation_axis_angle_inverted = rig_rotation_axis_angle_backup.copy()
+    rig_rotation_axis_angle_inverted.w *= -1
+
+    obj.rotation_euler      = rig_rotation_euler_inverted
+    obj.rotation_quaternion = rig_rotation_quaternion_backup.inverted()
+    obj.rotation_axis_angle = rig_rotation_axis_angle_inverted
+
+    bpy.ops.object.select_all(action='DESELECT')
+    metarig.select_set(True)
+    obj.select_set(True)
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+
+    metarig.rotation_euler      = metarig_rotation_euler_backup
+    metarig.rotation_quaternion = metarig_rotation_quaternion_backup
+    metarig.rotation_axis_angle = metarig_rotation_axis_angle_backup
+
+    obj.rotation_euler      = rig_rotation_euler_backup
+    obj.rotation_quaternion = rig_rotation_quaternion_backup
+    obj.rotation_axis_angle = rig_rotation_axis_angle_backup
+
+    metarig.select_set(False)
+    obj.select_set(True)
+
     metarig.data.pose_position = rest_backup
+    
     obj.data.pose_position = 'POSE'
 
     # Restore toggled armature modifiers
@@ -464,14 +528,6 @@ def generate_rig(context, metarig):
             child.matrix_world = mat
     # Restore active collection
     view_layer.active_layer_collection = layer_collection
-
-    # set location generated rig to metarig location
-    obj.location            = metarig.location
-    obj.rotation_mode       = metarig.rotation_mode
-    obj.rotation_euler      = metarig.rotation_euler
-    obj.rotation_quaternion = metarig.rotation_quaternion
-    obj.rotation_axis_angle = metarig.rotation_axis_angle
-    obj.scale               = metarig.scale
 
     t.tick("The rest: ")
 
