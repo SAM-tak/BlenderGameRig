@@ -78,7 +78,6 @@ Rigifyと違い、GameRigはリグ生成時にボーンのリネームを行わ�
 
 コンストレイントが設定されていても、ちゃんとそれごとコピーされます。
 
-
 ![final metarig](images/finalmetarig.jpg "final metarig")
 
 ### リグ生成

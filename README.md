@@ -161,7 +161,7 @@ In pose mode, you can set rig parameter in GameRig Rig Type panel that be placed
 
 ## Why 'Unity Mechanim/Human' metarig has X 90° rotation
 
-By deference of coordinate system between Blender and Unity, imported mesh lie down in Unity with a exported fbx by Blender. This is a reason of metarig has X +90° rotation (GameRig generates a rig with same rotation as metarig).
+By deference of coordinate system between Blender and Unity, imported mesh lie down in Unity with a fbx file exported by Blender. This is a reason of metarig has X +90° rotation (GameRig generates a rig with same rotation as metarig).
 
 ![imported fbx 1](images/importedfbx1.jpg "imported meshes lie down")
 
