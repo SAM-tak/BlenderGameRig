@@ -21,7 +21,7 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
   - [Blend animation and physic simulation result](#blend-animation-and-physic-simulation-result)
 - [Tips](#tips)
   - [How to use with an existing armature](#how-to-use-with-an-existing-armature)
-- [Why 'Unity Mechanim/Human' metarig has X 90° rotation](#why-unity-mechanimhuman-metarig-has-x-90°-rotation)
+- [Why 'Unity Mechanim/Human' metarig has X 90° rotation](#why-unity-mechanimhuman-metarig-has-x-90-rotation)
 
 <!-- /TOC -->
 
