@@ -54,6 +54,9 @@ def generate_rig(context, metarig):
     """
     t = Timer()
 
+    # clear created widget list
+    if hasattr(create_widget, 'created_widgets'):
+        del create_widget.created_widgets
     # clear copied bone list
     if hasattr(copy_bone, 'copied'):
         del copy_bone.copied
@@ -371,6 +374,8 @@ def generate_rig(context, metarig):
         if is_mch(obj.data.bones[bone].name):
             obj.data.bones[bone].layers = MCH_LAYER
 
+    # Assign shapes to bones
+    assign_all_widgets(obj)
     # Reveal all the layers with control bones on them
     vis_layers = [False for n in range(0, 32)]
     for bone in bones:
