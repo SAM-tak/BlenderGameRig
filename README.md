@@ -8,25 +8,40 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
 
 <!-- TOC -->
 
-- [!Blender GameRig](#blender-gamerig)
-  - [Rigging Add-on for Blender 2.80](#rigging-add-on-for-blender-280)
-  - [How to use](#how-to-use)
-    - [Add 'metarig'](#add-metarig)
-    - [Adjust metarig](#adjust-metarig)
-      - [Add additional bones](#add-additional-bones)
-    - [Generate rig](#generate-rig)
-    - [Regenerate rig](#regenerate-rig)
-  - [Deference from Rigify](#deference-from-rigify)
-    - [Clean hierarchy](#clean-hierarchy)
-    - [Multi Face Rig](#multi-face-rig)
-    - [Blend animation and physic simulation result](#blend-animation-and-physic-simulation-result)
-  - [Tips](#tips)
-    - [How to use with an existing armature](#how-to-use-with-an-existing-armature)
-  - [License](#license)
+- [How to use](#how-to-use)
+  - [Install GameRig to your blender](#install-gamerig-to-your-blender)
+  - [Add 'metarig'](#add-metarig)
+  - [Adjust metarig](#adjust-metarig)
+    - [Add additional bones](#add-additional-bones)
+  - [Generate rig](#generate-rig)
+  - [Regenerate rig](#regenerate-rig)
+- [Deference from Rigify](#deference-from-rigify)
+  - [Clean hierarchy](#clean-hierarchy)
+  - [Multi Face Rig](#multi-face-rig)
+  - [Blend animation and physic simulation result](#blend-animation-and-physic-simulation-result)
+- [Tips](#tips)
+  - [How to use with an existing armature](#how-to-use-with-an-existing-armature)
+- [License](#license)
 
 <!-- /TOC -->
 
 ## How to use
+
+### Install GameRig to your blender
+
+Download [this zip file](https://github.com/SAM-tak/BlenderGameRig/releases/download/v1.0-RC1/BlenderGameRig-1-0-RC1.zip) for install.
+
+Back to Blender and open Preference Window, and click 'Install...' button.
+
+![addonpanel](images/addonpanel.jpg "addonpanel")
+
+Choose downloaded zip file and click 'Install add-on from File...' button.
+
+![installaddon](images/installaddon.jpg "installaddon")
+
+Then GameRig will be found in Add-on list (filtering by categoly 'Rigging', you can find faster), click check box to activate.
+
+![addedaddon](images/addedaddon.jpg "addedaddon")
 
 ### Add 'metarig'
 
