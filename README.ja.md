@@ -23,7 +23,7 @@
   - [物理シミュレーションとアニメーションのブレンド（切り替え）機能がある](#物理シミュレーションとアニメーションのブレンド切り替え機能がある)
 - [Tips](#tips)
   - [既存のアーマチュアをメタリグ化する](#既存のアーマチュアをメタリグ化する)
-- [なぜ 'Unity Mechanim/Human' メタリグはX軸90°の回転を持っているのか](#なぜ-unity-mechanimhuman-メタリグはx軸90°の回転を持っているのか)
+- [なぜ'Unity Mechanim/Human'メタリグはX軸90°の回転を持っているのか](#なぜunity-mechanimhumanメタリグはx軸90°の回転を持っているのか)
 - [ライセンス](#ライセンス)
 
 <!-- /TOC -->
@@ -160,9 +160,9 @@ face リグ がより柔軟です。
 
 ![edit rig type](images/editrigtype.jpg "edit rig type")
 
-## なぜ 'Unity Mechanim/Human' メタリグはX軸90°の回転を持っているのか
+## なぜ'Unity Mechanim/Human'メタリグはX軸90°の回転を持っているのか
 
-BlenderとUnityの座標系の違いから、BlenderでエキスポートしたfbxをUnityにインポートすると横倒しになってしまうので、それに対処するためです。
+BlenderとUnityの座標系の違いから、BlenderでエキスポートしたfbxをUnityにインポートすると横倒しになってしまうので、それに対処するためです。(GameRigはメタリグと同じ回転をもったリグアーマチュアを生成します)
 
 ![imported fbx 1](images/importedfbx1.jpg "imported meshes lie down")
 
@@ -189,6 +189,8 @@ BlenderとUnityの座標系の違いから、Blenderでエキスポートしたf
 > Blender 2.80 と Unity 2019.1 の組み合わせの場合。
 >
 > Blender 2.79 と Unity 2018.4 の頃は同じことをするのに違う設定を使っていました。
+
+![no rotation and no scale](images/cleantransform.gif "no rotation and no scale")
 
 ## ライセンス
 
