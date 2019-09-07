@@ -136,6 +136,7 @@ for metarig_class in metarigs_dict:
         T = type("GameRig_Add_" + name + "_Metarig", (AddMetarigOperatorBase,), {})
         T.bl_idname = "gamerig." + name.lower() + "_metarig_add"
         T.bl_label = "Add " + text
+        T.bl_description = "Add an armature '%s' to current scene" % text
         T.bl_options = {'REGISTER', 'UNDO'}
         T.execute = make_metarig_add_execute(m)
 
