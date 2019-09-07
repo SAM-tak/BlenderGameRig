@@ -8,7 +8,6 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
 
 <!-- TOC -->
 
-- [Rigging Add-on for Blender 2.80](#rigging-add-on-for-blender-280)
 - [How to use](#how-to-use)
   - [Install GameRig to your blender](#install-gamerig-to-your-blender)
   - [Add 'metarig'](#add-metarig)
