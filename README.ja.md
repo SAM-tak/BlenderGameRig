@@ -148,7 +148,7 @@ face リグ がより柔軟です。
 
 ![no gamerig panel](images/nogamerigpanel.jpg "no gamerig panel")
 
-こういう場合はアーマチュア追加メニューから**Single Bone (metarig)**を選んで追加し、そのSingle Boneメタリグに既存のアーマチュアを**join (Ctrl + J / Menu Object→Join)**してください。
+こういう場合はアーマチュア追加メニューから**Single Bone (metarig)を選んで追加**し、そのSingle Boneメタリグに既存のアーマチュアを**join** (**Ctrl + J / Menu Object→Join**)してください。
 
 ![add single bone](images/addsinglebone.jpg "add single bone")
 
@@ -162,7 +162,7 @@ face リグ がより柔軟です。
 
 ## なぜ 'Unity Mechanim/Human' メタリグはX軸90°の回転を持っているのか
 
-BlenderとUnityの座標系の違いから、BlenderでエキスポートしたfbxをUnityに行っンポーとすると横倒しになってしまうので、それに対処するためです。
+BlenderとUnityの座標系の違いから、BlenderでエキスポートしたfbxをUnityにインポートすると横倒しになってしまうので、それに対処するためです。
 
 ![imported fbx 1](images/importedfbx1.jpg "imported meshes lie down")
 
