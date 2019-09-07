@@ -73,7 +73,7 @@ If your model has hair / cloth / etc. bones, add these too.
 
 These bones will be copied to generated rig.
 
-If they have constraints, these constraints will be copied too with right target.
+If they have constraints and/or have drivers, these will be copied too with right target.
 
 ![final metarig](images/finalmetarig.jpg "final metarig")
 
