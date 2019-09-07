@@ -239,15 +239,29 @@ def generate_rig(context, metarig):
     t.tick("Make list of org bones: ")
 
     #----------------------------------
+    error = None
+    def append_error(bone, rig, e):
+        nonlocal error
+        errorstr  = "failed at rig '%s' (%s)." % (bone, rig.__class__.__module__) if rig else "failed at rig '%s'." % bone
+        errorstr += "\n   " + e.message
+        print("GameRig: %s" % errorstr)
+        if error:
+            error += '\n' + errorstr
+        else:
+            error = errorstr
+    
     try:
         # Collect/initialize all the rigs.
         rigs = {}
         rigtypes = set()
+        bpy.ops.object.mode_set(mode='EDIT')
         for bone in bones_sorted:
-            bpy.ops.object.mode_set(mode='EDIT')
-            rig = get_bone_rig(metarig, obj, bone, rigtypes)
-            if rig:
-                rigs[bone] = rig
+            try:
+                rig = get_bone_rig(metarig, obj, bone, rigtypes)
+                if rig:
+                    rigs[bone] = rig
+            except MetarigError as e:
+                append_error(bone, None, e)
         t.tick("Initialize rigs: ")
 
         begin_progress(len(rigs.keys()) * 2)
@@ -261,16 +275,15 @@ def generate_rig(context, metarig):
 
         # Go into editmode in the rig armature
         bpy.ops.object.mode_set(mode='EDIT')
-        bone = None
-        rig = None
         for bone, rig in rigs.items():
-            script = rig.generate(context)
-            if script and len(script) > 0:
-                ui_scripts.append(script)
+            try:
+                script = rig.generate(context)
+                if script and len(script) > 0:
+                    ui_scripts.append(script)
+            except MetarigError as e:
+                append_error(bone, rig, e)
             tt.tick("Generate rig : %s (%s): " % (bone, rig.__class__.__module__))
             update_progress()
-        bone = None
-        rig = None
 
         # Go into objectmode in the rig armature
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -331,26 +344,14 @@ def generate_rig(context, metarig):
                     k2 = d2.keyframe_points[i]
                     copy_attributes(k1, k2)
         
-        bone = None
-        rig = None
         for bone, rig in rigs.items():
-            rig.postprocess(context)
+            try:
+                rig.postprocess(context)
+            except MetarigError as e:
+                append_error(bone, rig, e)
             tt.tick("PostProcess rig : %s (%s): " % (bone, rig.__class__.__module__))
             update_progress()
         t.tick("Generate rigs: ")
-        bone = None
-        rig = None
-    except MetarigError as e:
-        # Cleanup if something goes wrong
-        print("GameRig: failed to generate rig.")
-        if bone and rig:
-            e.message += '\n GameRig: failed at rig %s (%s).' % (bone, rig.__class__.__module__)
-        metarig.data.pose_position = rest_backup
-        obj.data.pose_position = 'POSE'
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Continue the exception
-        raise e
     except Exception as e:
         # Cleanup if something goes wrong
         print("GameRig: failed to generate rig.")
@@ -530,6 +531,7 @@ def generate_rig(context, metarig):
     view_layer.active_layer_collection = layer_collection
 
     t.tick("The rest: ")
+    return error
 
 
 def create_selection_sets(obj, metarig):

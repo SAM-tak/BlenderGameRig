@@ -552,14 +552,6 @@ class UtilityPanel(bpy.types.Panel):
         layout.operator(RevealUnlinkedWidgetOperator.bl_idname)
 
 
-def report_exception(operator, exception):
-    import traceback
-    if isinstance(exception, MetarigError):
-        operator.report({'ERROR'}, exception.message)
-    else:
-        operator.report({'EXCEPTION'}, traceback.format_exc(exception))
-
-
 class InitLayerOperator(bpy.types.Operator):
     """Initialize armature gamerig layers"""
 
@@ -670,9 +662,9 @@ class GenerateOperator(bpy.types.Operator):
         use_global_undo = context.preferences.edit.use_global_undo
         context.preferences.edit.use_global_undo = False
         try:
-            generate.generate_rig(context, context.object)
-        except MetarigError as rig_exception:
-            report_exception(self, rig_exception)
+            error = generate.generate_rig(context, context.object)
+            if error:
+                self.report({'ERROR'}, error)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         
