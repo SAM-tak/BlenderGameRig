@@ -8,6 +8,7 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
 
 <!-- TOC -->
 
+- [Rigging Add-on for Blender 2.80](#rigging-add-on-for-blender-280)
 - [How to use](#how-to-use)
   - [Install GameRig to your blender](#install-gamerig-to-your-blender)
   - [Add 'metarig'](#add-metarig)
@@ -21,7 +22,7 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
   - [Blend animation and physic simulation result](#blend-animation-and-physic-simulation-result)
 - [Tips](#tips)
   - [How to use with an existing armature](#how-to-use-with-an-existing-armature)
-- [License](#license)
+- [Why 'Unity Mechanim/Human' metarig has X 90° rotation](#why-unity-mechanimhuman-metarig-has-x-90°-rotation)
 
 <!-- /TOC -->
 
@@ -57,7 +58,7 @@ Then GameRig will be found in Add-on list (filtering by categoly 'Rigging', you 
 
 ### Adjust metarig
 
-Edit metarig armature, let it fit to your model.
+Edit metarig armature, let it fit to your character mesh.
 
 ![adjusted metarig](images/adjustmetarig.jpg "adjusted metarig")
 
@@ -159,6 +160,36 @@ In pose mode, you can set rig parameter in GameRig Rig Type panel that be placed
 
 ![edit rig type](images/editrigtype.jpg "edit rig type")
 
-## License
+## Why 'Unity Mechanim/Human' metarig has X 90° rotation
+
+By deference of coordinate system between Blender and Unity, imported mesh lie down in Unity with a exported fbx by Blender. This is a reason of metarig has X +90° rotation (GameRig generates a rig with same rotation as metarig).
+
+![imported fbx 1](images/importedfbx1.jpg "imported meshes lie down")
+
+Rig armature having X +90° rotation and their children having X -90° rotation, and settings of export fbx are:
+
+- scale is 0.01
+- 'Apply Unit' is off
+- 'Apply Transform' is on
+
+and Unity side import settings are:
+
+- Scale is 1.0
+- 'Convert Unit' is off
+
+![parent has x +90° rotation](images/parentrotation.jpg "x +90° rotation")
+![child has x -90° rotation](images/childrotation.jpg "x -90° rotation")
+![export setting](images/exportsetting.jpg "export setting")
+![import setting](images/importsetting.jpg "import setting")
+
+These settings make imported fbx object having right orientation and clean transform (no rotation, no scaling) on Unity.
+
+> Note:
+>
+> For combination of Blender 2.80 and Unity 2019.1
+>
+> I was using deferent settings for same effect in Blender 2.79 and Unity 2018.4 era.
+
+![no rotation and no scale](images/cleantransform.gif "no rotation and no scale")
 
 [GNU GENERAL PUBLIC LICENSE](LICENSE)

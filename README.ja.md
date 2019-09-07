@@ -23,6 +23,7 @@
   - [物理シミュレーションとアニメーションのブレンド（切り替え）機能がある](#物理シミュレーションとアニメーションのブレンド切り替え機能がある)
 - [Tips](#tips)
   - [既存のアーマチュアをメタリグ化する](#既存のアーマチュアをメタリグ化する)
+- [なぜ 'Unity Mechanim/Human' メタリグはX軸90°の回転を持っているのか](#なぜ-unity-mechanimhuman-メタリグはx軸90°の回転を持っているのか)
 - [ライセンス](#ライセンス)
 
 <!-- /TOC -->
@@ -159,6 +160,36 @@ face リグ がより柔軟です。
 ボーン・プロパティー・タブからリグの設定が行えるようになります。
 
 ![edit rig type](images/editrigtype.jpg "edit rig type")
+
+## なぜ 'Unity Mechanim/Human' メタリグはX軸90°の回転を持っているのか
+
+BlenderとUnityの座標系の違いから、BlenderでエキスポートしたfbxをUnityに行っンポーとすると横倒しになってしまうので、それに対処するためです。
+
+![imported fbx 1](images/importedfbx1.jpg "imported meshes lie down")
+
+リグアーマチュアがX軸+90°の回転を、子のメッシュオブジェクトがX軸-90°の回転を持つようにし、更にFBX Exportの設定を:
+
+- scale = 0.01
+- 'Apply Unit'はオフ
+- 'Apply Transform'はオン
+
+とし、またUnity側のインポート設定を:
+
+- Scale = 1.0
+- 'Convert Unit'はオフ
+
+![parent has x +90° rotation](images/parentrotation.jpg "x +90° rotation")
+![child has x -90° rotation](images/childrotation.jpg "x -90° rotation")
+![export setting](images/exportsetting.jpg "export setting")
+![import setting](images/importsetting.jpg "import setting")
+
+としてエキスポート・インポートを行うと、横倒しにならず、かつインポートしたオブジェクトに余計な回転やスケールが一切ないようにできます。
+
+> 付記:
+>
+> Blender 2.80 と Unity 2019.1 の組み合わせの場合。
+>
+> Blender 2.79 と Unity 2018.4 の頃は同じことをするのに違う設定を使っていました。
 
 ## ライセンス
 
