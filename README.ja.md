@@ -1,4 +1,4 @@
-# ![Blender GameRig](images/logo.png "Logo")
+# ![Blender GameRig](img/logo.jpg "Logo")
 
 *他の言語で読む: [English](README.md), [日本語](README.ja.md).*
 
@@ -23,7 +23,7 @@
   - [物理シミュレーションとアニメーションのブレンド（切り替え）機能がある](#物理シミュレーションとアニメーションのブレンド切り替え機能がある)
 - [Tips](#tips)
   - [既存のアーマチュアをメタリグ化する](#既存のアーマチュアをメタリグ化する)
-- [なぜ'Unity Mechanim/Human'メタリグはX軸90°の回転を持っているのか](#なぜunity-mechanimhumanメタリグはx軸90の回転を持っているのか)
+  - [なぜ'Unity Mechanim/Human'メタリグはX軸90°の回転を持っているのか](#なぜunity-mechanimhumanメタリグはx軸90の回転を持っているのか)
 - [ライセンス](#ライセンス)
 
 <!-- /TOC -->
@@ -36,15 +36,15 @@
 
 Blenderに戻ってプリファレンス・ウィンドウを開いて、'Install...'ボタンをクリックします。
 
-![addonpanel](images/addonpanel.jpg "addonpanel")
+![addonpanel](img/addonpanel.jpg "addonpanel")
 
 先ほどダウンロードしたZIPファイルを選択して'Install add-on from File...'ボタンをクリックします。
 
-![installaddon](images/installaddon.jpg "installaddon")
+![installaddon](img/installaddon.jpg "installaddon")
 
 GameRigがアドオン一覧に現れるので、チェックを入れて有効にします。
 
-![addedaddon](images/addedaddon.jpg "addedaddon")
+![addedaddon](img/addedaddon.jpg "addedaddon")
 
 ### 'メタリグ' を追加する
 
@@ -54,21 +54,21 @@ GameRigがアドオン一覧に現れるので、チェックを入れて有効�
 >
 > メニュー: Add → Add Armature
 
-![add metarig menu](images/addmetarig.jpg "add metarig menu")
+![add metarig menu](img/addmetarig.jpg "add metarig menu")
 
-![added metarig](images/metarig.jpg "added metarig")
+![added metarig](img/metarig.jpg "added metarig")
 
 ### メタリグを調整する
 
 metarig アーマチュアを編集して、適用したいモデルにボーンの位置合わせします。
 
-![adjusted metarig](images/adjustmetarig.jpg "adjusted metarig")
+![adjusted metarig](img/adjustmetarig.jpg "adjusted metarig")
 
 ボーン変形のために頂点グループを設定します。
 
 Rigifyと違い、GameRigはリグ生成時にボーンのリネームを行わないので、メタリグの時点でボーンの変形具合をテストできます。
 
-![setup vertexgroup](images/setupvertexgroup.jpg "setup vertexgroup")
+![setup vertexgroup](img/setupvertexgroup.jpg "setup vertexgroup")
 
 #### 追加のボーンを追加する
 
@@ -78,29 +78,29 @@ Rigifyと違い、GameRigはリグ生成時にボーンのリネームを行わ�
 
 コンストレイントやドライバーが設定されていても、ちゃんとそれごとコピーされます。
 
-![final metarig](images/finalmetarig.jpg "final metarig")
+![final metarig](img/finalmetarig.jpg "final metarig")
 
 ### リグ生成
 
 準備ができたら、アーマチュア・プロパティー・タブにある'Generate New Rig'ボタンをクリックします。
 
-![armature panel](images/armaturepanel.jpg "armature panel")
+![armature panel](img/armaturepanel.jpg "armature panel")
 
 これでリグが出来上がります。
 
-![generated rig](images/generatedrig.jpg "generated rig")
+![generated rig](img/generatedrig.jpg "generated rig")
 
 メッシュオブジェクトを出来上がったリグにリンクします。
 
-![parenting](images/parenting.jpg "parenting")
+![parenting](img/parenting.jpg "parenting")
 
 ポーズモードに入ると、生成されたリグのIK/FKブレンディングなどの様々な機能を使ってポージング・アニメーション制作ができます。
 
-![posing](images/posing.jpg "posing")
+![posing](img/posing.jpg "posing")
 
 リグの独自パラメータや機能には、サイドバーのアイテムタブにある'GameRig Properties'パネルでアクセスできます。
 
-![properties](images/properties.jpg "properties")
+![properties](img/properties.jpg "properties")
 
 ### リグの再生成
 
@@ -108,14 +108,14 @@ Rigifyと違い、GameRigはリグ生成時にボーンのリネームを行わ�
 
 メタリグを再編集したら、'Regenerate rig'ボタンを押してリグに変更を反映できます。
 
-![regenerate](images/regenerate.jpg "regenerate")
+![regenerate](img/regenerate.jpg "regenerate")
 > 注意:
 >
 > アクティブなコレクションが上書きしたいリグを含んでいるコレクションか確認してください。
 >
 > そうでないと、GameRigは新しいリグアーマチュアを制作してしまいます。
 >
-> ![wrong collection](images/wrongcollection.jpg "wrong collection")
+> ![wrong collection](img/wrongcollection.jpg "wrong collection")
 
 ## Rigifyとの違い
 
@@ -125,20 +125,20 @@ GameRigは元のボーンをリネームしないし、デフォーム用ボー�
 
 よりゲーム開発やVRコンテンツ制作向きのリグを生成できます。
 
-![unity mechanim avatar](images/unitymechanimavatar.jpg "unity mechanim avatar")
+![unity mechanim avatar](img/unitymechanimavatar.jpg "unity mechanim avatar")
 
 ### マルチ Face リグ
 
 face リグ がより柔軟です。
 
-![multihead metarig](images/multiheadmetarig.jpg "multihead metarig")
-![multihead rig](images/multiheadrig.jpg "multihead rig")
+![multihead metarig](img/multiheadmetarig.jpg "multihead metarig")
+![multihead rig](img/multiheadrig.jpg "multihead rig")
 
 ### 物理シミュレーションとアニメーションのブレンド（切り替え）機能がある
 
 **'generic'** と **'tentacle'** リグはメタボーンにコンストレントがついていた場合、その結果の位置とキーアニメーションによる位置とをブレンドできます。
 
-![rigphysicsblend](images/rigphysicsblend.gif "rigphysicsblend")
+![rigphysicsblend](img/rigphysicsblend.gif "rigphysicsblend")
 
 ## Tips
 
@@ -146,25 +146,25 @@ face リグ がより柔軟です。
 
 普通のアーマチュアはGameRigのメタリグとして認識されないため、アーマチュア・プロパティー・タブにGameRigパネルが現れないため、メタリグのセットアップができません。
 
-![no gamerig panel](images/nogamerigpanel.jpg "no gamerig panel")
+![no gamerig panel](img/nogamerigpanel.jpg "no gamerig panel")
 
 こういう場合はアーマチュア追加メニューから**Single Bone (metarig)を選んで追加**し、そのSingle Boneメタリグに既存のアーマチュアを**join** (**Ctrl + J / Menu Object→Join**)してください。
 
-![add single bone](images/addsinglebone.jpg "add single bone")
+![add single bone](img/addsinglebone.jpg "add single bone")
 
 これでアーマチュア・プロパティー・タブにGameRigパネルが現れるようになり、
 
-![joined armature](images/joinedarmature.jpg "joined armature")
+![joined armature](img/joinedarmature.jpg "joined armature")
 
 ボーン・プロパティー・タブからリグの設定が行えるようになります。
 
-![edit rig type](images/editrigtype.jpg "edit rig type")
+![edit rig type](img/editrigtype.jpg "edit rig type")
 
-## なぜ'Unity Mechanim/Human'メタリグはX軸90°の回転を持っているのか
+### なぜ'Unity Mechanim/Human'メタリグはX軸90°の回転を持っているのか
 
 BlenderとUnityの座標系の違いから、BlenderでエキスポートしたfbxをUnityにインポートすると横倒しになってしまうので、それに対処するためです。(GameRigはメタリグと同じ回転をもったリグアーマチュアを生成します)
 
-![imported fbx 1](images/importedfbx1.jpg "imported meshes lie down")
+![imported fbx 1](img/importedfbx1.jpg "imported meshes lie down")
 
 リグアーマチュアがX軸+90°の回転を、子のメッシュオブジェクトがX軸-90°の回転を持つようにし、更にFBX Exportの設定を:
 
@@ -177,10 +177,10 @@ BlenderとUnityの座標系の違いから、Blenderでエキスポートしたf
 - Scale = 1.0
 - 'Convert Unit'はオフ
 
-![parent has x +90° rotation](images/parentrotation.jpg "x +90° rotation")
-![child has x -90° rotation](images/childrotation.jpg "x -90° rotation")
-![export setting](images/exportsetting.jpg "export setting")
-![import setting](images/importsetting.jpg "import setting")
+![parent has x +90° rotation](img/parentrotation.jpg "x +90° rotation")
+![child has x -90° rotation](img/childrotation.jpg "x -90° rotation")
+![export setting](img/exportsetting.jpg "export setting")
+![import setting](img/importsetting.jpg "import setting")
 
 としてエキスポート・インポートを行うと、横倒しにならず、かつインポートしたオブジェクトに余計な回転やスケールが一切ないようにできます。
 
@@ -190,7 +190,7 @@ BlenderとUnityの座標系の違いから、Blenderでエキスポートしたf
 >
 > Blender 2.79 と Unity 2018.4 の頃は同じことをするのに違う設定を使っていました。
 
-![no rotation and no scale](images/cleantransform.gif "no rotation and no scale")
+![no rotation and no scale](img/cleantransform.gif "no rotation and no scale")
 
 ## ライセンス
 
