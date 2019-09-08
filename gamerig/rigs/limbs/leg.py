@@ -97,7 +97,8 @@ if is_selected( controls ):
 
 # FK limb follow
 if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )""")
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
+""")
 
 
     def create_leg( self, bones ):
