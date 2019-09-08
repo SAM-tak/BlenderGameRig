@@ -22,7 +22,7 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
 - [Tips](#tips)
   - [How to use with an existing armature](#how-to-use-with-an-existing-armature)
   - [Why 'Unity Mechanim/Human' metarig has X 90° rotation](#why-unity-mechanimhuman-metarig-has-x-90-rotation)
-- [LICENSE](#license)
+- [License](#license)
 
 <!-- /TOC -->
 
@@ -194,6 +194,6 @@ These settings make imported fbx object having right orientation and clean trans
 
 ![no rotation and no scale](img/cleantransform.gif "no rotation and no scale")
 
-## LICENSE
+## License
 
 [GNU GENERAL PUBLIC LICENSE](LICENSE)
