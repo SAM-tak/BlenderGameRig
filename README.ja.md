@@ -32,7 +32,9 @@
 
 ### GameRigをインストールする
 
-[このZIPファイル](https://github.com/SAM-tak/BlenderGameRig/releases/download/v1.0-RC1/BlenderGameRig-1-0-RC1.zip)をダウンロードします。
+[リリースページ](https://github.com/SAM-tak/BlenderGameRig/releases)に掲載されているzipファイルをダウンロードします。
+
+![download link](img/downloadlink.jpg "download link")
 
 Blenderに戻ってプリファレンス・ウィンドウを開いて、'Install...'ボタンをクリックします。
 

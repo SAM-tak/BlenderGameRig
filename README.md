@@ -29,7 +29,9 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
 
 ### Install GameRig to your blender
 
-Download [this zip file](https://github.com/SAM-tak/BlenderGameRig/releases/download/v1.0-RC1/BlenderGameRig-1-0-RC1.zip) for install.
+Download zip file for install from [Releases Page](https://github.com/SAM-tak/BlenderGameRig/releases).
+
+![download link](img/downloadlink.jpg "download link")
 
 Back to Blender and open Preference Window, and click 'Install...' button.
 
