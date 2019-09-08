@@ -26,7 +26,7 @@ import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
     rig_module_name, get_rig_type, create_widget, assign_all_widgets,
-    is_org, is_mch, is_jig, get_wgt_name, random_id,
+    is_org, is_mch, is_jig, random_id,
     copy_attributes, gamma_correct, get_rig_name, copy_bone, copy_attr_all_copied_posebone,
     begin_progress, update_progress, end_progress,
     MetarigError

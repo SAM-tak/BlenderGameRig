@@ -183,7 +183,7 @@ class Rig:
             eyeR_ctrl_e.head    = eyeR_e.tail + distance
             eyes_ctrl_e.head[:] =  ( eyeL_ctrl_e.head + eyeR_ctrl_e.head ) / 2
 
-            for bone in [ eyeL_ctrl_e, eyeR_ctrl_e, eyes_ctrl_e ]:
+            for bone in ( eyeL_ctrl_e, eyeR_ctrl_e, eyes_ctrl_e ):
                 bone.tail[:] = bone.head + Vector( [ 0, 0, eye_length * 0.75 ] )
 
             eyes_ctrl_e.length = (eyeL_ctrl_e.head - eyes_ctrl_e.head).length * 0.62
@@ -252,7 +252,8 @@ class Rig:
             tongue_ctrl_name = self.copy_bone( self.obj, tongue_org, ctrlname(tongue_name) )
 
             flip_bone( self.obj, rbn(tongue_ctrl_name) )
-            
+            eb[tongue_ctrl_name].align_roll(eb[tongue_org].z_axis)
+
             ret['tongue'] = [ tongue_ctrl_name ]
         
         self.eye_master_names = eye_master_names

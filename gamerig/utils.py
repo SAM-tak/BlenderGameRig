@@ -264,11 +264,9 @@ def flip_bone(obj, bone_name):
         bone = obj.data.edit_bones[bone_name]
         head = Vector(bone.head)
         tail = Vector(bone.tail)
-        z_axis = bone.z_axis.copy()
         bone.tail = head + tail
         bone.head = tail
         bone.tail = head
-        bone.align_roll(z_axis)
     else:
         raise RuntimeError("Cannot flip bones outside of edit mode")
 
@@ -290,13 +288,6 @@ def put_bone(obj, bone_name, pos):
 #=============================================
 # Widget creation
 #=============================================
-
-def get_wgt_name(rig_name, bone_name):
-    """ Object's with name widget_<rig_name>_<bone_name> get used as that bone's shape.
-    """
-    return 'widget_%s_%s' % (rig_name, basename(bone_name))
-
-
 def obj_to_bone(obj, rig, bone_name):
     """ Places an object at the location/rotation/scale of the given bone.
     """
@@ -323,8 +314,6 @@ def create_widget(rig, bone_name, bone_transform_name=None):
     if bone_transform_name is None:
         bone_transform_name = bone_name
 
-    obj_name = get_wgt_name(rig.name, bone_name)
-
     widget_collection_name = rig.name + ' widgets'
 
     if widget_collection_name in bpy.data.collections:
@@ -339,6 +328,8 @@ def create_widget(rig, bone_name, bone_transform_name=None):
 
     if not hasattr(create_widget, 'created_widgets'):
         create_widget.created_widgets = {}
+
+    obj_name = 'widget_%s_%s' % (rig.name, basename(bone_name))
 
     # Check if it already exists in the collection
     if obj_name in collection.objects:
@@ -362,16 +353,16 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         obj = bpy.data.objects.new(obj_name, mesh)
         collection.objects.link(obj)
 
-    # Move object to bone position and set layers
-    obj_to_bone(obj, rig, bone_transform_name)
+        # Move object to bone position and set layers
+        obj_to_bone(obj, rig, bone_transform_name)
 
-    create_widget.created_widgets[bone_name] = obj
+        create_widget.created_widgets[bone_name] = obj
 
-    return obj
+        return obj
 
 
 def assign_all_widgets(armature):
-    """ Unlink all created widget objects from current scene for cleanup.
+    """ Assign all created widget objects for corresponding bones.
     """
     if hasattr(create_widget, 'created_widgets'):
         for bone_name, obj in create_widget.created_widgets.items():

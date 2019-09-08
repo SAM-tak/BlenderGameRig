@@ -45,6 +45,7 @@ class Limb:
 
         return mch
 
+
     def postprocess_parent(self):
 
         mch = self.bones['parent']
@@ -75,7 +76,7 @@ class Limb:
                 'target_space' : 'WORLD',
                 'owner_space'  : 'WORLD'
             })
-            
+
 
     def create_ik( self, parent, not_arm ):
         org_bones = self.org_bones
@@ -558,6 +559,7 @@ if is_selected( ik_ctrl ):
 def get_bone_name( name, btype, suffix = '' ):
     if suffix:
         name = insert_before_first_period(name, '_' + suffix)
+    
     if btype == 'mch':
         name = mchname( name )
     elif btype == 'ctrl':
