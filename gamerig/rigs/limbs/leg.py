@@ -32,7 +32,40 @@ class Rig(Limb):
 
 
     def generate(self, context):
-        return super().generate(self.create_leg, True, """
+        return super().generate(self.create_leg, """
+controls = [%s]
+ik_ctrl  = [%s]
+fk_ctrl  = '%s'
+parent   = '%s'
+
+# IK/FK Switch on all Control Bones
+if is_selected( controls ):
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
+    props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
+    props.thigh_fk = controls[1]
+    props.shin_fk  = controls[2]
+    props.foot_fk  = controls[3]
+    props.toe_fk   = ''
+    props.thigh_ik = controls[0]
+    props.shin_ik  = ik_ctrl[1]
+    props.foot_ik  = ik_ctrl[2]
+    props.toe_ik   = ''
+    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
+    props.thigh_fk = controls[1]
+    props.shin_fk  = controls[2]
+    props.foot_fk  = controls[3]
+    props.toe_fk   = ''
+    props.thigh_ik = controls[0]
+    props.shin_ik  = ik_ctrl[1]
+    props.foot_ik  = controls[5]
+    props.footroll = controls[4]
+    props.mfoot_ik = ik_ctrl[2]
+    props.toe_ik   = ''
+
+# FK limb follow
+if is_selected( fk_ctrl ):
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
+""" if len(self.org_bones) < 4 else """
 controls = [%s]
 ik_ctrl  = [%s]
 fk_ctrl  = '%s'
@@ -64,8 +97,7 @@ if is_selected( controls ):
 
 # FK limb follow
 if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
-""")
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )""")
 
 
     def create_leg( self, bones ):
@@ -115,16 +147,12 @@ if is_selected( fk_ctrl ):
 
         # Create 2nd roll mch, and two rock mch bones
         roll2_mch = get_bone_name( self.footprint_bone, 'mch', 'roll' )
-        roll2_mch = copy_bone( self.obj, org_bones[3], roll2_mch )
+        roll2_mch = copy_bone( self.obj, org_bones[2], roll2_mch )
 
         eb[ roll2_mch ].use_connect = False
         eb[ roll2_mch ].parent      = None
 
-        put_bone(
-            self.obj,
-            roll2_mch,
-            ( eb[ self.footprint_bone ].head + eb[ self.footprint_bone ].tail ) / 2
-        )
+        put_bone(self.obj, roll2_mch, ( eb[ self.footprint_bone ].head + eb[ self.footprint_bone ].tail ) / 2)
 
         eb[ roll2_mch ].length /= 4
 
@@ -185,7 +213,7 @@ if is_selected( fk_ctrl ):
 
 
     def postprocess(self, context):
-        super().postprocess(True)
+        super().postprocess()
 
         bones = self.bones
         
@@ -376,12 +404,14 @@ class Leg_FK2IK(bpy.types.Operator):
             thigh  = obj.pose.bones[self.thigh_fk]
             shin   = obj.pose.bones[self.shin_fk]
             foot   = obj.pose.bones[self.foot_fk]
-            toe    = obj.pose.bones[self.toe_fk]
+            if self.toe_fk in obj.pose.bones:
+                toe    = obj.pose.bones[self.toe_fk]
             
             thighi = obj.pose.bones[self.thigh_ik]
             shini  = obj.pose.bones[self.shin_ik]
             footi  = obj.pose.bones[self.foot_ik]
-            toei   = obj.pose.bones[self.toe_ik]
+            if self.toe_ik in obj.pose.bones:
+                toei   = obj.pose.bones[self.toe_ik]
 
             # Thigh position
             match_pose_translation(thigh, thighi)
@@ -397,8 +427,9 @@ class Leg_FK2IK(bpy.types.Operator):
             match_pose_scale(foot, footi)
 
             # Toe position
-            match_pose_rotation(toe, toei)
-            match_pose_scale(toe, toei)
+            if self.toe_fk in obj.pose.bones:
+                match_pose_rotation(toe, toei)
+                match_pose_scale(toe, toei)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
@@ -439,14 +470,16 @@ class Leg_IK2FK(bpy.types.Operator):
             thigh    = obj.pose.bones[self.thigh_fk]
             shin     = obj.pose.bones[self.shin_fk]
             foot     = obj.pose.bones[self.foot_fk]
-            toe      = obj.pose.bones[self.toe_fk]
+            if self.toe_fk in obj.pose.bones:
+                toe = obj.pose.bones[self.toe_fk]
 
             thighi   = obj.pose.bones[self.thigh_ik]
             shini    = obj.pose.bones[self.shin_ik]
             footi    = obj.pose.bones[self.foot_ik]
             footroll = obj.pose.bones[self.footroll]
             mfooti   = obj.pose.bones[self.mfoot_ik]
-            toei     = obj.pose.bones[self.toe_ik]
+            if self.toe_ik in obj.pose.bones:
+                toei = obj.pose.bones[self.toe_ik]
             
             # Clear footroll
             set_pose_rotation(footroll, Matrix())
@@ -460,10 +493,11 @@ class Leg_IK2FK(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.mode_set(mode='POSE')
 
-            # Toe position
-            match_pose_translation(toei, toe)
-            match_pose_rotation(toei, toe)
-            match_pose_scale(toei, toe)
+            if self.toe_fk in obj.pose.bones:
+                # Toe position
+                match_pose_translation(toei, toe)
+                match_pose_rotation(toei, toe)
+                match_pose_scale(toei, toe)
 
             # Thigh position
             match_pose_translation(thighi, thigh)

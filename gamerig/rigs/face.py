@@ -336,7 +336,6 @@ class Rig:
                     tweak_name = ctrlname( uniques[bone] )
 
                 tweak_name = self.copy_bone( self.obj, bone, tweak_name )
-                print(bone, tweak_name)
                 eb[ rbn(tweak_name) ].use_connect = False
                 eb[ rbn(tweak_name) ].parent      = None
 

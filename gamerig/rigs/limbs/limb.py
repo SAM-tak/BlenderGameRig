@@ -78,7 +78,7 @@ class Limb:
             })
 
 
-    def create_ik( self, parent, not_arm ):
+    def create_ik( self, parent ):
         org_bones = self.org_bones
 
         eb = self.obj.data.edit_bones
@@ -100,10 +100,7 @@ class Limb:
             get_bone_name( org_bones[0], 'mch', 'ik_stretch' )
         )
 
-        if not_arm:
-            eb[ mch_str ].tail = eb[ org_bones[-2] ].head
-        else:
-            eb[ mch_str ].tail = eb[ org_bones[-1] ].head
+        eb[ mch_str ].tail = eb[ org_bones[2] ].head
 
         # Parenting
         eb[ ctrl    ].parent = eb[ parent ]
@@ -118,7 +115,7 @@ class Limb:
         }
 
 
-    def postprocess_ik( self, not_arm ):
+    def postprocess_ik( self ):
         ctrl = self.bones['ik']['ctrl']['limb']
         mch_str = self.bones['ik']['mch_str']
         mch = self.bones['ik']['mch']
@@ -155,7 +152,7 @@ class Limb:
         create_ikarrow_widget( self.obj, ctrl )
 
 
-    def create_fk( self, parent, not_arm ):
+    def create_fk( self, parent ):
         org_bones = self.org_bones.copy()
 
         eb = self.obj.data.edit_bones
@@ -172,9 +169,9 @@ class Limb:
         eb[ mch ].length /= 4
         
         # Parenting
-        if not not_arm:
+        if len(ctrls) < 4:
             if len(ctrls) < 3:
-                raise MetarigError("gamerig.limb.arm: rig '%s' have no enough length " % parent)
+                raise MetarigError("gamerig.limb: rig '%s' have no enough length " % parent)
 
             eb[ ctrls[0] ].parent      = eb[ parent   ]
             eb[ ctrls[1] ].parent      = eb[ ctrls[0] ]
@@ -183,9 +180,6 @@ class Limb:
             eb[ mch      ].parent      = eb[ ctrls[1] ]
             eb[ mch      ].use_connect = True
         else:
-            if len(ctrls) < 4:
-                raise MetarigError("gamerig.limb: rig '%s' have no enough length " % parent)
-            
             eb[ ctrls[0] ].parent      = eb[ parent   ]
             eb[ ctrls[1] ].parent      = eb[ ctrls[0] ]
             eb[ ctrls[1] ].use_connect = True
@@ -198,7 +192,7 @@ class Limb:
         return { 'ctrl' : ctrls, 'mch' : mch }
 
 
-    def postprocess_fk(self, not_arm):
+    def postprocess_fk(self):
         ctrls = self.bones['fk']['ctrl']
         mch = self.bones['fk']['mch']
 
@@ -217,7 +211,7 @@ class Limb:
         create_limb_widget(self.obj, ctrls[0])
         create_limb_widget(self.obj, ctrls[1])
 
-        if not not_arm:
+        if len(ctrls) < 4:
             create_directed_circle_widget(self.obj, ctrls[2], radius=-0.4, head_tail=0.0) # negative radius is reasonable. to flip xz
         else:
             create_limb_widget(self.obj, ctrls[2])
@@ -299,7 +293,7 @@ class Limb:
             })
 
 
-    def generate(self, create_terminal, not_arm, script_template):
+    def generate(self, create_terminal, script_template):
         eb = self.obj.data.edit_bones
 
         # Clear parents for org bones
@@ -311,8 +305,8 @@ class Limb:
 
         # Create mch limb parent
         bones['parent'] = self.create_parent()
-        bones['fk']     = self.create_fk(bones['parent'], not_arm)
-        bones['ik']     = self.create_ik(bones['parent'], not_arm)
+        bones['fk']     = self.create_fk(bones['parent'])
+        bones['ik']     = self.create_ik(bones['parent'])
 
         self.org_parenting(self.org_bones)
 
@@ -321,10 +315,10 @@ class Limb:
         return self.create_script( bones, script_template )
 
 
-    def postprocess(self, not_arm):
+    def postprocess(self):
         self.postprocess_parent()
-        self.postprocess_fk(not_arm)
-        self.postprocess_ik(not_arm)
+        self.postprocess_fk()
+        self.postprocess_ik()
         bones = self.bones
         self.setup_switch(self.org_bones, bones['ik'], bones['fk']['ctrl'], bones['parent'])
 

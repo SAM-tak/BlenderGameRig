@@ -275,13 +275,14 @@ def generate_rig(context, metarig):
 
         # Go into editmode in the rig armature
         bpy.ops.object.mode_set(mode='EDIT')
-        for bone, rig in rigs.items():
+        for bone, rig in dict(rigs.items()).items():
             try:
                 script = rig.generate(context)
                 if script and len(script) > 0:
                     ui_scripts.append(script)
             except MetarigError as e:
                 append_error(bone, rig, e)
+                del rigs[bone]
             tt.tick("Generate rig : %s (%s): " % (bone, rig.__class__.__module__))
             update_progress()
 

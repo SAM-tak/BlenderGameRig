@@ -95,6 +95,12 @@ if is_selected( control ):
             drv_modifier.poly_order      = 1
             drv_modifier.coefficients[0] = 0.0
             drv_modifier.coefficients[1] = 1.0
+        else:
+            # Constrain the original bone.
+            con = pb[self.org_bone].constraints.new('COPY_TRANSFORMS')
+            con.name = "copy_transforms"
+            con.target = self.obj
+            con.subtarget = self.bone
 
         # Create control widget
         if self.metabone.gamerig.control_widget_type == 'Circle':

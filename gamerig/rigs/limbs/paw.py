@@ -36,7 +36,10 @@ class Rig(Limb):
 
 
     def generate(self, context):
-        return super().generate(self.create_paw, True, """
+        if len(self.org_bones) < 4:
+            raise MetarigError("gamerig.limb.paw: rig '%s' have no enough length " % self.org_bones[0])
+        
+        return super().generate(self.create_paw, """
 controls = [%s]
 ik_ctrl  = [%s]
 fk_ctrl  = '%s'
@@ -118,15 +121,14 @@ if is_selected( fk_ctrl ):
         bones['ik']['heel'] = heel
         bones['ik']['mch_ik_socket'] = mch_ik_socket
 
-        if len( org_bones ) >= 4:
-            # Create toes mch bone
-            toes_mch = get_bone_name( org_bones[3], 'mch' )
-            toes_mch = copy_bone( self.obj, org_bones[3], toes_mch )
+        # Create toes mch bone
+        toes_mch = get_bone_name( org_bones[3], 'mch' )
+        toes_mch = copy_bone( self.obj, org_bones[3], toes_mch )
 
-            eb[ toes_mch ].use_connect = False
-            eb[ toes_mch ].parent      = eb[ ctrl ]
+        eb[ toes_mch ].use_connect = False
+        eb[ toes_mch ].parent      = eb[ ctrl ]
 
-            bones['ik']['toes_mch'] = toes_mch
+        bones['ik']['toes_mch'] = toes_mch
 
         bones['ik']['ctrl']['terminal'] += [ heel, toes_mch, ctrl ]
 
@@ -134,7 +136,7 @@ if is_selected( fk_ctrl ):
 
 
     def postprocess(self, context):
-        super().postprocess(True)
+        super().postprocess()
 
         bones = self.bones
 

@@ -32,7 +32,7 @@ class Rig(Limb):
 
 
     def generate(self, context):
-        return super().generate(self.create_arm, False, """
+        return super().generate(self.create_arm, """
 controls = [%s]
 ik_ctrl  = [%s]
 fk_ctrl  = '%s'
@@ -90,7 +90,7 @@ if is_selected( fk_ctrl ):
 
 
     def postprocess(self, context):
-        super().postprocess(False)
+        super().postprocess()
 
         bones = self.bones
         
