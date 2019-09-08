@@ -193,4 +193,6 @@ These settings make imported fbx object having right orientation and clean trans
 
 ![no rotation and no scale](img/cleantransform.gif "no rotation and no scale")
 
+## LICENSE
+
 [GNU GENERAL PUBLIC LICENSE](LICENSE)
