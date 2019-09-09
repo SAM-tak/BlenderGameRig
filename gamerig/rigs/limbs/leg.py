@@ -120,6 +120,7 @@ if is_selected( fk_ctrl ):
         heel = get_bone_name( org_bones[2], 'ctrl', 'heel_ik' )
         heel = copy_bone( self.obj, org_bones[2], heel )
         self.orient_bone( eb[ heel ], 'y', 0.5 )
+        eb[ heel ].align_roll(eb[ self.footprint_bone ].z_axis)
         eb[ heel ].length = eb[ org_bones[2] ].length / 2
 
         # Reset control position and orientation
@@ -152,6 +153,9 @@ if is_selected( fk_ctrl ):
 
         eb[ roll2_mch ].use_connect = False
         eb[ roll2_mch ].parent      = None
+        # align roll2_mch's height to horizontal
+        eb[ roll2_mch ].tail.z = eb[ roll2_mch ].head.z
+        eb[ roll2_mch ].align_roll(eb[ self.footprint_bone ].z_axis)
 
         put_bone(self.obj, roll2_mch, ( eb[ self.footprint_bone ].head + eb[ self.footprint_bone ].tail ) / 2)
 
@@ -205,7 +209,6 @@ if is_selected( fk_ctrl ):
 
         bones['ik']['ctrl']['terminal'] += [ heel, ctrl ]
 
-
         # add IK Follow feature
         mch_ik_socket = self.make_ik_follow_bone( eb, ctrl )
         bones['ik']['mch_ik_socket'] = mch_ik_socket
@@ -247,14 +250,14 @@ if is_selected( fk_ctrl ):
             'subtarget'    : heel,
             'use_y'        : False,
             'use_z'        : False,
-            'invert_x'     : False,
+            'invert_x'     : True,
             'owner_space'  : 'LOCAL',
             'target_space' : 'LOCAL'
         })
         self.make_constraint(roll2_mch, {
             'constraint'  : 'LIMIT_ROTATION',
             'use_limit_x' : True,
-            'min_x'       : math.radians(-360),
+            'max_x'       : math.radians(360),
             'owner_space' : 'LOCAL'
         })
 

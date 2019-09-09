@@ -139,11 +139,19 @@ class Limb:
         if self.rot_axis == 'automatic':
             pb[ mch ].lock_ik_x = False
         else:
-            pb[ ctrl ].rotation_quaternion = pb[ ctrl ].rotation_quaternion @ \
-                Quaternion(
-                    (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0)
-                    , radians(-90.0)
-                )
+            pb[ ctrl ].rotation_quaternion = Quaternion(
+                (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0),
+                radians(-90.0)
+            )
+            if self.rot_axis == 'x':
+                pb[ ctrl ].rotation_mode = 'ZXY'
+                pb[ ctrl ].rotation_euler.x = radians(-90.0)
+            elif self.rot_axis == 'y':
+                pb[ ctrl ].rotation_mode = 'ZYX'
+                pb[ ctrl ].rotation_euler.y = radians(-90.0)
+            elif self.rot_axis == 'z':
+                pb[ ctrl ].rotation_mode = 'XZY'
+                pb[ ctrl ].rotation_euler.z = radians(-90.0)
 
         # Locks and Widget
         pb[ ctrl ].lock_location = True, True, True

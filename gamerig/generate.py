@@ -71,6 +71,8 @@ def generate_rig(context, metarig):
 
     print("Fetch rig (%s)." % rig_name)
     obj = next((i for i in context.collection.objects if i != metarig and i.type == 'ARMATURE' and i.name == rig_name), None)
+    if obj and not obj in context.visible_objects:
+        return "GAMERIG ERROR: Overwritee rig '%s' is hidden. Cannot Operate." % obj.name
 
     # Random string with time appended so that
     # different rigs don't collide id's
@@ -93,7 +95,7 @@ def generate_rig(context, metarig):
     # object to generate the rig in.
     
     toggledArmatureModifiers = []
-    if obj is not None:
+    if obj:
         print("Overwrite existing rig.")
         try:
             # toggle armature object to metarig if it using generated rig.
@@ -131,7 +133,6 @@ def generate_rig(context, metarig):
     bpy.ops.object.select_all(action='DESELECT')
     metarig.select_set(True)
     obj.select_set(True)
-    obj.hide_viewport = False
     metarig_rotation_euler_backup      = metarig.rotation_euler.copy()
     metarig_rotation_quaternion_backup = metarig.rotation_quaternion.copy()
     metarig_rotation_axis_angle_backup = Vector(metarig.rotation_axis_angle)
@@ -145,7 +146,6 @@ def generate_rig(context, metarig):
     # Select generated rig object
     metarig.select_set(False)
     obj.select_set(True)
-    obj.hide_viewport = False
     view_layer.objects.active = obj
 
     # Get parented objects to restore later

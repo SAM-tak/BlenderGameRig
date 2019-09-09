@@ -653,7 +653,7 @@ class GenerateOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return not context.object.hide_viewport and not context.object.hide_select
+        return context.object in context.visible_objects
 
     def execute(self, context):
         import importlib
@@ -847,20 +847,24 @@ class RenameBatchOperator(bpy.types.Operator):
         else:
             datapathexp = re.compile(r'^(pose\.bones\[")(.+)("\].*)')
             if param.rename_batch_re:
+                groups = set()
                 exp = re.compile(param.rename_batch_find)
-                for i in context.object.animation_data.action.groups:
-                    i.name = exp.sub(param.rename_batch_replace, i.name)
                 for i in context.object.animation_data.action.fcurves:
                     match = datapathexp.match(i.data_path)
                     if match:
+                        groups.add(i.group)
                         i.data_path = match.group(1) + exp.sub(param.rename_batch_replace, match.group(2)) + match.group(3)
+                for i in groups:
+                    i.name = exp.sub(param.rename_batch_replace, i.name)
             else:
-                for i in context.object.animation_data.action.groups:
-                    i.name = i.name.replace(param.rename_batch_find, param.rename_batch_replace)
+                groups = set()
                 for i in context.object.animation_data.action.fcurves:
                     match = datapathexp.match(i.data_path)
                     if match:
+                        groups.add(i.group)
                         i.data_path = match.group(1) + match.group(2).replace(param.rename_batch_find, param.rename_batch_replace) + match.group(3)
+                for i in groups:
+                    i.name = i.name.replace(param.rename_batch_find, param.rename_batch_replace)
 
         return {'FINISHED'}
 
