@@ -320,8 +320,6 @@ def create_widget(rig, bone_name, bone_transform_name=None):
         collection = bpy.data.collections[widget_collection_name]
     else:
         collection = bpy.data.collections.new(widget_collection_name)
-    
-    if not widget_collection_name in bpy.context.scene.collection.children:
         bpy.context.scene.collection.children.link(collection)
         bpy.context.view_layer.layer_collection.children[collection.name].hide_viewport = True
         collection.hide_render = True
