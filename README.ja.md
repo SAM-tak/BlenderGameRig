@@ -1,6 +1,6 @@
 # ![Blender GameRig](img/logo.jpg "Logo")
 
-*他の言語で読む: [English](README.md), [日本語](README.ja.md).*
+> 他の言語で読む: [English](README.md), [日本語](README.ja.md)
 
 ## Blender 2.80 対応 リギング アドオン
 
@@ -32,7 +32,7 @@
 
 ### GameRigをインストールする
 
-[リリースページ](https://github.com/SAM-tak/BlenderGameRig/releases)に掲載されているzipファイルをダウンロードします。
+[リリースページ](/../../releases/latest)に掲載されているzipファイルをダウンロードします。
 
 ![download link](img/downloadlink.jpg "download link")
 
@@ -54,7 +54,7 @@ GameRigがアドオン一覧に現れるので、チェックを入れて有効�
 >
 > ショートカット: ⇧ A
 >
-> メニュー: Add → Add Armature
+> メニュー: Add → Armature → GameRig
 
 ![add metarig menu](img/addmetarig.jpg "add metarig menu")
 

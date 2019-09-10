@@ -1,6 +1,6 @@
 # ![Blender GameRig](img/logo.jpg "Logo")
 
-*Read this in other languages: [English](README.md), [日本語](README.ja.md).*
+> Read this in other languages: [English](README.md), [日本語](README.ja.md).
 
 ## Rigging Add-on for Blender 2.80
 
@@ -30,7 +30,7 @@ Rigging framework for game / realtime content development. Hard fork from [Rigif
 
 ### Install GameRig to your blender
 
-Download zip file for install from [Releases Page](https://github.com/SAM-tak/BlenderGameRig/releases).
+Download zip file for install from [Releases Page](/../../releases/latest).
 
 ![download link](img/downloadlink.jpg "download link")
 
@@ -52,7 +52,7 @@ Then GameRig will be found in Add-on list (filtering by categoly 'Rigging', you 
 >
 > Hotkey: ⇧ A
 >
-> Menu: Add → Add Armature
+> Menu: Add → Armature → GameRig
 
 ![add metarig menu](img/addmetarig.jpg "add metarig menu")
 
