@@ -285,6 +285,22 @@ class GlobalProperties(PropertyGroup):
     rename_batch_replace : StringProperty(name="Replace", description="replace string")
     rename_batch_re : BoolProperty(name="Regular expression", description="Use regular expression")
 
+    # Properties.
+    q2e_order_list : EnumProperty(
+        items=(
+            ('QUATERNION', 'QUATERNION', 'QUATERNION'),
+            ('XYZ', 'XYZ', 'XYZ'),
+            ('XZY', 'XZY', 'XZY'),
+            ('YXZ', 'YXZ', 'YXZ'),
+            ('YZX', 'YZX', 'YZX'),
+            ('ZXY', 'ZXY', 'ZXY'),
+            ('ZYX', 'ZYX', 'ZYX'),
+        ),
+        name='Convert to',
+        description="The target rotation mode", default='QUATERNION'
+    )
+    q2e_convert_only_selected : BoolProperty(name="Convert Only Selected", description="Convert selected bones only", default=True)
+
     # a value between [0,100] will show the slider  
     progress_indicator : FloatProperty(
         name="GameRig : Generating",
