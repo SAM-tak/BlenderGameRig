@@ -55,8 +55,8 @@ class Rig:
             fk_ctrl_chain.append( ctrl_bone )
 
         ik_ctrl_chain = []
-        ik_org_chain = []
         if not self.params.fk_only:
+            ik_org_chain = []
             cur_ik_len = 0
             for i in self.params.mid_ik_lens:
                 if i > 0:
@@ -125,12 +125,6 @@ class Rig:
                 eb[mch_bone].parent = None
                 ik_chain.append( mch_bone )
 
-            mch_bone = copy_bone(self.obj, self.org_bones[-1], mchname(insert_before_first_period(name, '_ik_term')))
-            eb[mch_bone].parent = None
-            flip_bone(self.obj, mch_bone)
-            eb[mch_bone].length /= 4
-            ik_chain.append( mch_bone )
-
         for i, name in enumerate(fk_chain):
             if i == 0:
                 eb[name].parent = eb[self.org_bones[0]].parent
@@ -189,7 +183,7 @@ class Rig:
             cur_ik_len = 0
             for i in self.params.mid_ik_lens:
                 if i > 0:
-                    if cur_ik_len + i >= len(self.org_bones) - 2:
+                    if cur_ik_len + i >= len(self.org_bones) - 1:
                         break
                     ik_chain_target.append(ik_chain[cur_ik_len])
                     ik_chain_target.append(ik_chain[cur_ik_len + i - 1])
@@ -198,10 +192,10 @@ class Rig:
             
             if len(ik_chain_target) > 0:
                 ik_chain_target.append(ik_chain[cur_ik_len])
-                ik_chain_target.append(ik_chain[-2])
+                ik_chain_target.append(ik_chain[-1])
                 ik_lens.append(len(self.org_bones) - cur_ik_len)
             else:
-                ik_chain_target = [ik_chain[0], ik_chain[-2]]
+                ik_chain_target = [ik_chain[0], ik_chain[-1]]
             
             if len(ik_lens) == 0:
                 ik_lens.append(self.params.chain_length)
@@ -224,10 +218,6 @@ class Rig:
                         'subtarget'   : ctrl,
                     })
 
-                    self.make_constraint( mchb, {
-                        'constraint'  : 'MAINTAIN_VOLUME'
-                    })
-                    pb[ mchb ].ik_stretch = 0.01
 
             for l, mchb, ctrl in zip( ik_lens, ik_chain_target[1::2], ik_ctrls[1::2] ):
                 self.make_constraint( mchb, {
@@ -236,6 +226,10 @@ class Rig:
                     'chain_count' : l,
                     'use_stretch' : self.params.stretchable,
                 })
+
+            if self.params.stretchable:
+                for mchb in ik_chain:
+                    pb[ mchb ].ik_stretch = 0.1
 
         # bind original bone
         for org, fkmch, ikmch in zip( org_bones, fk_chain, ik_chain if not self.params.fk_only else fk_chain ):
