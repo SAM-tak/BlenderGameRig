@@ -180,10 +180,14 @@ class Rig:
                 self.make_constraint( mchb, {
                     'constraint'  : 'MAINTAIN_VOLUME'
                 })
-                pb[ mchb ].ik_stretch = 0.01
 
         # ik chain
         if not self.params.fk_only:
+            
+            if self.params.stretchable:
+                for mchb in ik_chain:
+                    pb[ mchb ].ik_stretch = 0.01
+
             ik_chain_target = []
             ik_lens = []
             cur_ik_len = 0
@@ -217,17 +221,6 @@ class Rig:
                     'constraint'  : 'DAMPED_TRACK',
                     'subtarget'   : ctrl,
                 })
-
-                if self.params.stretchable:
-                    self.make_constraint( mchb, {
-                        'constraint'  : 'STRETCH_TO',
-                        'subtarget'   : ctrl,
-                    })
-
-                    self.make_constraint( mchb, {
-                        'constraint'  : 'MAINTAIN_VOLUME'
-                    })
-                    pb[ mchb ].ik_stretch = 0.01
 
             for l, mchb, ctrl in zip( ik_lens, ik_chain_target[1::2], ik_ctrls[1::2] ):
                 self.make_constraint( mchb, {
