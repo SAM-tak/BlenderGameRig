@@ -229,7 +229,7 @@ class Rig:
 
             if self.params.stretchable:
                 for mchb in ik_chain:
-                    pb[ mchb ].ik_stretch = 0.01
+                    pb[ mchb ].ik_stretch = 0.1
 
         # bind original bone
         for org, fkmch, ikmch in zip( org_bones, fk_chain, ik_chain if not self.params.fk_only else fk_chain ):
