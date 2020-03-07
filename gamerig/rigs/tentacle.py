@@ -16,12 +16,6 @@ class Rig:
         self.params = metabone.gamerig
         self.switchable_rig = len(metabone.constraints) > 0
 
-        # Assign values to tweak layers props if opted by user
-        if self.params.tweak_extra_layers:
-            self.tweak_layers = list(self.params.tweak_layers)
-        else:
-            self.tweak_layers = None
-
         if self.params.chain_length < 2:
             raise MetarigError(
                 "GAMERIG ERROR: invalid chain length : rig '%s'" % bone_name
@@ -50,6 +44,7 @@ class Rig:
         eb = self.obj.data.edit_bones
 
         fk_ctrl_chain = []
+
         for name in self.org_bones:
             ctrl_bone = copy_bone(self.obj, name, ctrlname(insert_before_first_period(name, '_fk')))
             eb[ctrl_bone].use_connect = False
@@ -61,31 +56,51 @@ class Rig:
 
         ik_ctrl_chain = []
         ik_org_chain = []
-        cur_ik_len = 0
-        for i in self.params.mid_ik_lens:
-            if i > 0:
+        if not self.params.fk_only:
+            cur_ik_len = 0
+            for i in self.params.mid_ik_lens:
+                if i > 0:
+                    ik_org_chain.append(self.org_bones[cur_ik_len])
+                    ik_org_chain.append(self.org_bones[cur_ik_len + i - 1])
+                    if cur_ik_len + i >= len(self.org_bones) - 2:
+                        break
+                    cur_ik_len += i
+            
+            if len(ik_org_chain) > 0:
                 ik_org_chain.append(self.org_bones[cur_ik_len])
-                ik_org_chain.append(self.org_bones[cur_ik_len + i - 1])
-                if cur_ik_len + i >= len(self.org_bones) - 2:
-                    break
-                cur_ik_len += i
-        
-        if len(ik_org_chain) > 0:
-            ik_org_chain.append(self.org_bones[cur_ik_len])
-            ik_org_chain.append(self.org_bones[-1])
-        else:
-            ik_org_chain = [self.org_bones[0], self.org_bones[-1]]
+                ik_org_chain.append(self.org_bones[-1])
+            else:
+                ik_org_chain = [self.org_bones[0], self.org_bones[-1]]
 
-        for i, name in enumerate(ik_org_chain):
-            ctrl_bone = copy_bone(self.obj, name, ctrlname(insert_before_first_period(name, '_ik')))
+            for i, name in enumerate(ik_org_chain):
+                ctrl_bone = copy_bone(self.obj, name, ctrlname(insert_before_first_period(name, '_ik')))
+                eb[ctrl_bone].use_connect = False
+                flip_bone(self.obj, ctrl_bone)
+                eb[ctrl_bone].length /= 4
+                eb[ctrl_bone].parent = eb[name].parent if i == 0 else eb[ik_ctrl_chain[-1]] if i % 2 == 0 else None
+
+                ik_ctrl_chain.append( ctrl_bone )
+
+        root_ctrls = []
+        if self.params.add_root_controller:
+            name = self.org_bones[0]
+
+            ctrl_bone = copy_bone(self.obj, name, ctrlname(insert_before_first_period(name, '_root_fk')))
             eb[ctrl_bone].use_connect = False
-            flip_bone(self.obj, ctrl_bone)
             eb[ctrl_bone].length /= 4
-            eb[ctrl_bone].parent = eb[name].parent if i == 0 else eb[ik_ctrl_chain[-1]] if i % 2 == 0 else None
+            eb[ctrl_bone].parent = eb[self.org_bones[0]].parent
 
-            ik_ctrl_chain.append( ctrl_bone )
+            root_ctrls.append( ctrl_bone )
 
-        return (fk_ctrl_chain, ik_ctrl_chain)
+            if not self.params.fk_only:
+                ctrl_bone = copy_bone(self.obj, name, ctrlname(insert_before_first_period(name, '_root_ik')))
+                eb[ctrl_bone].use_connect = False
+                eb[ctrl_bone].length /= 4
+                eb[ctrl_bone].parent = eb[self.org_bones[0]].parent
+
+                root_ctrls.append( ctrl_bone )
+
+        return (fk_ctrl_chain, ik_ctrl_chain, root_ctrls)
 
 
     def make_mchs( self ):
@@ -104,16 +119,17 @@ class Rig:
         fk_chain.append( mch_bone )
 
         ik_chain = []
-        for name in self.org_bones:
-            mch_bone = copy_bone(self.obj, name, mchname(insert_before_first_period(name, '_ik')))
-            eb[mch_bone].parent = None
-            ik_chain.append( mch_bone )
+        if not self.params.fk_only:
+            for name in self.org_bones:
+                mch_bone = copy_bone(self.obj, name, mchname(insert_before_first_period(name, '_ik')))
+                eb[mch_bone].parent = None
+                ik_chain.append( mch_bone )
 
-        mch_bone = copy_bone(self.obj, self.org_bones[-1], mchname(insert_before_first_period(name, '_ik_term')))
-        eb[mch_bone].parent = None
-        flip_bone(self.obj, mch_bone)
-        eb[mch_bone].length /= 4
-        ik_chain.append( mch_bone )
+            mch_bone = copy_bone(self.obj, self.org_bones[-1], mchname(insert_before_first_period(name, '_ik_term')))
+            eb[mch_bone].parent = None
+            flip_bone(self.obj, mch_bone)
+            eb[mch_bone].length /= 4
+            ik_chain.append( mch_bone )
 
         for i, name in enumerate(fk_chain):
             if i == 0:
@@ -138,11 +154,18 @@ class Rig:
         # org bones' constraints
         fk_ctrls = all_bones['fk_ctrls']
         ik_ctrls = all_bones['ik_ctrls']
+        root_ctrls = all_bones['root_ctrls']
         fk_chain = all_bones['fk_chain']
         ik_chain = all_bones['ik_chain']
 
         # fk chain
         for mchb, ctrl in zip( fk_chain, fk_ctrls ):
+            if self.params.add_root_controller and mchb == fk_chain[0]:
+                self.make_constraint( mchb, {
+                    'constraint'  : 'COPY_TRANSFORMS',
+                    'subtarget'   : root_ctrls[0],
+                })
+            
             self.make_constraint( mchb, {
                 'constraint'  : 'DAMPED_TRACK',
                 'subtarget'   : ctrl,
@@ -160,82 +183,91 @@ class Rig:
                 pb[ mchb ].ik_stretch = 0.01
 
         # ik chain
-        ik_chain_target = []
-        ik_lens = []
-        cur_ik_len = 0
-        for i in self.params.mid_ik_lens:
-            if i > 0:
-                if cur_ik_len + i >= len(self.org_bones) - 2:
-                    break
+        if not self.params.fk_only:
+            ik_chain_target = []
+            ik_lens = []
+            cur_ik_len = 0
+            for i in self.params.mid_ik_lens:
+                if i > 0:
+                    if cur_ik_len + i >= len(self.org_bones) - 2:
+                        break
+                    ik_chain_target.append(ik_chain[cur_ik_len])
+                    ik_chain_target.append(ik_chain[cur_ik_len + i - 1])
+                    ik_lens.append(i)
+                    cur_ik_len += i
+            
+            if len(ik_chain_target) > 0:
                 ik_chain_target.append(ik_chain[cur_ik_len])
-                ik_chain_target.append(ik_chain[cur_ik_len + i - 1])
-                ik_lens.append(i)
-                cur_ik_len += i
-        
-        if len(ik_chain_target) > 0:
-            ik_chain_target.append(ik_chain[cur_ik_len])
-            ik_chain_target.append(ik_chain[-2])
-            ik_lens.append(len(self.org_bones) - cur_ik_len)
-        else:
-            ik_chain_target = [ik_chain[0], ik_chain[-2]]
-        
-        if len(ik_lens) == 0:
-            ik_lens.append(self.params.chain_length)
-        
-        for mchb, ctrl in zip( ik_chain_target[0::2], ik_ctrls[0::2] ):
-            self.make_constraint( mchb, {
-                'constraint'  : 'DAMPED_TRACK',
-                'subtarget'   : ctrl,
-            })
-
-            if self.params.stretchable:
+                ik_chain_target.append(ik_chain[-2])
+                ik_lens.append(len(self.org_bones) - cur_ik_len)
+            else:
+                ik_chain_target = [ik_chain[0], ik_chain[-2]]
+            
+            if len(ik_lens) == 0:
+                ik_lens.append(self.params.chain_length)
+            
+            for mchb, ctrl in zip( ik_chain_target[0::2], ik_ctrls[0::2] ):
+                if self.params.add_root_controller and mchb == ik_chain_target[0]:
+                    self.make_constraint( mchb, {
+                        'constraint'  : 'COPY_TRANSFORMS',
+                        'subtarget'   : root_ctrls[1],
+                    })
+                
                 self.make_constraint( mchb, {
-                    'constraint'  : 'STRETCH_TO',
+                    'constraint'  : 'DAMPED_TRACK',
                     'subtarget'   : ctrl,
                 })
 
-                self.make_constraint( mchb, {
-                    'constraint'  : 'MAINTAIN_VOLUME'
-                })
-                pb[ mchb ].ik_stretch = 0.01
+                if self.params.stretchable:
+                    self.make_constraint( mchb, {
+                        'constraint'  : 'STRETCH_TO',
+                        'subtarget'   : ctrl,
+                    })
 
-        for l, mchb, ctrl in zip( ik_lens, ik_chain_target[1::2], ik_ctrls[1::2] ):
-            self.make_constraint( mchb, {
-                'constraint'  : 'IK',
-                'subtarget'   : ctrl,
-                'chain_count' : l,
-                'use_stretch' : self.params.stretchable,
-            })
+                    self.make_constraint( mchb, {
+                        'constraint'  : 'MAINTAIN_VOLUME'
+                    })
+                    pb[ mchb ].ik_stretch = 0.01
+
+            for l, mchb, ctrl in zip( ik_lens, ik_chain_target[1::2], ik_ctrls[1::2] ):
+                self.make_constraint( mchb, {
+                    'constraint'  : 'IK',
+                    'subtarget'   : ctrl,
+                    'chain_count' : l,
+                    'use_stretch' : self.params.stretchable,
+                })
 
         # bind original bone
-        for org, fkmch, ikmch in zip( org_bones, fk_chain, ik_chain ):
+        for org, fkmch, ikmch in zip( org_bones, fk_chain, ik_chain if not self.params.fk_only else fk_chain ):
             stashed = self.stash_constraint(org)
 
             self.make_constraint( org, {
                 'constraint'  : 'COPY_TRANSFORMS',
                 'subtarget'   : fkmch
             })
-            self.make_constraint( org, {
-                'constraint'  : 'COPY_TRANSFORMS',
-                'subtarget'   : ikmch
-            })
+            
+            if not self.params.fk_only:
+                self.make_constraint( org, {
+                    'constraint'  : 'COPY_TRANSFORMS',
+                    'subtarget'   : ikmch
+                })
 
-            # Add driver to relevant constraint
-            drv = pb[org].constraints[-1].driver_add("influence").driver
-            drv.type = 'AVERAGE'
+                # Add driver to relevant constraint
+                drv = pb[org].constraints[-1].driver_add("influence").driver
+                drv.type = 'AVERAGE'
 
-            var = drv.variables.new()
-            var.name = 'ik_fk_switch'
-            var.type = "SINGLE_PROP"
-            var.targets[0].id = self.obj
-            var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["IK/FK"]'
+                var = drv.variables.new()
+                var.name = 'ik_fk_switch'
+                var.type = "SINGLE_PROP"
+                var.targets[0].id = self.obj
+                var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["IK/FK"]'
 
-            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
 
-            drv_modifier.mode            = 'POLYNOMIAL'
-            drv_modifier.poly_order      = 1
-            drv_modifier.coefficients[0] = 1.0
-            drv_modifier.coefficients[1] = -1.0
+                drv_modifier.mode            = 'POLYNOMIAL'
+                drv_modifier.poly_order      = 1
+                drv_modifier.coefficients[0] = 1.0
+                drv_modifier.coefficients[1] = -1.0
 
             self.unstash_constraint( org, stashed )
 
@@ -343,22 +375,26 @@ class Rig:
         else:
             ik_fk_snap_target = [self.mchs[0][1], self.mchs[0][-1]]
 
-        return """
+        if self.params.fk_only and not self.switchable_rig:
+            return ''
+        else:
+            return """
 controls = %s
 
-# IK/FK Switch on all Control Bones
 if is_selected( controls ):
+""" % (self.ctrls[0] + self.ctrls[1] + self.ctrls[2]) + ("""
+    # IK/FK Switch on all Control Bones
     layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
-""" % (self.ctrls[0] + self.ctrls[1]) + ("""
+""" if not self.params.fk_only else '') + ("""
     layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
-""" if self.switchable_rig else '') + """
+""" if self.switchable_rig else '') + ("""
     props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK (" + controls[0] + ")", icon='SNAP_ON')
     props.fk_ctrls = "%s"
     props.ik_chain = "%s"
     props = layout.operator(Tentacle_IK2FK.bl_idname, text="Snap IK->FK (" + controls[0] + ")", icon='SNAP_ON')
     props.ik_ctrls = "%s"
     props.fk_chain = "%s"
-""" % (self.ctrls[0], self.mchs[1][1:], self.ctrls[1], ik_fk_snap_target) + ("""
+""" % (self.ctrls[0], self.mchs[1][1:], self.ctrls[1], ik_fk_snap_target) if not self.params.fk_only else '') + ("""
     props = layout.operator(Tentacle_FK2Target.bl_idname, text="Snap FK->Target (" + controls[0] + ")", icon='SNAP_ON')
     props.fk_ctrls = "%s"
     props.targets  = "%s"
@@ -375,20 +411,27 @@ if is_selected( controls ):
         for ctrl in self.ctrls[1]:
             create_cube_widget(self.obj, ctrl)
 
-        # Create IK/FK switch property
-        pb[self.ctrls[0][0]]['IK/FK'] = 1.0
-        prop = rna_idprop_ui_prop_get( pb[self.ctrls[0][0]], 'IK/FK', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'IK/FK Switch'
+        if self.params.add_root_controller:
+            create_sphere_widget(self.obj, self.ctrls[2][0])
+            if not self.params.fk_only:
+                create_cube_widget(self.obj, self.ctrls[2][1])
+
+        if not self.params.fk_only:
+            # Create IK/FK switch property
+            pb[self.ctrls[0][0]]['IK/FK'] = 1.0
+            prop = rna_idprop_ui_prop_get( pb[self.ctrls[0][0]], 'IK/FK', create=True )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = 'IK/FK Switch'
 
         all_bones = {
-            'fk_ctrls' : self.ctrls[0],
-            'ik_ctrls' : self.ctrls[1],
-            'fk_chain' : self.mchs[0],
-            'ik_chain' : self.mchs[1],
+            'fk_ctrls'   : self.ctrls[0],
+            'ik_ctrls'   : self.ctrls[1],
+            'root_ctrls' : self.ctrls[2],
+            'fk_chain'   : self.mchs[0],
+            'ik_chain'   : self.mchs[1],
         }
 
         self.make_constraints(context, all_bones)
@@ -546,6 +589,18 @@ def add_parameters(params):
         description = "Allow stretch to controllers"
     )
 
+    params.fk_only = bpy.props.BoolProperty(
+        name        = "FK Only",
+        default     = False,
+        description = "Don't make IK controllers."
+    )
+
+    params.add_root_controller = bpy.props.BoolProperty(
+        name        = "Add Root Controller",
+        default     = False,
+        description = "Add controller for root position."
+    )
+
     # Setting up extra layers for the FK
     params.fk_extra_layers = bpy.props.BoolProperty(
         name        = "FK Extra Layers",
@@ -571,6 +626,8 @@ def parameters_ui(layout, params):
     
     r = layout.row()
     r.prop(params, "stretchable")
+    r.prop(params, "fk_only")
+    r.prop(params, "add_root_controller")
 
     r = layout.row()
     r.prop(params, "fk_extra_layers")
