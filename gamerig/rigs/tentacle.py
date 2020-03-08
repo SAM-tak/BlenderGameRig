@@ -177,10 +177,6 @@ class Rig:
                     'subtarget'   : ctrl,
                 })
 
-                self.make_constraint( mchb, {
-                    'constraint'  : 'MAINTAIN_VOLUME'
-                })
-
         # ik chain
         if not self.params.fk_only:
             
@@ -261,6 +257,29 @@ class Rig:
                 drv_modifier.poly_order      = 1
                 drv_modifier.coefficients[0] = 1.0
                 drv_modifier.coefficients[1] = -1.0
+
+            if self.params.stretchable:
+                self.make_constraint( org, {
+                    'constraint'  : 'MAINTAIN_VOLUME'
+                })
+
+                # Add driver to relevant constraint
+                drv = pb[org].constraints[-1].driver_add("influence").driver
+                drv.type = 'AVERAGE'
+
+                var = drv.variables.new()
+                var.name = 'maintain_volume'
+                var.type = "SINGLE_PROP"
+                var.targets[0].id = self.obj
+                var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["Maintain Volume"]'
+
+                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+
+                drv_modifier.mode            = 'POLYNOMIAL'
+                drv_modifier.poly_order      = 1
+                drv_modifier.coefficients[0] = 0.0
+                drv_modifier.coefficients[1] = 1.0
+
 
             self.unstash_constraint( org, stashed )
 
@@ -368,7 +387,7 @@ class Rig:
         else:
             ik_fk_snap_target = [self.mchs[0][1], self.mchs[0][-1]]
 
-        if self.params.fk_only and not self.switchable_rig:
+        if self.params.fk_only and not self.params.stretchable and not self.switchable_rig:
             return ''
         else:
             return """
@@ -379,6 +398,8 @@ if is_selected( controls ):
     # IK/FK Switch on all Control Bones
     layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
 """ if not self.params.fk_only else '') + ("""
+    layout.prop( pose_bones[ controls[0] ], '["Maintain Volume"]', text='Maintain Volume (' + controls[0] + ')', slider = True )
+""" if self.params.stretchable else '') + ("""
     layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
 """ if self.switchable_rig else '') + ("""
     props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK (" + controls[0] + ")", icon='SNAP_ON')
@@ -418,6 +439,16 @@ if is_selected( controls ):
             prop["soft_min"]    = 0.0
             prop["soft_max"]    = 1.0
             prop["description"] = 'IK/FK Switch'
+        
+        if self.params.stretchable:
+            # Create Maintain Volume property
+            pb[self.ctrls[0][0]]['Maintain Volume'] = 1.0
+            prop = rna_idprop_ui_prop_get( pb[self.ctrls[0][0]], 'Maintain Volume', create=True )
+            prop["min"]         = 0.0
+            prop["max"]         = 1.0
+            prop["soft_min"]    = 0.0
+            prop["soft_max"]    = 1.0
+            prop["description"] = 'Maintain Volume Influence'
 
         all_bones = {
             'fk_ctrls'   : self.ctrls[0],
