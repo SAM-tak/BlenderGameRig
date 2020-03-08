@@ -62,7 +62,7 @@ class Rig:
                 if i > 0:
                     ik_org_chain.append(self.org_bones[cur_ik_len])
                     ik_org_chain.append(self.org_bones[cur_ik_len + i - 1])
-                    if cur_ik_len + i >= len(self.org_bones) - 2:
+                    if cur_ik_len + i > len(self.org_bones) - 2:
                         break
                     cur_ik_len += i
             
@@ -189,7 +189,7 @@ class Rig:
             cur_ik_len = 0
             for i in self.params.mid_ik_lens:
                 if i > 0:
-                    if cur_ik_len + i >= len(self.org_bones) - 2:
+                    if cur_ik_len + i > len(self.org_bones) - 2:
                         break
                     ik_chain_target.append(ik_chain[cur_ik_len])
                     ik_chain_target.append(ik_chain[cur_ik_len + i - 1])
