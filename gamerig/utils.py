@@ -378,6 +378,7 @@ def copy_attributes(a, b):
         if not key.startswith("_") \
         and not key.startswith("error_") \
         and key != "group" \
+        and key != "strips" \
         and key != "is_valid" \
         and key != "rna_type" \
         and key != "bl_rna":

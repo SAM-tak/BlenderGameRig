@@ -94,6 +94,9 @@ def generate_rig(context, metarig):
     # regenerate in the same object.  If not, create a new
     # object to generate the rig in.
     
+    previous_action = None
+    previous_nla_tracks = None
+    previous_nla_strips = {}
     toggledArmatureModifiers = []
     if obj:
         print("Overwrite existing rig.")
@@ -107,6 +110,10 @@ def generate_rig(context, metarig):
                         j.object = metarig
             # Get rid of anim data in case the rig already existed
             print("Clear rig animation data.")
+            previous_action = obj.animation_data.action
+            previous_nla_tracks = tuple(obj.animation_data.nla_tracks)
+            for i in previous_nla_tracks:
+                previous_nla_strips[i] = tuple(i.strips)
             obj.animation_data_clear()
             obj.data.animation_data_clear()
         except KeyError:
@@ -530,6 +537,17 @@ def generate_rig(context, metarig):
             child.matrix_world = mat
     # Restore active collection
     view_layer.active_layer_collection = layer_collection
+
+    # Restore action and NLA tracks
+    if previous_action:
+        obj.animation_data.action = previous_action
+    if previous_nla_tracks:
+        for s in previous_nla_tracks:
+            d = obj.animation_data.nla_tracks.new()
+            copy_attributes(s, d)
+            for ss in previous_nla_strips[s]:
+                dd = d.strips.new(ss.name, ss.frame_start, ss.action)
+                copy_attributes(ss, dd)
 
     t.tick("The rest: ")
     return error
