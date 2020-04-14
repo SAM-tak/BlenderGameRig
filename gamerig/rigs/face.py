@@ -773,7 +773,8 @@ class Rig:
 
         # Parent all org bones to the face
         for bone in self.org_bones:
-            if bone != face_name and eb[ rbn(bone) ].parent is None:
+            if bone != face_name:
+                eb[ rbn(bone) ].use_connect = False
                 eb[ rbn(bone) ].parent = eb[ rbn(face_name) ]
 
 
@@ -1363,7 +1364,6 @@ def create_square_widget(rig, bone_name, size=1.0, bone_transform_name=None):
 
         mesh = obj.data
         mesh.from_pydata(verts, edges, faces)
-        mesh.update()
         mesh.update()
         return obj
     else:
