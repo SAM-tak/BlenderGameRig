@@ -327,7 +327,7 @@ def create_widget(rig, bone_name, bone_transform_name=None):
     if not hasattr(create_widget, 'created_widgets'):
         create_widget.created_widgets = {}
 
-    obj_name = 'widget_%s_%s' % (rig.name, basename(bone_name))
+    obj_name = 'widget_%s.%s' % (rig.name, basename(bone_name))
 
     # Check if it already exists in the collection
     if obj_name in collection.objects:

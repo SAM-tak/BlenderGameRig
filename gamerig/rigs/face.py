@@ -6,7 +6,11 @@ from ..utils import (
     create_widget,
     basename, ctrlname, mchname, insert_before_first_period
 )
-from .widgets import create_face_widget, create_eye_widget, create_eyes_widget, create_ear_widget, create_jaw_widget
+from .widgets import (
+    create_face_widget, create_eye_widget, create_eyes_widget, create_ear_widget, create_jaw_widget,
+    create_upper_arc_widget, create_lower_arc_widget, create_left_arc_widget, create_right_arc_widget
+)
+
 
 def mch_target(name):
     """ Prepends the MCH_PREFIX to a name if it doesn't already have
@@ -362,10 +366,7 @@ class Rig:
                     eb[ rbn(tweak_name) ].head    = eb[ rbn(bone) ].tail
                     eb[ rbn(tweak_name) ].tail[:] = eb[ rbn(tweak_name) ].head + Vector(( 0, 0, self.face_length / 7 ))
 
-                    if 'lip.T.L' in bone or 'lip.T.R' in bone:
-                        eb[ rbn(tweak_name) ].align_roll( face_e.z_axis )
-                    else:
-                        eb[ rbn(tweak_name) ].align_roll( eb[ rbn(bone) ].z_axis )
+                    eb[ rbn(tweak_name) ].align_roll( eb[ rbn(bone) ].z_axis )
 
                     tweaks.append( tweak_name )
 
@@ -381,11 +382,22 @@ class Rig:
                 if bone in self.primary_tweaks:
                     if self.primary_layers:
                         pb[rbn(bone)].bone.layers = self.primary_layers
-                    create_face_widget( self.obj, rbn(bone), size = 0.8 )
+                    size = 1
                 else:
                     if self.secondary_layers:
                         pb[rbn(bone)].bone.layers = self.secondary_layers
-                    create_face_widget( self.obj, rbn(bone), size = 0.5 )
+                    size = 0.7
+                
+                if bone == ctrlname('lid.B.L') or bone == ctrlname('lid.T.R') or bone == ctrlname('lips.R'):
+                    create_left_arc_widget( self.obj, rbn(bone), size = size )
+                elif bone == ctrlname('lid.B.R') or bone == ctrlname('lid.T.L') or bone == ctrlname('lips.L'):
+                    create_right_arc_widget( self.obj, rbn(bone), size = size )
+                elif bone.startswith(ctrlname('lid.T.')) or bone == ctrlname('lip.T') or bone.startswith(ctrlname('lip.T.')):
+                    create_upper_arc_widget( self.obj, rbn(bone), size = size )
+                elif bone.startswith(ctrlname('lid.B.')) or bone == ctrlname('lip.B') or bone.startswith(ctrlname('lip.B.')):
+                    create_lower_arc_widget( self.obj, rbn(bone), size = size )
+                else:
+                    create_face_widget( self.obj, rbn(bone), size = size * 0.8 )
 
 
     def all_controls( self ):
@@ -705,8 +717,10 @@ class Rig:
         groups = {
             ctrlname('jaw_master'): [
                 ctrlname('jaw'),
-                tailctrlname('jaw.R'),
-                tailctrlname('jaw.L'),
+                ctrlname('jaw.L'),
+                ctrlname('jaw.R'),
+                ctrlname('jaw.L.001'),
+                ctrlname('jaw.R.001'),
                 ctrlname('chin.L'),
                 ctrlname('chin.R'),
                 ctrlname('chin'),
