@@ -19,10 +19,11 @@ class Rig:
         self.org_bones = [bone_name] + connected_children_names(obj, bone_name)
 
         if self.params.symmetry:
-            m = re.search(r'(L|R)(\.?\d*)$', bone_name)
+            m = re.search(r'(\W)(L|R)(\.\d+)?$', bone_name)
             if m:
-                lr = 'R' if m.group(1) == 'L' else 'L'
-                counterpart = re.sub(m.group(1) + m.group(2) + '$', lr + m.group(2), bone_name)
+                lr = 'R' if m.group(2) == 'L' else 'L'
+                ext = m.group(3) if m.group(3) else ''
+                counterpart = re.sub(m.group(1) + m.group(2) + ext + '$', m.group(1) + lr + ext, bone_name)
                 if obj.data.bones[counterpart]:
                     cps = connected_children_names(obj, counterpart)
                     cps.reverse()
@@ -63,7 +64,6 @@ class Rig:
 
                 ctrls.append( ctrl_bone )
                 l += 1
-                print(l, org, ctrl_bone)
         else:
             for org in self.org_bones:
                 ctrl_bone = copy_bone(self.obj, org, ctrlname(org))
@@ -247,7 +247,7 @@ controls = %s
 if is_selected( controls ):
 """ % self.ctrls[0] + ("""
     layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
-    props = layout.operator(Ring_Ctrl2Target.bl_idname, text="Snap Ctrl->Target (" + controls[0] + ")", icon='SNAP_ON')
+    props = layout.operator(Ring_Snap.bl_idname, text="Snap Ctrl->Target (" + controls[0] + ")", icon='SNAP_ON')
     props.ctrls = "%s"
     props.targets  = "%s"
 """ % (self.ctrls, self.org_bones) if self.switchable_rig else '')
@@ -265,10 +265,10 @@ if is_selected( controls ):
 
 def operator_script(rig_id):
     return '''
-class Ring_Ctrl2Target(bpy.types.Operator):
-    """ Snaps an Ctrl to Target Bone Position.
+class Ring_Snap(bpy.types.Operator):
+    """ Snaps controllers to Target Bone Position.
     """
-    bl_idname = "gamerig.ring_ctrl2bone_{rig_id}"
+    bl_idname = "gamerig.ring_snap_{rig_id}"
     bl_label = "Snap ring ctrls to Target"
     bl_description = "Snap ring controllers to target bone position (no keying)"
     bl_options = {{'UNDO', 'INTERNAL'}}
@@ -302,7 +302,7 @@ class Ring_Ctrl2Target(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
-classes.append(Ring_Ctrl2Target)
+classes.append(Ring_Snap)
 
 
 '''.format(rig_id=rig_id)
