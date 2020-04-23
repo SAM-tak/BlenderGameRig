@@ -134,8 +134,8 @@ class Rig:
         # RE pattern match right or left parts
         # match the letter "L" (or "R"), followed by an optional dot (".")
         # and 0 or more digits at the end of the the string
-        left_pattern  = re.compile(r'\WL(\.\d+)$')
-        right_pattern = re.compile(r'\WR(\.\d+)$')
+        left_pattern  = re.compile(r'[\._ ]L(\.\d+)?$')
+        right_pattern = re.compile(r'[\._ ]R(\.\d+)?$')
 
         left  = sorted( [ name for name in bones if left_pattern.search( name )  ] )
         right = sorted( [ name for name in bones if right_pattern.search( name ) ] )
