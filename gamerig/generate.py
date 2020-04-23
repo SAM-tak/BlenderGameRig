@@ -467,9 +467,6 @@ def generate_rig(context, metarig):
     # Create Bone Groups
     create_bone_groups(obj, metarig)
 
-    # Add rig_ui to logic
-    create_persistent_rig_ui(obj, script)
-    
     # Remove all jig bones.
     bpy.ops.object.mode_set(mode='EDIT')
     for bone in [bone.name for bone in obj.data.edit_bones]:
@@ -619,32 +616,6 @@ def create_bone_groups(obj, metarig):
         if g_id >= 0:
             name = groups[g_id].name
             b.bone_group = obj.pose.bone_groups[name]
-
-
-def create_persistent_rig_ui(obj, script):
-    """Make sure the ui script always follows the rig around"""
-    skip = False
-    driver = None
-
-    if hasattr(obj.animation_data, 'drivers'):
-        for fcurve in obj.animation_data.drivers:
-            if fcurve.data_path == 'pass_index':
-                driver = fcurve.driver
-                for variable in driver.variables:
-                    if variable.name == script.name:
-                        skip = True
-                        break
-                break
-
-    if not skip:
-        if not driver:
-            fcurve = obj.driver_add("pass_index")
-            driver = fcurve.driver
-
-        variable = driver.variables.new()
-        variable.name = script.name
-        variable.targets[0].id_type = 'TEXT'
-        variable.targets[0].id = script
 
 
 def get_bone_rig(metarig, obj, bone_name, rigtypes, halt_on_missing=False):
