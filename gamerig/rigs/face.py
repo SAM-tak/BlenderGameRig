@@ -347,7 +347,7 @@ class Rig:
 
                 eb[ rbn(tweak_name) ].tail[:] = eb[ rbn(tweak_name) ].head + Vector(( 0, 0, self.face_length / 7 ))
                 if ctrlname('lip.T') == tweak_name or ctrlname('lip.B') == tweak_name:
-                    eb[ rbn(tweak_name) ].align_roll( face_e.z_axis )
+                    eb[ rbn(tweak_name) ].align_roll( -face_e.z_axis )
                 else:
                     eb[ rbn(tweak_name) ].align_roll( eb[ rbn(bone) ].z_axis )
 
