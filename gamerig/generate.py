@@ -227,7 +227,7 @@ def generate_rig(context, metarig):
         for d in obj.animation_data.drivers:
             try:
                 obj.driver_remove(d.data_path)
-            except expression as TypeError:
+            except TypeError:
                 pass
     
     t.tick("Duplicate rig: ")
