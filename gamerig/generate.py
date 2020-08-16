@@ -539,12 +539,15 @@ def generate_rig(context, metarig):
     if previous_action:
         obj.animation_data.action = previous_action
     if previous_nla_tracks:
-        for s in previous_nla_tracks:
-            d = obj.animation_data.nla_tracks.new()
-            copy_attributes(s, d)
-            for ss in previous_nla_strips[s]:
-                dd = d.strips.new(ss.name, ss.frame_start, ss.action)
-                copy_attributes(ss, dd)
+        try:
+            for s in previous_nla_tracks:
+                d = obj.animation_data.nla_tracks.new()
+                copy_attributes(s, d)
+                for ss in previous_nla_strips[s]:
+                    dd = d.strips.new(ss.name, ss.frame_start, ss.action)
+                    copy_attributes(ss, dd)
+        except Exception as e:
+            print("GameRig: Warning. failed to restore NLA tracks.")
 
     t.tick("The rest: ")
     return error
