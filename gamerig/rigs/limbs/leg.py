@@ -41,12 +41,15 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
+    props = layout.operator(Leg_SnapIKRootController.bl_idname, text="Snap IK Root (" + fk_ctrl + ")", icon='SNAP_ON')
+    props.ik = controls[0]
+    props.mch = ik_ctrl[0]
     props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
     props.toe_fk   = ''
-    props.thigh_ik = controls[0]
+    props.thigh_ik = ik_ctrl[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
     props.toe_ik   = ''
@@ -74,12 +77,15 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
+    props = layout.operator(Leg_SnapIKRootController.bl_idname, text="Snap IK Root (" + fk_ctrl + ")", icon='SNAP_ON')
+    props.ik = controls[0]
+    props.mch = ik_ctrl[0]
     props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
     props.thigh_fk = controls[1]
     props.shin_fk  = controls[2]
     props.foot_fk  = controls[3]
     props.toe_fk   = controls[4]
-    props.thigh_ik = controls[0]
+    props.thigh_ik = ik_ctrl[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
     props.toe_ik   = controls[5]
@@ -374,7 +380,7 @@ if is_selected( fk_ctrl ):
 
 
 def operator_script(rig_id):
-    return '''
+    return Limb.operator_script('Leg', rig_id) + '''
 class Leg_FK2IK(bpy.types.Operator):
     """ Snaps an FK leg to an IK leg.
     """
