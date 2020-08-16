@@ -119,7 +119,7 @@ class Rig:
         pb = self.obj.pose.bones
 
         ctrlbone = pb[self.ctrl]
-        ctrlbone.lock_rotation = (False, False, True)
+        ctrlbone.lock_rotation = (False, True, False)
         ctrlbone.rotation_mode = 'XYZ'
 
         i = 0
