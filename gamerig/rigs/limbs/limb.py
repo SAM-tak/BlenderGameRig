@@ -83,27 +83,15 @@ class Limb:
 
         eb = self.obj.data.edit_bones
 
-        ctrl = copy_bone(
-            self.obj,
-            org_bones[0],
-            get_bone_name( org_bones[0], 'ctrl', 'ik' )
-        )
-        mch = copy_bone(
-            self.obj,
-            org_bones[0],
-            get_bone_name( org_bones[0], 'mch',  'ik' )
-        )
-        mch2 = copy_bone(
-            self.obj,
-            org_bones[1],
-            get_bone_name( org_bones[1], 'mch',  'ik' )
-        )
-        mch_target = copy_bone(
-            self.obj,
-            org_bones[2],
-            get_bone_name( org_bones[2], 'mch',  'ik_target' )
-        )
-        eb[ mch_target ].length /= 4
+        ctrl       = get_bone_name( org_bones[0], 'ctrl', 'ik'        )
+        mch        = get_bone_name( org_bones[0], 'mch',  'ik'        )
+        mch_target = get_bone_name( org_bones[0], 'mch',  'ik_target' )
+
+        for o, ik in zip( org_bones, [ ctrl, mch, mch_target ] ):
+            bone = copy_bone( self.obj, o, ik )
+
+            if org_bones.index(o) == len( org_bones ) - 1:
+                eb[ bone ].length /= 4
 
         # Create MCH Stretch
         mch_str = copy_bone(
@@ -117,12 +105,11 @@ class Limb:
         # Parenting
         eb[ ctrl    ].parent = eb[ parent ]
         eb[ mch_str ].parent = eb[ parent ]
-        eb[ mch     ].parent = eb[ parent ]
-        eb[ mch2    ].parent = eb[ mch ]
+        eb[ mch     ].parent = eb[ ctrl   ]
         
         return {
             'ctrl'          : { 'limb' : ctrl },
-            'mch'           : [ mch, mch2 ],
+            'mch'           : mch,
             'mch_target'    : mch_target,
             'mch_str'       : mch_str
         }
@@ -134,7 +121,7 @@ class Limb:
         mch = self.bones['ik']['mch']
         mch_target = self.bones['ik']['mch_target']
 
-        self.make_constraint( mch[1], {
+        self.make_constraint( mch, {
             'constraint'  : 'IK',
             'subtarget'   : mch_target,
             'chain_count' : 2,
@@ -142,25 +129,33 @@ class Limb:
         })
 
         pb = self.obj.pose.bones
-        pb[ mch[0] ].ik_stretch = 0.1
-        pb[ mch[1] ].ik_stretch = 0.1
+        pb[ mch  ].ik_stretch = 0.1
+        pb[ ctrl ].ik_stretch = 0.1
 
         # IK constraint Rotation locks
         for axis in ['x','y','z']:
             if axis != self.rot_axis:
-               setattr( pb[ mch[1] ], 'lock_ik_' + axis, True )
+               setattr( pb[ mch ], 'lock_ik_' + axis, True )
         if self.rot_axis == 'automatic':
-            pb[ mch[1] ].lock_ik_x = False
+            pb[ mch ].lock_ik_x = False
         else:
             pb[ ctrl ].rotation_quaternion = Quaternion(
                 (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0),
                 radians(-90.0)
             )
+            if self.rot_axis == 'x':
+                pb[ ctrl ].rotation_mode = 'ZXY'
+                pb[ ctrl ].rotation_euler.x = radians(-90.0)
+            elif self.rot_axis == 'y':
+                pb[ ctrl ].rotation_mode = 'ZYX'
+                pb[ ctrl ].rotation_euler.y = radians(-90.0)
+            elif self.rot_axis == 'z':
+                pb[ ctrl ].rotation_mode = 'XZY'
+                pb[ ctrl ].rotation_euler.z = radians(-90.0)
 
         # Locks and Widget
         pb[ ctrl ].lock_location = True, True, True
-        pb[ ctrl ].lock_rotation = False, False, False
-        pb[ ctrl ].lock_rotation_w = False
+        pb[ ctrl ].lock_rotation = False, False, True
         pb[ ctrl ].lock_scale = True, True, True
         create_ikarrow_widget( self.obj, ctrl )
 
@@ -276,16 +271,11 @@ class Limb:
         prop["soft_max"]    = 1.0
         prop["description"] = 'IK/FK Switch'
 
-        # Constrain IK first mch to controller bone
-        self.make_constraint(ik['mch'][0], {
-            'constraint'  : 'COPY_TRANSFORMS',
-            'subtarget'   : ik['ctrl']['limb']
-        })
-
         # Constrain org to IK and FK bones
-        ik =  [ i for i in ik['mch'] ] + [ ik['mch_target'] ]
+        iks =  [ ik['ctrl']['limb'] ]
+        iks += [ ik[k] for k in [ 'mch', 'mch_target'] ]
 
-        for o, i, f in itertools.zip_longest( org, ik, fk ):
+        for o, i, f in itertools.zip_longest( org, iks, fk ):
             if i is not None:
                 self.make_constraint(o, {
                     'constraint'  : 'COPY_TRANSFORMS',
@@ -466,8 +456,8 @@ class Limb:
 
         # IK ctrl has IK stretch
         ik_ctrl = [
-            bones['ik']['mch'][0],
-            bones['ik']['mch'][1],
+            bones['ik']['ctrl']['terminal'][-1],
+            bones['ik']['mch'],
             bones['ik']['mch_target']
         ]
 
@@ -566,48 +556,6 @@ if is_selected( ik_ctrl ):
 
         for i in range(24,32):
             row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-    @staticmethod
-    def operator_script(subclass, rig_id):
-        return '''
-class {subclass}_SnapIKRootController(bpy.types.Operator):
-    """ Snaps IK Root Controller position to proper position.
-    """
-    bl_idname = "gamerig.{_subclass}_snap_ikroot_{rig_id}"
-    bl_label = "Snap IK Root Controller to proper position"
-    bl_description = "Snap IK Root Controller to current IKed position (no keying)"
-    bl_options = {{'UNDO', 'INTERNAL'}}
-
-    ik : bpy.props.StringProperty(name="IK controller")
-    mch : bpy.props.StringProperty(name="IKed Bone")
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None and context.mode == 'POSE'
-
-    def execute(self, context):
-        use_global_undo = context.preferences.edit.use_global_undo
-        context.preferences.edit.use_global_undo = False
-        try:
-            """ Matches the fk bones in a leg rig to the ik bones.
-            """
-            obj = context.active_object
-
-            ctrl  = obj.pose.bones[self.ik]
-            mch = obj.pose.bones[self.mch]
-
-            # Thigh position
-            match_pose_translation(ctrl, mch)
-            match_pose_rotation(ctrl, mch)
-            match_pose_scale(ctrl, mch)
-        finally:
-            context.preferences.edit.use_global_undo = use_global_undo
-        return {{'FINISHED'}}
-
-classes.append({subclass}_SnapIKRootController)
-
-
-'''.format(subclass=subclass, _subclass=subclass.lower(), rig_id=rig_id)
 
 
 def get_bone_name( name, btype, suffix = '' ):

@@ -41,14 +41,11 @@ parent   = '%s'
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator(Arm_SnapIKRootController.bl_idname, text="Snap IK Root (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.ik = controls[0]
-    props.mch = ik_ctrl[0]
     props = layout.operator(Arm_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
     props.uarm_fk = controls[1]
     props.farm_fk = controls[2]
     props.hand_fk = controls[3]
-    props.uarm_ik = ik_ctrl[0]
+    props.uarm_ik = controls[0]
     props.farm_ik = ik_ctrl[1]
     props.hand_ik = controls[4]
     props = layout.operator(Arm_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
@@ -134,7 +131,7 @@ if is_selected( fk_ctrl ):
 
 
 def operator_script(rig_id):
-    return Limb.operator_script('Arm', rig_id) + '''
+    return '''
 class Arm_FK2IK(bpy.types.Operator):
     """ Snaps an FK arm to an IK arm.
     """
