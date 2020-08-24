@@ -49,25 +49,29 @@ parent   = '%s'
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
     props = layout.operator(Paw_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.thigh_fk = controls[1]
-    props.shin_fk  = controls[2]
-    props.foot_fk  = controls[3]
-    props.toe_fk   = controls[4]
-    props.thigh_ik = controls[0]
+    props.thigh_fk = controls[2]
+    props.shin_fk  = controls[3]
+    props.foot_fk  = controls[4]
+    props.toe_fk   = controls[5]
+    props.thigh_ik = ik_ctrl[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
-    props.toe_ik   = controls[6]
+    props.toe_ik   = controls[7]
     props = layout.operator(Paw_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.thigh_fk = controls[1]
-    props.shin_fk  = controls[2]
-    props.foot_fk  = controls[3]
-    props.toe_fk   = controls[4]
+    props.thigh_fk = controls[2]
+    props.shin_fk  = controls[3]
+    props.foot_fk  = controls[4]
+    props.toe_fk   = controls[5]
     props.thigh_ik = controls[0]
     props.shin_ik  = ik_ctrl[1]
-    props.foot_ik  = controls[5]
+    props.foot_ik  = controls[6]
     props.mfoot_ik = ik_ctrl[2]
-    props.toe_ik   = ik_ctrl[0]
-    props.mtoe_ik  = controls[6]
+    props.toe_ik   = controls[8]
+    props.mtoe_ik  = controls[7]
+
+# IK Use Pole
+if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] ):
+    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
@@ -242,7 +246,36 @@ class Paw_FK2IK(bpy.types.Operator):
         use_global_undo = context.preferences.edit.use_global_undo
         context.preferences.edit.use_global_undo = False
         try:
-            fk2ik_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.toe_ik])
+            """ Matches the fk bones in a leg rig to the ik bones.
+            """
+            obj = context.active_object
+
+            thigh  = obj.pose.bones[self.thigh_fk]
+            shin   = obj.pose.bones[self.shin_fk]
+            foot   = obj.pose.bones[self.foot_fk]
+            toe    = obj.pose.bones[self.toe_fk]
+            
+            thighi = obj.pose.bones[self.thigh_ik]
+            shini  = obj.pose.bones[self.shin_ik]
+            footi  = obj.pose.bones[self.foot_ik]
+            toei   = obj.pose.bones[self.toe_ik]
+
+            # Thigh position
+            match_pose_translation(thigh, thighi)
+            match_pose_rotation(thigh, thighi)
+            match_pose_scale(thigh, thighi)
+
+            # Shin position
+            match_pose_rotation(shin, shini)
+            match_pose_scale(shin, shini)
+
+            # Foot position
+            match_pose_rotation(foot, footi)
+            match_pose_scale(foot, footi)
+
+            # Toe position
+            match_pose_rotation(toe, toei)
+            match_pose_scale(toe, toei)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
@@ -263,10 +296,10 @@ class Paw_IK2FK(bpy.types.Operator):
 
     thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
     shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
-    mfoot_ik : bpy.props.StringProperty(name="MFoot IK Name")
     foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
-    mtoe_ik  : bpy.props.StringProperty(name="MToe IK Name")
+    mfoot_ik : bpy.props.StringProperty(name="MFoot IK Name")
     toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
+    mtoe_ik  : bpy.props.StringProperty(name="MToe IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -276,7 +309,47 @@ class Paw_IK2FK(bpy.types.Operator):
         use_global_undo = context.preferences.edit.use_global_undo
         context.preferences.edit.use_global_undo = False
         try:
-            ik2fk_paw(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.toe_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.mfoot_ik, self.toe_ik, self.mtoe_ik])
+            """ Matches the ik bones in a leg rig to the fk bones.
+            """
+            obj = context.active_object
+
+            thigh    = obj.pose.bones[self.thigh_fk]
+            shin     = obj.pose.bones[self.shin_fk]
+            foot     = obj.pose.bones[self.foot_fk]
+            toe      = obj.pose.bones[self.toe_fk]
+
+            thighi   = obj.pose.bones[self.thigh_ik]
+            shini    = obj.pose.bones[self.shin_ik]
+            footi    = obj.pose.bones[self.foot_ik]
+            mfooti   = obj.pose.bones[self.mfoot_ik]
+            toei     = obj.pose.bones[self.toe_ik]
+            mtoei    = obj.pose.bones[self.mtoe_ik]
+            
+            # Toe position
+            mat = mtoei.bone.matrix_local.inverted() @ toei.bone.matrix_local
+            toemat = get_pose_matrix_in_other_space(toe.matrix, toei) @ mat
+            set_pose_translation(toei, toemat)
+            set_pose_rotation(toei, toemat)
+            set_pose_scale(toei, toemat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+
+            # Foot position
+            mat = mfooti.bone.matrix_local.inverted() @ footi.bone.matrix_local
+            footmat = get_pose_matrix_in_other_space(foot.matrix, footi) @ mat
+            set_pose_translation(footi, footmat)
+            set_pose_rotation(footi, footmat)
+            set_pose_scale(footi, footmat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+
+            # Thigh position
+            match_pose_translation(thighi, thigh)
+            match_pose_rotation(thighi, thigh)
+            match_pose_scale(thighi, thigh)
+
+            # Rotation Correction
+            correct_rotation(thighi,thigh)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}

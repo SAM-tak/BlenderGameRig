@@ -42,19 +42,23 @@ parent   = '%s'
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
     props = layout.operator(Arm_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.uarm_fk = controls[1]
-    props.farm_fk = controls[2]
-    props.hand_fk = controls[3]
-    props.uarm_ik = controls[0]
+    props.uarm_fk = controls[2]
+    props.farm_fk = controls[3]
+    props.hand_fk = controls[4]
+    props.uarm_ik = ik_ctrl[0]
     props.farm_ik = ik_ctrl[1]
-    props.hand_ik = controls[4]
+    props.hand_ik = controls[5]
     props = layout.operator(Arm_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.uarm_fk = controls[1]
-    props.farm_fk = controls[2]
-    props.hand_fk = controls[3]
+    props.uarm_fk = controls[2]
+    props.farm_fk = controls[3]
+    props.hand_fk = controls[4]
     props.uarm_ik = controls[0]
     props.farm_ik = ik_ctrl[1]
-    props.hand_ik = controls[4]
+    props.hand_ik = controls[5]
+
+# IK Use Pole
+if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[5] ):
+    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
 
 # FK limb follow
 if is_selected( fk_ctrl ):

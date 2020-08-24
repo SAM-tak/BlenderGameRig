@@ -42,25 +42,33 @@ parent   = '%s'
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
     props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.thigh_fk = controls[1]
-    props.shin_fk  = controls[2]
-    props.foot_fk  = controls[3]
+    props.thigh_fk = controls[2]
+    props.shin_fk  = controls[3]
+    props.foot_fk  = controls[4]
     props.toe_fk   = ''
-    props.thigh_ik = controls[0]
+    props.thigh_ik = ik_ctrl[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
     props.toe_ik   = ''
     props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.thigh_fk = controls[1]
-    props.shin_fk  = controls[2]
-    props.foot_fk  = controls[3]
+    props.thigh_fk = controls[2]
+    props.shin_fk  = controls[3]
+    props.foot_fk  = controls[4]
     props.toe_fk   = ''
-    props.thigh_ik = controls[0]
+    props.thigh_ik = ik_ctrl[0]
     props.shin_ik  = ik_ctrl[1]
-    props.foot_ik  = controls[5]
-    props.footroll = controls[4]
+    props.foot_ik  = controls[8]
+    props.footroll = controls[7]
     props.mfoot_ik = ik_ctrl[2]
     props.toe_ik   = ''
+
+# IK Use Pole
+if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[7] ) or is_selected( controls[8] ):
+    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
+
+# IK Toe Follow
+if controls[0]['IK Use Pole'] > 0 and (is_selected( controls[1] ) or is_selected( controls[7] ) or is_selected( controls[8] )):
+    layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow (' + controls[1] + ')', slider = True )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
@@ -75,30 +83,38 @@ parent   = '%s'
 if is_selected( controls ):
     layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
     props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.thigh_fk = controls[1]
-    props.shin_fk  = controls[2]
-    props.foot_fk  = controls[3]
-    props.toe_fk   = controls[4]
-    props.thigh_ik = controls[0]
+    props.thigh_fk = controls[2]
+    props.shin_fk  = controls[3]
+    props.foot_fk  = controls[4]
+    props.toe_fk   = controls[5]
+    props.thigh_ik = ik_ctrl[0]
     props.shin_ik  = ik_ctrl[1]
     props.foot_ik  = ik_ctrl[2]
-    props.toe_ik   = controls[5]
+    props.toe_ik   = controls[6]
     props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
-    props.thigh_fk = controls[1]
-    props.shin_fk  = controls[2]
-    props.foot_fk  = controls[3]
-    props.toe_fk   = controls[4]
-    props.thigh_ik = controls[0]
+    props.thigh_fk = controls[2]
+    props.shin_fk  = controls[3]
+    props.foot_fk  = controls[4]
+    props.toe_fk   = controls[5]
+    props.thigh_ik = ik_ctrl[0]
     props.shin_ik  = ik_ctrl[1]
-    props.foot_ik  = controls[7]
-    props.footroll = controls[6]
+    props.foot_ik  = controls[8]
+    props.footroll = controls[7]
     props.mfoot_ik = ik_ctrl[2]
-    props.toe_ik   = controls[5]
+    props.toe_ik   = controls[6]
+
+# IK Use Pole
+if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] ):
+    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
+
+# IK Toe Follow
+if pose_bones[ controls[0] ]['IK Use Pole'] > 0 and (is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] )):
+    layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow (' + controls[1] + ')', slider = True )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
     layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
-""")
+""", True)
 
 
     def create_leg( self, bones ):
@@ -134,6 +150,9 @@ if is_selected( fk_ctrl ):
 
         eb[ bones['ik']['mch_target'] ].parent      = eb[ heel ]
         eb[ bones['ik']['mch_target'] ].use_connect = False
+
+        eb[ bones['ik']['mch_ctrl_parent_target'] ].parent      = eb[ heel ]
+        eb[ bones['ik']['mch_ctrl_parent_target'] ].use_connect = False
 
         # Create foot mch rock and roll bones
 
@@ -231,7 +250,8 @@ if is_selected( fk_ctrl ):
         mch_ik_socket = bones['ik']['mch_ik_socket']
 
         org_bones = self.org_bones
-
+        pb = self.obj.pose.bones
+        
         # Constrain rock and roll MCH bones
         self.make_constraint(roll1_mch, {
             'constraint'   : 'COPY_ROTATION',
@@ -261,7 +281,50 @@ if is_selected( fk_ctrl ):
             'owner_space' : 'LOCAL'
         })
 
-        pb = self.obj.pose.bones
+        # Constrain Ik controller parent
+        mch_ctrl_parent = bones['ik']['mch_ctrl_parent']
+        self.make_constraint(mch_ctrl_parent, {
+            'constraint'   : 'COPY_ROTATION',
+            'subtarget'    : bones['ik']['mch_ctrl_parent_target'],
+            'use_x'        : False,
+            'use_y'        : False,
+            'owner_space'  : 'LOCAL'
+        })
+        # workaround for exception
+        pb[mch_ctrl_parent].constraints[-1].target_space = 'LOCAL_WITH_PARENT'
+        
+        # Find IK toe follow property
+        ik_dir_ctrl = bones['ik']['ctrl']['limb'][1]
+        pb[ik_dir_ctrl]['IK Toe Follow']  = 1.0
+        prop = rna_idprop_ui_prop_get( pb[ik_dir_ctrl], 'IK Toe Follow', create=True )
+        prop["min"]         = 0.0
+        prop["max"]         = 1.0
+        prop["soft_min"]    = 0.0
+        prop["soft_max"]    = 1.0
+        prop["description"] = 'Rate of facing knee to toe forward'
+        # Add driver to limit scale constraint influence
+        drv      = pb[mch_ctrl_parent].constraints[-1].driver_add("influence").driver
+        drv.type = 'SUM'
+
+        var = drv.variables.new()
+        var.name = 'ik_toe_follow'
+        var.type = "SINGLE_PROP"
+        var.targets[0].id = self.obj
+        var.targets[0].data_path = pb[ik_dir_ctrl].path_from_id() + '['+ '"' + prop.name + '"' + ']'
+
+        drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+
+        drv_modifier.mode            = 'POLYNOMIAL'
+        drv_modifier.poly_order      = 1
+        drv_modifier.coefficients[0] = 0.0
+        drv_modifier.coefficients[1] = 1.0
+        
+        self.make_constraint(bones['ik']['mch_ctrl_parent_target'], {
+            'constraint'   : 'COPY_ROTATION',
+            'subtarget'    : bones['ik']['mch_target'],
+            'invert_y'     : True
+        })
+
         for i,b in enumerate([ rock1_mch, rock2_mch ]):
             head_tail = pb[b].head - pb[self.footprint_bone].head
             if '.L' in b:

@@ -266,8 +266,23 @@ def create_right_arc_widget(rig, bone_name, size=1.0, bone_transform_name=None):
 def create_ikarrow_widget(rig, bone_name, size=1.0, bone_transform_name=None):
     obj = create_widget(rig, bone_name, bone_transform_name)
     if obj is not None:
-        verts = [(0.10000000149011612*size, 0.0*size, -0.30000001192092896*size), (0.10000000149011612*size, 0.699999988079071*size, -0.30000001192092896*size), (-0.10000000149011612*size, 0.0*size, -0.30000001192092896*size), (-0.10000000149011612*size, 0.699999988079071*size, -0.30000001192092896*size), (0.20000000298023224*size, 0.699999988079071*size, -0.30000001192092896*size), (0.0*size, 1.0*size, -0.30000001192092896*size), (-0.20000000298023224*size, 0.699999988079071*size, -0.30000001192092896*size), ]
+        verts = [(0.1*size, 0.0*size, -0.2*size), (0.1*size, 0.7*size, -0.2*size), (-0.1*size, 0.0*size, -0.2*size), (-0.1*size, 0.7*size, -0.2*size), (0.2*size, 0.7*size, -0.2*size), (0.0*size, 1.0*size, -0.2*size), (-0.2*size, 0.7*size, -0.2*size), ]
         edges = [(0, 1), (2, 3), (1, 4), (4, 5), (3, 6), (5, 6), (0, 2), ]
+        faces = []
+
+        mesh = obj.data
+        mesh.from_pydata(verts, edges, faces)
+        mesh.update()
+        return obj
+    else:
+        return None
+
+
+def create_ikdir_widget(rig, bone_name, size=1.0, bone_transform_name=None):
+    obj = create_widget(rig, bone_name, bone_transform_name)
+    if obj is not None:
+        verts = [(0.0*size, 0.0*size, 0.0*size), (0.0*size, 0.7*size, 0.0*size), (0.2*size, 0.7*size, 0.0*size), (0.0*size, 1.0*size, 0.0*size), (-0.2*size, 0.7*size, 0.0*size), ]
+        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (1, 4), ]
         faces = []
 
         mesh = obj.data
