@@ -118,6 +118,7 @@ class Limb:
 
         eb[ dir_ctrl ].head = eb[ mch_str ].head + (eb[ mch_str ].tail - eb[ mch_str ].head) / 2
         eb[ dir_ctrl ].tail = eb[ dir_ctrl ].head + ( -eb[ dir_ctrl ].z_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].x_axis ) * eb[ dir_ctrl ].length
+        eb[ dir_ctrl ].align_roll(eb[ mch_str ].y_axis)
         eb[ dir_ctrl ].inherit_scale = 'NONE'
 
         mch_pole_target = copy_bone(
@@ -179,7 +180,7 @@ class Limb:
             }
 
 
-    def postprocess_ik( self ):
+    def postprocess_ik( self, reverse_ik_widget ):
         ctrl = self.bones['ik']['ctrl']['limb'][0]
         dir_ctrl = self.bones['ik']['ctrl']['limb'][1]
         mch_str = self.bones['ik']['mch_str']
@@ -228,7 +229,7 @@ class Limb:
         pb[ dir_ctrl ].rotation_mode = 'XYZ' if self.rot_axis == 'x' else 'ZYX'
         pb[ dir_ctrl ].lock_scale = True, True, True
 
-        create_ikdir_widget( self.obj, dir_ctrl )
+        create_ikdir_widget( self.obj, dir_ctrl, -1.0 if reverse_ik_widget else 1.0 )
 
         pb[ ctrl ].lock_rotation = True, False, True
         pb[ ctrl ].rotation_mode = 'ZXY' if self.rot_axis == 'x' else 'XZY'
@@ -321,8 +322,8 @@ class Limb:
         pb = self.obj.pose.bones
 
         # Toggle Pole Driver
-        pb[ ik['ctrl']['limb'][0] ]['IK Use Pole'] = 0
-        prop = rna_idprop_ui_prop_get( pb[ ik['ctrl']['limb'][0] ], 'IK Use Pole', create = True )
+        pb[ ik['ctrl']['limb'][1] ]['IK Pole Mode'] = 0
+        prop = rna_idprop_ui_prop_get( pb[ ik['ctrl']['limb'][1] ], 'IK Pole Mode', create = True )
 
         prop["min"]         = 0
         prop["max"]         = 1
@@ -333,18 +334,18 @@ class Limb:
         drv = pb[ ik['mch'] ].constraints[ 0 ].driver_add("mute").driver
         drv.type = 'AVERAGE'
         var = drv.variables.new()
-        var.name = 'ik_use_pole'
+        var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][0] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
 
         drv = pb[ ik['mch'] ].constraints[ 1 ].driver_add("mute").driver
         drv.type = 'AVERAGE'
         var = drv.variables.new()
-        var.name = 'ik_use_pole'
+        var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][0] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
 
         drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
         drv_modifier.mode            = 'POLYNOMIAL'
@@ -355,19 +356,19 @@ class Limb:
         drv = pb[ ik['ctrl']['limb'][0] ].bone.driver_add("hide").driver
         drv.type = 'AVERAGE'
         var = drv.variables.new()
-        var.name = 'ik_use_pole'
+        var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][0] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
 
         fcu = pb[ ik['ctrl']['limb'][1] ].bone.driver_add("hide")
         drv = fcu.driver
         drv.type = 'AVERAGE'
         var = drv.variables.new()
-        var.name = 'ik_use_pole'
+        var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][0] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
 
         drv_modifier = fcu.modifiers.new('GENERATOR')
         drv_modifier.mode            = 'POLYNOMIAL'
@@ -453,10 +454,10 @@ class Limb:
         return self.create_script( bones, script_template )
 
 
-    def postprocess(self):
+    def postprocess(self, reverse_ik_widget = False):
         self.postprocess_parent()
         self.postprocess_fk()
-        self.postprocess_ik()
+        self.postprocess_ik(reverse_ik_widget)
         bones = self.bones
         self.setup_switch(self.org_bones, bones['ik'], bones['fk']['ctrl'], bones['parent'])
 

@@ -69,9 +69,9 @@ if is_selected( controls ):
     props.toe_ik   = controls[8]
     props.mtoe_ik  = controls[7]
 
-# IK Use Pole
+# IK Pole Mode
 if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] ):
-    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
+    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
@@ -140,7 +140,7 @@ if is_selected( fk_ctrl ):
 
 
     def postprocess(self, context):
-        super().postprocess()
+        super().postprocess(reverse_ik_widget = True)
 
         bones = self.bones
 

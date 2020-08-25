@@ -62,12 +62,12 @@ if is_selected( controls ):
     props.mfoot_ik = ik_ctrl[2]
     props.toe_ik   = ''
 
-# IK Use Pole
+# IK Pole Mode
 if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[7] ) or is_selected( controls[8] ):
-    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
+    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
 
 # IK Toe Follow
-if controls[0]['IK Use Pole'] > 0 and (is_selected( controls[1] ) or is_selected( controls[7] ) or is_selected( controls[8] )):
+if controls[1]['IK Pole Mode'] > 0 and (is_selected( controls[1] ) or is_selected( controls[7] ) or is_selected( controls[8] )):
     layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow (' + controls[1] + ')', slider = True )
 
 # FK limb follow
@@ -103,12 +103,12 @@ if is_selected( controls ):
     props.mfoot_ik = ik_ctrl[2]
     props.toe_ik   = controls[6]
 
-# IK Use Pole
+# IK Pole Mode
 if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] ):
-    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
+    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
 
 # IK Toe Follow
-if pose_bones[ controls[0] ]['IK Use Pole'] > 0 and (is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] )):
+if pose_bones[ controls[1] ]['IK Pole Mode'] > 0 and (is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] )):
     layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow (' + controls[1] + ')', slider = True )
 
 # FK limb follow

@@ -56,9 +56,9 @@ if is_selected( controls ):
     props.farm_ik = ik_ctrl[1]
     props.hand_ik = controls[5]
 
-# IK Use Pole
+# IK Pole Mode
 if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[5] ):
-    layout.prop( pose_bones[ controls[0] ], '["IK Use Pole"]', text='IK Use Pole (' + controls[0] + ')' )
+    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
 
 # FK limb follow
 if is_selected( fk_ctrl ):
