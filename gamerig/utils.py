@@ -211,47 +211,9 @@ def copy_bone(obj, bone_name, assign_name=''):
         edit_bone_2.bbone_easein = edit_bone_1.bbone_easein
         edit_bone_2.bbone_easeout = edit_bone_1.bbone_easeout
 
-        if not hasattr(copy_bone, 'copied'):
-            copy_bone.copied = []
-        copy_bone.copied.append((bone_name_1, bone_name_2))
-
         return bone_name_2
     else:
         raise RuntimeError("Cannot copy bones outside of edit mode")
-
-
-def copy_attr_all_copied_posebone(obj):
-    if hasattr(copy_bone, 'copied'):
-        for i in copy_bone.copied:
-            bone_name_1 = i[0]
-            bone_name_2 = i[1]
-            # Get the pose bones
-            pose_bone_1 = obj.pose.bones[bone_name_1]
-            pose_bone_2 = obj.pose.bones[bone_name_2]
-
-            # Copy pose bone attributes
-            pose_bone_2.rotation_mode = pose_bone_1.rotation_mode
-            pose_bone_2.rotation_axis_angle = tuple(pose_bone_1.rotation_axis_angle)
-            pose_bone_2.rotation_euler = tuple(pose_bone_1.rotation_euler)
-            pose_bone_2.rotation_quaternion = tuple(pose_bone_1.rotation_quaternion)
-
-            pose_bone_2.lock_location = tuple(pose_bone_1.lock_location)
-            pose_bone_2.lock_scale = tuple(pose_bone_1.lock_scale)
-            pose_bone_2.lock_rotation = tuple(pose_bone_1.lock_rotation)
-            pose_bone_2.lock_rotation_w = pose_bone_1.lock_rotation_w
-            pose_bone_2.lock_rotations_4d = pose_bone_1.lock_rotations_4d
-
-            # Copy custom properties
-            for key in pose_bone_1.keys():
-                if key != "_RNA_UI" and key != "gamerig":
-                    prop1 = rna_idprop_ui_prop_get(pose_bone_1, key, create=False)
-                    if prop1 is not None:
-                        prop2 = rna_idprop_ui_prop_get(pose_bone_2, key, create=True)
-                        pose_bone_2[key] = pose_bone_1[key]
-                        for key in prop1.keys():
-                            prop2[key] = prop1[key]
-        
-        del copy_bone.copied
 
 
 def flip_bone(obj, bone_name):
@@ -386,6 +348,22 @@ def copy_attributes(a, b):
                 setattr(b, key, getattr(a, key))
             except AttributeError:
                 pass
+
+
+def bone_props_ui_string(obj, bone_name):
+    bone = obj.pose.bones[bone_name]
+    rna_properties = {prop.identifier for prop in bone.bl_rna.properties if prop.is_runtime}
+    ret = ""
+    for k in bone.keys():
+        if k == '_RNA_UI' or k in rna_properties:
+            continue
+        if isinstance(bone[k], float):
+            ret += f"    layout.prop( pose_bones['{bone.name}'], '[\"{k}\"]', text='{k} ({bone.name})', slider = True )\n"
+
+    if len(ret) > 0:
+        return ret
+    
+    return None
 
 
 def rig_module_name(rig_type):

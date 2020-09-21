@@ -20,7 +20,7 @@
 
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, ctrlname
+from ..utils import copy_bone, ctrlname, bone_props_ui_string
 from .widgets import create_bone_widget, create_circle_widget
 
 class Rig:
@@ -44,16 +44,19 @@ class Rig:
         # Make a control bone (copy of original).
         self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
 
-        return """
-control = '%s'
+        props_ui_str = bone_props_ui_string(self.obj, self.org_bone)
 
-# Rig/Phy Switch on all Control Bones
-if is_selected( control ):
-    layout.prop( pose_bones[ control ], '["Rig/Phy"]', text='Rig/Phy (' + control + ')', slider = True )
-    props = layout.operator(Generic_Snap.bl_idname, text="Snap to Target (" + control + ")", icon='SNAP_ON')
+        if len(self.metabone.constraints) > 0 or props_ui_str:
+            return f"""
+if is_selected('{self.bone}'):
+""" + (props_ui_str if props_ui_str else "") + (f"""
+    # Rig/Phy Switch on all Control Bones
+    layout.prop( pose_bones['{self.bone}'], '["Rig/Phy"]', text='Rig/Phy ({self.bone})', slider = True )
+    props = layout.operator(Generic_Snap.bl_idname, text="Snap to Target ({self.bone})", icon='SNAP_ON')
     props.ctrl = control
-    props.target  = "%s"
-""" % (self.bone, self.org_bone) if len(self.metabone.constraints) > 0 else None
+    props.target  = "{self.org_bone}"
+""" if len(self.metabone.constraints) > 0 else "")
+
 
     def postprocess(self, context):
         pb = self.obj.pose.bones

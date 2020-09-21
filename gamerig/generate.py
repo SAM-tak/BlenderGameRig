@@ -194,6 +194,14 @@ def generate_rig(context, metarig):
     obj.select_set(True)
     view_layer.objects.active = obj
 
+    # Copy metarig's Custom properties to rig
+    for prop in metarig.data.keys():
+        try:
+            if prop != "_RNA_UI" and prop != "gamerig" and prop != "gamerig_id":
+                obj.data[prop] = metarig.data[prop]
+        except KeyError:
+            pass
+
     # Copy over bone properties
     for bone in metarig.data.bones:
         bone_gen = obj.data.bones[bone.name]
@@ -346,11 +354,14 @@ def generate_rig(context, metarig):
                             target.data_path = "GAMERIG-" + target.data_path
 
                 # Copy key frames
-                for i in range(len(d1.keyframe_points)):
-                    d2.keyframe_points.add()
-                    k1 = d1.keyframe_points[i]
-                    k2 = d2.keyframe_points[i]
-                    copy_attributes(k1, k2)
+                try:
+                    for i in range(len(d1.keyframe_points)):
+                        d2.keyframe_points.add()
+                        k1 = d1.keyframe_points[i]
+                        k2 = d2.keyframe_points[i]
+                        copy_attributes(k1, k2)
+                except TypeError:
+                    pass
         
         for bone, rig in rigs.items():
             try:
@@ -508,6 +519,18 @@ def generate_rig(context, metarig):
     obj.select_set(True)
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
 
+    for ob in bpy.data.objects:
+        if ob.parent == obj:
+            for i in range(len(ob.rotation_euler)):
+                if abs(ob.rotation_euler[i]) <= sys.float_info.epsilon:
+                    ob.rotation_euler[i] = 0
+            for i in range(len(ob.rotation_quaternion)):
+                if abs(ob.rotation_quaternion[i]) <= sys.float_info.epsilon:
+                    ob.rotation_quaternion[i] = 0
+            for i in range(len(ob.rotation_axis_angle)):
+                if abs(ob.rotation_axis_angle[i]) <= sys.float_info.epsilon:
+                    ob.rotation_axis_angle[i] = 0
+
     metarig.rotation_euler      = metarig_rotation_euler_backup
     metarig.rotation_quaternion = metarig_rotation_quaternion_backup
     metarig.rotation_axis_angle = metarig_rotation_axis_angle_backup
@@ -515,7 +538,7 @@ def generate_rig(context, metarig):
     obj.rotation_euler      = rig_rotation_euler_backup
     obj.rotation_quaternion = rig_rotation_quaternion_backup
     obj.rotation_axis_angle = rig_rotation_axis_angle_backup
-
+    
     metarig.select_set(False)
     obj.select_set(True)
 

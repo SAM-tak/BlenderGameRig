@@ -20,7 +20,7 @@
 
 import bpy
 
-from ..utils import copy_bone, ctrlname, create_widget
+from ..utils import copy_bone, ctrlname, create_widget, bone_props_ui_string
 
 
 class Rig:
@@ -41,7 +41,15 @@ class Rig:
         """
         # Make a control bone (copy of original).
         self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
-    
+        
+        props_ui_str = bone_props_ui_string(self.obj, self.org_bone)
+
+        if props_ui_str:
+            return f"""
+if is_selected( '{self.bone}' ):
+""" + props_ui_str
+
+
     def postprocess(self, context):
         pb = self.obj.pose.bones
         # Constrain the original bone.
