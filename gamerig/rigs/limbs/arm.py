@@ -34,35 +34,36 @@ class Rig(Limb):
     def generate(self, context):
         return super().generate(self.create_arm, """
 controls = [%s]
-ik_ctrl  = [%s]
-fk_ctrl  = '%s'
+ik_ctrls = [%s]
+fk_ctrls = [%s]
+ik_mchs  = [%s]
 parent   = '%s'
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator(Arm_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + parent + ')', slider = True )
+    props = layout.operator(Arm_FK2IK.bl_idname, text="Snap FK->IK (" + parent + ")", icon='SNAP_ON')
     props.uarm_fk = controls[2]
     props.farm_fk = controls[3]
     props.hand_fk = controls[4]
-    props.uarm_ik = ik_ctrl[0]
-    props.farm_ik = ik_ctrl[1]
+    props.uarm_ik = ik_ctrls[0]
+    props.farm_ik = ik_mchs[0]
     props.hand_ik = controls[5]
-    props = layout.operator(Arm_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
+    props = layout.operator(Arm_IK2FK.bl_idname, text="Snap IK->FK (" + controls[1] + ")", icon='SNAP_ON')
     props.uarm_fk = controls[2]
     props.farm_fk = controls[3]
     props.hand_fk = controls[4]
     props.uarm_ik = controls[0]
-    props.farm_ik = ik_ctrl[1]
+    props.farm_ik = ik_mchs[0]
     props.hand_ik = controls[5]
 
 # IK Pole Mode
-if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[5] ):
+if is_selected( ik_ctrls ):
     layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
 
 # FK limb follow
-if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
+if is_selected( fk_ctrls ):
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + parent + ')', slider = True )
 """)
 
 

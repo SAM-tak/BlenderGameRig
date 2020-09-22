@@ -579,31 +579,25 @@ class Limb:
 
     def create_script(self, bones, script_template):
         # All ctrls have IK/FK switch
-        controls =  bones['ik']['ctrl']['limb']
-        controls += bones['fk']['ctrl']
-        controls += bones['ik']['ctrl']['terminal']
+        controls =  bones['ik']['ctrl']['limb'] + bones['fk']['ctrl'] + bones['ik']['ctrl']['terminal']
 
-        controls_string = ", ".join(["'" + x + "'" for x in controls])
+        # IK ctrls has IK stretch
+        ik_ctrls = bones['ik']['ctrl']['limb'] + bones['ik']['ctrl']['terminal']
 
-        # IK ctrl has IK stretch
-        ik_ctrl = [
-            bones['ik']['ctrl']['limb'][0],
-            bones['ik']['mch'],
-            bones['ik']['mch_target']
-        ]
-
-        ik_ctrl_string = ", ".join(["'" + x + "'" for x in ik_ctrl])
+        # non controller ik staff
+        ik_mchs = [bones['ik']['mch'], bones['ik']['mch_target']]
 
         code = script_template % (
-            controls_string,
-            ik_ctrl_string,
-            bones['fk']['ctrl'][0],
+            ", ".join(["'" + x + "'" for x in controls]),
+            ", ".join(["'" + x + "'" for x in ik_ctrls]),
+            ", ".join(["'" + x + "'" for x in bones['fk']['ctrl']]),
+            ", ".join(["'" + x + "'" for x in ik_mchs]),
             bones['fk']['ctrl'][0]
         )
 
         if self.allow_ik_stretch or self.root_bone:
             code += """
-if is_selected( ik_ctrl ):
+if is_selected( ik_ctrls ):
 """
             if self.allow_ik_stretch:
                 code += """

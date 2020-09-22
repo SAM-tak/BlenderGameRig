@@ -41,41 +41,42 @@ class Rig(Limb):
         
         return super().generate(self.create_paw, """
 controls = [%s]
-ik_ctrl  = [%s]
-fk_ctrl  = '%s'
+ik_ctrls = [%s]
+fk_ctrls = [%s]
+ik_mchs  = [%s]
 parent   = '%s'
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + fk_ctrl + ')', slider = True )
-    props = layout.operator(Paw_FK2IK.bl_idname, text="Snap FK->IK (" + fk_ctrl + ")", icon='SNAP_ON')
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + parent + ')', slider = True )
+    props = layout.operator(Paw_FK2IK.bl_idname, text="Snap FK->IK (" + parent + ")", icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
     props.toe_fk   = controls[5]
-    props.thigh_ik = ik_ctrl[0]
-    props.shin_ik  = ik_ctrl[1]
-    props.foot_ik  = ik_ctrl[2]
+    props.thigh_ik = ik_ctrls[0]
+    props.shin_ik  = ik_mchs[0]
+    props.foot_ik  = ik_mchs[1]
     props.toe_ik   = controls[7]
-    props = layout.operator(Paw_IK2FK.bl_idname, text="Snap IK->FK (" + fk_ctrl + ")", icon='SNAP_ON')
+    props = layout.operator(Paw_IK2FK.bl_idname, text="Snap IK->FK (" + controls[1] + ")", icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
     props.toe_fk   = controls[5]
     props.thigh_ik = controls[0]
-    props.shin_ik  = ik_ctrl[1]
+    props.shin_ik  = ik_mchs[0]
     props.foot_ik  = controls[6]
-    props.mfoot_ik = ik_ctrl[2]
+    props.mfoot_ik = ik_mchs[1]
     props.toe_ik   = controls[8]
     props.mtoe_ik  = controls[7]
 
 # IK Pole Mode
-if is_selected( controls[0] ) or is_selected( controls[1] ) or is_selected( controls[6] ) or is_selected( controls[7] ) or is_selected( controls[8] ):
+if is_selected( ik_ctrls ):
     layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
 
 # FK limb follow
-if is_selected( fk_ctrl ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + fk_ctrl + ')', slider = True )
+if is_selected( fk_ctrls ):
+    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + parent + ')', slider = True )
 """)
 
 
