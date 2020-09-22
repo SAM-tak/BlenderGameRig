@@ -20,7 +20,7 @@
 
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, ctrlname, bone_props_ui_string
+from ..utils import copy_bone, ctrlname, bone_prop_link_driver, bone_props_ui_string
 from .widgets import create_bone_widget, create_circle_widget
 
 class Rig:
@@ -44,7 +44,7 @@ class Rig:
         # Make a control bone (copy of original).
         self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
 
-        props_ui_str = bone_props_ui_string(self.obj, self.org_bone)
+        props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
 
         if len(self.metabone.constraints) > 0 or props_ui_str:
             return f"""
@@ -104,6 +104,9 @@ if is_selected('{self.bone}'):
             con.name = "copy_transforms"
             con.target = self.obj
             con.subtarget = self.bone
+
+        # add driver linked to original custom properties
+        bone_prop_link_driver(self.obj, self.bone, self.org_bone)
 
         # Create control widget
         if self.metabone.gamerig.control_widget_type == 'Circle':

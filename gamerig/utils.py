@@ -350,15 +350,43 @@ def copy_attributes(a, b):
                 pass
 
 
-def bone_props_ui_string(obj, bone_name):
+def bone_prop_link_driver(obj, bone_name, org_bone_name):
+    # Copy custom properties
     bone = obj.pose.bones[bone_name]
-    rna_properties = {prop.identifier for prop in bone.bl_rna.properties if prop.is_runtime}
-    ret = ""
-    for k in bone.keys():
-        if k == '_RNA_UI' or k in rna_properties:
+    org_bone = obj.pose.bones[org_bone_name]
+    rna_properties = {prop.identifier for prop in org_bone.bl_rna.properties if prop.is_runtime}
+    for key in org_bone.keys():
+        if key == '_RNA_UI' or key in rna_properties:
             continue
-        if isinstance(bone[k], float):
-            ret += f"    layout.prop( pose_bones['{bone.name}'], '[\"{k}\"]', text='{k} ({bone.name})', slider = True )\n"
+        if isinstance(org_bone[key], float):
+            prop1 = rna_idprop_ui_prop_get(org_bone, key, create=False)
+            if prop1 is not None:
+                prop2 = rna_idprop_ui_prop_get(bone, key, create=True)
+                for k in prop1.keys():
+                    prop2[k] = prop1[k]
+
+                key2 = f'{key}({org_bone_name})'
+                bone[key2] = org_bone[key]
+
+                drv = org_bone.driver_add(f'["{key}"]').driver
+                drv.type = 'AVERAGE'
+
+                var = drv.variables.new()
+                var.name = key2
+                var.type = 'SINGLE_PROP'
+                var.targets[0].id = obj
+                var.targets[0].data_path = f'{bone.path_from_id()}["{key2}"]'
+
+
+def bone_props_ui_string(obj, bone_name, org_bone_name):
+    org_bone = obj.pose.bones[org_bone_name]
+    rna_properties = {prop.identifier for prop in org_bone.bl_rna.properties if prop.is_runtime}
+    ret = ""
+    for key in org_bone.keys():
+        if key == '_RNA_UI' or key in rna_properties:
+            continue
+        if isinstance(org_bone[key], float):
+            ret += f"    layout.prop( pose_bones['{bone_name}'], '[\"{key}({org_bone_name})\"]', text='{key} ({org_bone_name})', slider = True )\n"
 
     if len(ret) > 0:
         return ret

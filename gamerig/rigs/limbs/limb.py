@@ -579,7 +579,7 @@ class Limb:
 
     def create_script(self, bones, script_template):
         # All ctrls have IK/FK switch
-        controls =  bones['ik']['ctrl']['limb'] + bones['fk']['ctrl'] + bones['ik']['ctrl']['terminal']
+        controls = bones['ik']['ctrl']['limb'] + bones['fk']['ctrl'] + bones['ik']['ctrl']['terminal']
 
         # IK ctrls has IK stretch
         ik_ctrls = bones['ik']['ctrl']['limb'] + bones['ik']['ctrl']['terminal']
