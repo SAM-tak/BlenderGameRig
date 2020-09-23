@@ -289,11 +289,11 @@ if is_selected( fk_ctrls ):
             'constraint'   : 'COPY_ROTATION',
             'subtarget'    : bones['ik']['mch_ctrl_parent_target'],
             'use_x'        : False,
-            'use_y'        : False,
-            'owner_space'  : 'LOCAL'
+            'use_y'        : False
         })
         # workaround for exception
-        pb[mch_ctrl_parent].constraints[-1].target_space = 'LOCAL_WITH_PARENT'
+        pb[mch_ctrl_parent].constraints[-1].owner_space  = 'POSE'
+        pb[mch_ctrl_parent].constraints[-1].target_space = 'POSE'
         
         # Find IK toe follow property
         ik_dir_ctrl = bones['ik']['ctrl']['limb'][1]
