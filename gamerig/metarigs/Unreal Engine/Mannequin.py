@@ -1122,10 +1122,6 @@ def create(obj):
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-    try:
-        pbone.gamerig.name = "finger"
-    except AttributeError:
-        pass
     pbone = obj.pose.bones[bones['index_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
@@ -1161,10 +1157,6 @@ def create(obj):
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
     pbone.bone.layers = [False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-    try:
-        pbone.gamerig.name = "finger"
-    except AttributeError:
-        pass
     pbone = obj.pose.bones[bones['index_03_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
