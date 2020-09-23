@@ -153,7 +153,7 @@ class Limb:
             eb[ mch_pole_target ].parent = eb[ dir_ctrl ]
 
             return {
-                'ctrl'                   : { 'limb' : [ctrl, dir_ctrl] },
+                'ctrl'                   : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
                 'mch'                    : mch,
                 'mch_target'             : mch_target,
                 'mch_str'                : mch_str,
@@ -172,7 +172,7 @@ class Limb:
             eb[ mch_pole_target ].parent = eb[ dir_ctrl ]
 
             return {
-                'ctrl'            : { 'limb' : [ctrl, dir_ctrl] },
+                'ctrl'            : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
                 'mch'             : mch,
                 'mch_target'      : mch_target,
                 'mch_str'         : mch_str,
@@ -579,10 +579,10 @@ class Limb:
 
     def create_script(self, bones, script_template):
         # All ctrls have IK/FK switch
-        controls = bones['ik']['ctrl']['limb'] + bones['fk']['ctrl'] + bones['ik']['ctrl']['terminal']
+        controls = bones['ik']['ctrl']['limb'] + bones['fk']['ctrl'] + bones['ik']['ctrl']['terminal'] + bones['ik']['ctrl']['additional']
 
         # IK ctrls has IK stretch
-        ik_ctrls = bones['ik']['ctrl']['limb'] + bones['ik']['ctrl']['terminal']
+        ik_ctrls = bones['ik']['ctrl']['limb'] + bones['ik']['ctrl']['terminal'] + bones['ik']['ctrl']['additional']
 
         # non controller ik staff
         ik_mchs = [bones['ik']['mch'], bones['ik']['mch_target']]

@@ -19,8 +19,8 @@
 # <pep8 compliant>
 import bpy, math
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError, connected_children_names, copy_bone, put_bone, flip_bone
-from ..widgets import create_foot_widget, create_ballsocket_widget, create_toe_widget
+from ...utils import MetarigError, connected_children_names, copy_bone, put_bone, flip_bone, ctrlname
+from ..widgets import create_foot_widget, create_ballsocket_widget, create_toe_widget, create_circle_widget
 from .limb import *
 
 class Rig(Limb):
@@ -28,6 +28,7 @@ class Rig(Limb):
     def __init__(self, obj, bone_name, metabone):
         super().__init__(obj, bone_name, metabone)
         self.footprint_bone = self.params.footprint_bone
+        self.conntact_bone = self.params.conntact_bone if self.params.has_conntact_bone else None
         self.org_bones = ([bone_name] + connected_children_names(obj, bone_name))[:4]
 
 
@@ -233,6 +234,23 @@ if is_selected( fk_ctrls ):
         # add IK Follow feature
         mch_ik_socket = self.make_ik_follow_bone( eb, ctrl )
         bones['ik']['mch_ik_socket'] = mch_ik_socket
+
+        if self.conntact_bone:
+            # add contact bone mechanism
+            contact_mch_ik = get_bone_name( self.conntact_bone, 'mch', 'ik' )
+            contact_mch_ik = copy_bone( self.obj, self.conntact_bone, contact_mch_ik )
+            contact_mch_fk = get_bone_name( self.conntact_bone, 'mch', 'fk' )
+            contact_mch_fk = copy_bone( self.obj, self.conntact_bone, contact_mch_fk )
+
+            contact_ctrl = copy_bone( self.obj, self.conntact_bone, ctrlname(self.conntact_bone) )
+            eb[ contact_ctrl ].use_connect = False
+            eb[ contact_ctrl ].parent = eb[ contact_mch_fk ]
+
+            bones['contact'] = {}
+            bones['contact']['ik_mch'] = contact_mch_ik
+            bones['contact']['fk_mch'] = contact_mch_fk
+            bones['contact']['ctrl'] = contact_ctrl
+            bones['ik']['ctrl']['additional'] += [contact_ctrl]
 
         return bones
 
@@ -443,6 +461,81 @@ if is_selected( fk_ctrls ):
 
             # Create toe circle widget
             create_toe_widget(self.obj, toeik)
+        
+        if self.conntact_bone:
+            # Set contact bone constraints up
+            contact_mch_ik = bones['contact']['ik_mch']
+            contact_mch_fk = bones['contact']['fk_mch']
+            contact_ctrl   = bones['contact']['ctrl']
+
+            min_x = (pb[self.footprint_bone].head - pb[self.conntact_bone].head).x
+            max_x = (pb[self.footprint_bone].tail - pb[self.conntact_bone].head).x
+            if max_x < min_x:
+                max_x, min_x = min_x, max_x
+            min_z = -abs((pb[ctrl].tail - pb[self.conntact_bone].head).y)
+            max_z = abs((pb[ctrl].head - pb[self.conntact_bone].head).y)
+            if max_z < min_z:
+                max_z, min_z = min_z, max_z
+
+            self.make_constraint(contact_mch_ik, {
+                'constraint'     : 'TRANSFORM',
+                'subtarget'      : heel,
+                'owner_space'    : 'LOCAL',
+                'target_space'   : 'LOCAL',
+                'map_from'       : 'ROTATION',
+                'from_min_x_rot' : math.radians(-45.0),
+                'from_max_x_rot' : math.radians(45.0),
+                'from_min_y_rot' : math.radians(-45.0),
+                'from_max_y_rot' : math.radians(45.0),
+                'map_top'        : 'LOCATION',
+                'map_to_x_from'  : 'Y',
+                'to_min_x'       : min_x * 5.0,
+                'to_max_x'       : max_x * 5.0,
+                'map_to_y_from'  : 'Z',
+                'map_to_z_from'  : 'X',
+                'to_min_z'       : -max_z * 5.0,
+                'to_max_z'       : max_z * 5.0,
+                'mix_mode'       : 'REPLACE',
+            })
+            self.make_constraint(contact_mch_ik, {
+                'constraint'     : 'LIMIT_LOCATION',
+                'use_min_x'      : True,
+                'min_x'          : min_x,
+                'use_min_z'      : True,
+                'min_z'          : min_z,
+                'use_max_x'      : True,
+                'max_x'          : max_x,
+                'use_max_z'      : True,
+                'max_z'          : max_z,
+                'owner_space'    : 'LOCAL',
+            })
+
+            self.make_constraint(contact_mch_fk, {
+                'constraint'  : 'COPY_TRANSFORMS',
+                'subtarget'   : contact_mch_ik
+            })
+
+            drv      = pb[contact_mch_fk].constraints[-1].driver_add("influence").driver
+            drv.type = 'AVERAGE'
+            var = drv.variables.new()
+            var.name = 'ik_fk_switch'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb_master.path_from_id() + '["IK/FK"]'
+
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+            drv_modifier.mode            = 'POLYNOMIAL'
+            drv_modifier.poly_order      = 1
+            drv_modifier.coefficients[0] = 1.0
+            drv_modifier.coefficients[1] = -1.0
+
+            self.make_constraint(self.conntact_bone, {
+                'constraint'  : 'COPY_TRANSFORMS',
+                'subtarget'   : contact_ctrl
+            })
+
+            # add widget
+            create_circle_widget(self.obj, contact_ctrl, radius = 0.5)
 
 
 def operator_script(rig_id):
@@ -603,6 +696,16 @@ def add_parameters( params ):
         description="Specify footprint bone name",
         default="JIG-heel.L"
     )
+    params.has_conntact_bone = bpy.props.BoolProperty(
+        name="Enable Foot Contanct Bone Feature",
+        description="Retain Foot Contanct Mechanism",
+        default=False
+    )
+    params.conntact_bone = bpy.props.StringProperty(
+        name="Foot Contanct Bone Name",
+        description="Specify Foot Contanct Bone name",
+        default="ground.L"
+    )
     Limb.add_parameters(params)
 
 
@@ -610,6 +713,10 @@ def parameters_ui(layout, params):
     """ Create the ui for the rig parameters."""
     r = layout.row()
     r.prop(params, "footprint_bone")
+    r = layout.row()
+    r.prop(params, "has_conntact_bone")
+    if params.has_conntact_bone:
+        r.prop(params, "conntact_bone")
     Limb.parameters_ui(layout, params)
 
 
