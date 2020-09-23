@@ -93,7 +93,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_mchs[0]
     props.foot_ik  = ik_mchs[1]
     props.toe_ik   = controls[6]
-    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + controls[1] + ")", icon='SNAP_ON')
+    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + parent + ")", icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
@@ -294,6 +294,13 @@ if is_selected( fk_ctrls ):
         # workaround for exception
         pb[mch_ctrl_parent].constraints[-1].owner_space  = 'POSE'
         pb[mch_ctrl_parent].constraints[-1].target_space = 'POSE'
+
+        self.make_constraint(mch_ctrl_parent, {
+            'constraint'   : 'LIMIT_ROTATION',
+            'use_limit_x'  : True,
+            'use_limit_y'  : True,
+            'owner_space' : 'LOCAL'
+        })
         
         # Find IK toe follow property
         ik_dir_ctrl = bones['ik']['ctrl']['limb'][1]
