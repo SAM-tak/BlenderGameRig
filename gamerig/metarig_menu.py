@@ -129,7 +129,7 @@ metarig_ops = {}
 for metarig_class in metarigs_dict:
     metarig_ops[metarig_class] = []
     for m in metarigs_dict[metarig_class]:
-        name = '_D_'.join(m.__name__.split('.')[2:]).replace(' ', '_')
+        name = ('_D_'.join(m.__name__.split('.')[2:]) if '.' in m.__name__ else m.__name__).replace(' ', '_')
         text = ' '.join((i.capitalize() for i in m.__name__.rsplit('.', 1)[-1].split('_'))) + " (Meta Rig)"
 
         # Dynamically construct an Operator
@@ -152,7 +152,7 @@ for submenu_name in sorted(list(metarigs_dict.keys())):
     # Create menu functions
     armature_submenu = type('Class_GameRig_' + submenu_name + '_submenu', (ArmatureSubMenu,), {})
     armature_submenu.bl_label = submenu_name
-    idname = '_D_'.join(submenu_name.split('.')[2:]).replace(' ', '_')
+    idname = ('_D_'.join(submenu_name.split('.')[2:]) if '.' in submenu_name else submenu_name).replace(' ', '_')
     armature_submenu.bl_idname = 'GAMERIG_MT_GameRig_%s_class' % idname
     armature_submenu.operators = [(mop.bl_idname, name, text) for mop, name, text in metarig_ops[submenu_name]]
     GAMERIG_MT_Armature.submenus.append(armature_submenu)
