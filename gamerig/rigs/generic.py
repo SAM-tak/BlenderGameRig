@@ -46,7 +46,7 @@ class Rig:
 
         props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
 
-        if len(self.metabone.constraints) > 0 or props_ui_str:
+        if self.has_physics() or props_ui_str:
             return f"""
 if is_selected('{self.bone}'):
 """ + (props_ui_str if props_ui_str else "") + (f"""
@@ -55,13 +55,13 @@ if is_selected('{self.bone}'):
     props = layout.operator(Generic_Snap.bl_idname, text="Snap to Target ({self.bone})", icon='SNAP_ON')
     props.ctrl = control
     props.target  = "{self.org_bone}"
-""" if len(self.metabone.constraints) > 0 else "")
+""" if self.has_physics() else "")
 
 
     def postprocess(self, context):
         pb = self.obj.pose.bones
         bone = self.bone
-        if len(self.metabone.constraints) > 0:
+        if self.has_physics():
             if not 'Rig/Phy' in pb[bone]:
                 # Create Rig/Physics switch property
                 pb[bone]['Rig/Phy'] = 0.0
@@ -99,6 +99,9 @@ if is_selected('{self.bone}'):
             drv_modifier.coefficients[0] = 0.0
             drv_modifier.coefficients[1] = 1.0
         else:
+            if len(self.metabone.constraints) > 0:
+                # Copy constraints to controller
+                self.transfer_constraint()
             # Constrain the original bone.
             con = pb[self.org_bone].constraints.new('COPY_TRANSFORMS')
             con.name = "copy_transforms"
@@ -152,6 +155,26 @@ if is_selected('{self.bone}'):
                         setattr(const, k, v)
                     except AttributeError:
                         pass
+
+
+    def transfer_constraint( self ):
+        stashed = self.stash_constraint()
+
+        pb = self.obj.pose.bones
+
+        target_pb = pb[self.bone]
+        for i in stashed:
+            const    = target_pb.constraints.new( i['type'] )
+            for k, v in i.items():
+                if k != "type":
+                    try:
+                        setattr(const, k, v)
+                    except AttributeError:
+                        pass
+
+
+    def has_physics( self ):
+        return len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type == 'COPY_TRANSFORMS'
 
 
 def operator_script(rig_id):
