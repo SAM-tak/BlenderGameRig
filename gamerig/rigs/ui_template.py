@@ -211,6 +211,19 @@ def correct_rotation(bone_ik, bone_fk):
     bone_ik.rotation_axis_angle[0] = alfamin
     bone_ik.rotation_mode = rot_mod
 
+
+def insert_keyframe_by_mode(context, pb):
+    option = {{'INSERTKEY_AVAILABLE'}} if context.scene.tool_settings.use_keyframe_insert_auto else {{'INSERTKEY_REPLACE'}}
+    pb.keyframe_insert(data_path='location', group='Bone', options=option)
+    pb.keyframe_insert(data_path='scale', group='Bone', options=option)
+    if pb.rotation_mode == 'QUATERNION':
+        pb.keyframe_insert(data_path='rotation_quaternion', group='Bone', options=option)
+    elif pb.rotation_mode == 'AXIS_ANGLE':
+        pb.keyframe_insert(data_path='rotation_axis_angle', group='Bone', options=option)
+    else:
+        pb.keyframe_insert(data_path='rotation_euler', group='Bone', options=option)
+
+
 classes = []
 
 ###########################

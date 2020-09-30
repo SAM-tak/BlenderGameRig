@@ -20,7 +20,7 @@
 
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import copy_bone, ctrlname, bone_prop_link_driver, bone_props_ui_string
+from ..utils import copy_bone, ctrlname, mchname, bone_prop_link_driver, bone_props_ui_string
 from .widgets import create_bone_widget, create_circle_widget
 
 class Rig:
@@ -43,6 +43,11 @@ class Rig:
         """
         # Make a control bone (copy of original).
         self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
+
+        if self.behaves_as_offset():
+            self.parent_bone = copy_bone(self.obj, self.org_bone, mchname(self.org_bone))
+            self.obj.data.edit_bones[self.bone].use_connect = False
+            self.obj.data.edit_bones[self.bone].parent = self.obj.data.edit_bones[self.parent_bone]
 
         props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
 
@@ -100,8 +105,12 @@ if is_selected('{self.bone}'):
             drv_modifier.coefficients[1] = 1.0
         else:
             if len(self.metabone.constraints) > 0:
-                # Copy constraints to controller
-                self.transfer_constraint()
+                if hasattr(self, 'parent_bone'):
+                    # Copy constraints to parent bone
+                    self.transfer_constraint(self.parent_bone)
+                else:
+                    # Copy constraints to controller
+                    self.transfer_constraint(self.bone)
             # Constrain the original bone.
             con = pb[self.org_bone].constraints.new('COPY_TRANSFORMS')
             con.name = "copy_transforms"
@@ -157,12 +166,12 @@ if is_selected('{self.bone}'):
                         pass
 
 
-    def transfer_constraint( self ):
+    def transfer_constraint( self, bone ):
         stashed = self.stash_constraint()
 
         pb = self.obj.pose.bones
 
-        target_pb = pb[self.bone]
+        target_pb = pb[bone]
         for i in stashed:
             const    = target_pb.constraints.new( i['type'] )
             for k, v in i.items():
@@ -175,6 +184,10 @@ if is_selected('{self.bone}'):
 
     def has_physics( self ):
         return len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type == 'COPY_TRANSFORMS'
+
+
+    def behaves_as_offset( self ):
+        return len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type != 'COPY_TRANSFORMS' and self.metabone.gamerig.constraint_offset_controller
 
 
 def operator_script(rig_id):
@@ -196,7 +209,7 @@ class Generic_Snap(bpy.types.Operator):
 
     def execute(self, context):
         use_global_undo = context.preferences.edit.use_global_undo
-        context.preferences.edit.use_global_undo = False
+        #context.preferences.edit.use_global_undo = False
         try:
             """ Matches the fk bones in an arm rig to the ik bones.
             """
@@ -207,6 +220,8 @@ class Generic_Snap(bpy.types.Operator):
             match_pose_translation(cb, tb)
             match_pose_rotation(cb, tb)
             match_pose_scale(cb, tb)
+
+            insert_keyframe_by_mode(context, cb)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
@@ -227,6 +242,11 @@ def add_parameters(params):
         description = "Choose a widget for the bone control",
         items = [('Frustum', 'Frustum', ''), ('Circle', 'Circle', '')]
     )
+    params.constraint_offset_controller = bpy.props.BoolProperty(
+        name        = "Offset Controller for Contrainted Bone",
+        description = "Behave offset controller when metabone has been contrainted",
+        default     = False
+    )
 
 
 def parameters_ui(layout, params):
@@ -234,6 +254,8 @@ def parameters_ui(layout, params):
     """
     r = layout.row()
     r.prop(params, "control_widget_type")
+    r = layout.row()
+    r.prop(params, "constraint_offset_controller")
 
 
 def create_sample(obj):

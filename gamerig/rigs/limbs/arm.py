@@ -176,16 +176,19 @@ class Arm_FK2IK(bpy.types.Operator):
             match_pose_translation(uarm, uarmi)
             match_pose_rotation(uarm, uarmi)
             match_pose_scale(uarm, uarmi)
+            insert_keyframe_by_mode(context, uarm)
 
             # Forearm position
-            match_pose_translation(hand, handi)
+            match_pose_translation(farm, farmi)
             match_pose_rotation(farm, farmi)
             match_pose_scale(farm, farmi)
+            insert_keyframe_by_mode(context, farm)
 
             # Hand position
             match_pose_translation(hand, handi)
             match_pose_rotation(hand, handi)
             match_pose_scale(hand, handi)
+            insert_keyframe_by_mode(context, hand)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
@@ -228,14 +231,15 @@ class Arm_IK2FK(bpy.types.Operator):
             match_pose_translation(handi, hand)
             match_pose_rotation(handi, hand)
             match_pose_scale(handi, hand)
+            insert_keyframe_by_mode(context, handi)
 
             # Upper Arm position
             match_pose_translation(uarmi, uarm)
             match_pose_rotation(uarmi, uarm)
             match_pose_scale(uarmi, uarm)
-
             # Rotation Correction
             correct_rotation(uarmi, uarm)
+            insert_keyframe_by_mode(context, uarmi)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}

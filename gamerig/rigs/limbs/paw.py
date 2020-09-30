@@ -265,18 +265,22 @@ class Paw_FK2IK(bpy.types.Operator):
             match_pose_translation(thigh, thighi)
             match_pose_rotation(thigh, thighi)
             match_pose_scale(thigh, thighi)
+            insert_keyframe_by_mode(context, thigh)
 
             # Shin position
             match_pose_rotation(shin, shini)
             match_pose_scale(shin, shini)
+            insert_keyframe_by_mode(context, shin)
 
             # Foot position
             match_pose_rotation(foot, footi)
             match_pose_scale(foot, footi)
+            insert_keyframe_by_mode(context, foot)
 
             # Toe position
             match_pose_rotation(toe, toei)
             match_pose_scale(toe, toei)
+            insert_keyframe_by_mode(context, toe)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
@@ -334,6 +338,7 @@ class Paw_IK2FK(bpy.types.Operator):
             set_pose_scale(toei, toemat)
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, toei)
 
             # Foot position
             mat = mfooti.bone.matrix_local.inverted() @ footi.bone.matrix_local
@@ -343,14 +348,15 @@ class Paw_IK2FK(bpy.types.Operator):
             set_pose_scale(footi, footmat)
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, footi)
 
             # Thigh position
             match_pose_translation(thighi, thigh)
             match_pose_rotation(thighi, thigh)
             match_pose_scale(thighi, thigh)
-
             # Rotation Correction
             correct_rotation(thighi,thigh)
+            insert_keyframe_by_mode(context, thighi)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
