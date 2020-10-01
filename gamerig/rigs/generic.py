@@ -66,6 +66,16 @@ if is_selected('{self.bone}'):
     def postprocess(self, context):
         pb = self.obj.pose.bones
         bone = self.bone
+
+        # copy original bone lock state and rotation mode
+        pb[bone].rotation_mode = pb[self.org_bone].rotation_mode
+        pb[bone].lock_location = pb[self.org_bone].lock_location
+        pb[bone].lock_rotation = tuple(pb[self.org_bone].lock_rotation)
+        pb[bone].lock_rotation_w = pb[self.org_bone].lock_rotation_w
+        pb[bone].lock_rotations_4d = pb[self.org_bone].lock_rotations_4d
+        pb[bone].lock_location = tuple(pb[self.org_bone].lock_location)
+        pb[bone].lock_scale = tuple(pb[self.org_bone].lock_scale)
+
         if self.has_physics():
             if not 'Rig/Phy' in pb[bone]:
                 # Create Rig/Physics switch property

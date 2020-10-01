@@ -355,20 +355,20 @@ def bone_prop_link_driver(obj, bone_name, org_bone_name):
     bone = obj.pose.bones[bone_name]
     org_bone = obj.pose.bones[org_bone_name]
     rna_properties = {prop.identifier for prop in org_bone.bl_rna.properties if prop.is_runtime}
-    for key in org_bone.keys():
-        if key == '_RNA_UI' or key in rna_properties:
+    for key1 in org_bone.keys():
+        if key1 == '_RNA_UI' or key1 in rna_properties:
             continue
-        if isinstance(org_bone[key], float):
-            prop1 = rna_idprop_ui_prop_get(org_bone, key, create=False)
+        if isinstance(org_bone[key1], float):
+            prop1 = rna_idprop_ui_prop_get(org_bone, key1, create=False)
             if prop1 is not None:
-                prop2 = rna_idprop_ui_prop_get(bone, key, create=True)
+                key2 = f'{key1}({org_bone_name})'
+                prop2 = rna_idprop_ui_prop_get(bone, key2, create=True)
                 for k in prop1.keys():
                     prop2[k] = prop1[k]
 
-                key2 = f'{key}({org_bone_name})'
-                bone[key2] = org_bone[key]
+                bone[key2] = org_bone[key1]
 
-                drv = org_bone.driver_add(f'["{key}"]').driver
+                drv = org_bone.driver_add(f'["{key1}"]').driver
                 drv.type = 'AVERAGE'
 
                 var = drv.variables.new()
