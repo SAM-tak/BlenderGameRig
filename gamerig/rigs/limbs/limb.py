@@ -33,15 +33,18 @@ class Limb:
 
         eb = self.obj.data.edit_bones
 
-        name = get_bone_name( org_bones[0], 'mch', 'parent' )
-
-        mch = copy_bone( self.obj, org_bones[0], name )
-        self.orient_bone( eb[mch], 'y' )
-        eb[ mch ].length = eb[ org_bones[0] ].length / 4
-
-        eb[ mch ].parent = eb[ org_bones[0] ].parent
-
-        eb[ mch ].roll = 0.0
+        mch = copy_bone( self.obj, org_bones[0], get_bone_name( org_bones[0], 'mch', 'parent' ) )
+        
+        if self.root_bone:
+            eb[ mch ].tail[:] = eb[ mch ].head + eb[ self.root_bone ].vector
+            eb[ mch ].length = eb[ org_bones[0] ].length / 4
+            eb[ mch ].parent = eb[ org_bones[0] ].parent
+            eb[ mch ].roll = eb[ self.root_bone ].roll
+        else:
+            self.orient_bone( eb[mch], 'y' )
+            eb[ mch ].length = eb[ org_bones[0] ].length / 4
+            eb[ mch ].parent = eb[ org_bones[0] ].parent
+            eb[ mch ].roll = 0.0
 
         return mch
 
@@ -73,9 +76,13 @@ class Limb:
                 'use_limit_z'  : True,
                 'min_z'        : 0,
                 'max_z'        : 0,
-                'target_space' : 'WORLD',
-                'owner_space'  : 'WORLD'
+                'target_space' : 'POSE',
+                'owner_space'  : 'POSE'
             })
+            # # workaround for exception
+            # pb = self.obj.pose.bones
+            # pb[mch].constraints[-1].target_space = 'POSE'
+            # pb[mch].constraints[-1].owner_space  = 'POSE'
 
 
     def create_ik( self, parent, needs_controller_parent ):
@@ -282,13 +289,6 @@ class Limb:
         ctrls = self.bones['fk']['ctrl']
         mch = self.bones['fk']['mch']
 
-        # Constrain MCH's scale to root
-        if self.root_bone:
-            self.make_constraint( mch, {
-                'constraint'  : 'COPY_SCALE',
-                'subtarget'   : self.root_bone
-            })
-
         # Locks and widgets
         pb = self.obj.pose.bones
         pb[ ctrls[2] ].lock_location = True, True, True
@@ -484,18 +484,23 @@ class Limb:
         owner_pb = pb[bone]
         const    = owner_pb.constraints.new( constraint['constraint'] )
 
-        constraint['target'] = self.obj
+        if 'target' in dir(const):
+            if 'target' in constraint:
+                const.target = constraint['target']
+            else:
+                const.target = self.obj
+        if 'subtarget' in dir(const):
+            if 'subtarget' in constraint:
+                const.subtarget = constraint['subtarget']
 
         # filter contraint props to those that actually exist in the currnet
         # type of constraint, then assign values to each
         for p in [ k for k in constraint.keys() if k in dir(const) ]:
             if p in dir( const ):
-                setattr( const, p, constraint[p] )
+                if p != 'target' and p != 'subtarget':
+                    setattr( const, p, constraint[p] )
             else:
-                raise MetarigError(
-                    "GAMERIG ERROR: property %s does not exist in %s constraint" % (
-                        p, constraint['constraint']
-                ))
+                raise MetarigError(f"GAMERIG ERROR: property '{p}' does not exist in {constraint['constraint']} constraint")
 
 
     def setup_ik_stretch(self, bones, pb, pb_master):

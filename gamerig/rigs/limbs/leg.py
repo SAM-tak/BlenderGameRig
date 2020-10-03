@@ -307,11 +307,10 @@ if is_selected( fk_ctrls ):
             'constraint'   : 'COPY_ROTATION',
             'subtarget'    : bones['ik']['mch_ctrl_parent_target'],
             'use_x'        : False,
-            'use_y'        : False
+            'use_y'        : False,
+            'owner_space'  : 'POSE',
+            'target_space' : 'POSE'
         })
-        # workaround for exception
-        pb[mch_ctrl_parent].constraints[-1].owner_space  = 'POSE'
-        pb[mch_ctrl_parent].constraints[-1].target_space = 'POSE'
 
         self.make_constraint(mch_ctrl_parent, {
             'constraint'   : 'LIMIT_ROTATION',
