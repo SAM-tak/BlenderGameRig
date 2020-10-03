@@ -79,10 +79,6 @@ class Limb:
                 'target_space' : 'POSE',
                 'owner_space'  : 'POSE'
             })
-            # # workaround for exception
-            # pb = self.obj.pose.bones
-            # pb[mch].constraints[-1].target_space = 'POSE'
-            # pb[mch].constraints[-1].owner_space  = 'POSE'
 
 
     def create_ik( self, parent, needs_controller_parent ):
