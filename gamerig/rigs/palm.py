@@ -38,8 +38,10 @@ def bone_siblings(obj, bone):
 
     bones = []
 
+    namebase = bone.split('.', 1)
+
     for b in parent.children:
-        if b.name != bone:
+        if b.name != bone and b.name.startswith(namebase[0]):
             bones.append(b.name)
 
     return bones

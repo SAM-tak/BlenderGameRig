@@ -1257,7 +1257,7 @@ def create(obj):
     const.use_x        = False
     const.use_y        = True
     const.use_z        = False
-    const.target_space = 'LOCAL_WITH_PARENT'
+    const.target_space = 'LOCAL'
     const.owner_space  = 'LOCAL'
 
     pbone = obj.pose.bones[bones['lowerarm_twist_01_r']]
@@ -1267,7 +1267,7 @@ def create(obj):
     const.use_x        = False
     const.use_y        = True
     const.use_z        = False
-    const.target_space = 'LOCAL_WITH_PARENT'
+    const.target_space = 'LOCAL'
     const.owner_space  = 'LOCAL'
 
     pbone = obj.pose.bones[bones['thigh_twist_01_l']]
@@ -1299,7 +1299,7 @@ def create(obj):
     const.use_x        = False
     const.use_y        = True
     const.use_z        = False
-    const.target_space = 'LOCAL_WITH_PARENT'
+    const.target_space = 'LOCAL'
     const.owner_space  = 'LOCAL'
 
     pbone = obj.pose.bones[bones['calf_twist_01_r']]
@@ -1309,7 +1309,7 @@ def create(obj):
     const.use_x        = False
     const.use_y        = True
     const.use_z        = False
-    const.target_space = 'LOCAL_WITH_PARENT'
+    const.target_space = 'LOCAL'
     const.owner_space  = 'LOCAL'
 
     bpy.ops.object.mode_set(mode='EDIT')

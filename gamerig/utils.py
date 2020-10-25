@@ -147,7 +147,11 @@ def mchname(name):
 
 def insert_before_first_period(name, text):
     t = name.split('.', 1)
-    return t[0] + text + '.' + t[1] if len(t) > 1 else name + text
+    if len(t) > 1:
+        return t[0] + text + '.' + t[1]
+    else:
+        m = re.search(r'_[lrLR]$', name)
+        return name[0:-2] + text + m.group(0) if m else name + text
 
 
 #=======================
