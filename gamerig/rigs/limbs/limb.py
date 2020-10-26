@@ -76,7 +76,6 @@ class Limb:
                 'use_limit_z'  : True,
                 'min_z'        : 0,
                 'max_z'        : 0,
-                'target_space' : 'POSE',
                 'owner_space'  : 'POSE'
             })
 
