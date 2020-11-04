@@ -478,24 +478,27 @@ if is_selected( fk_ctrls ):
             if max_z < min_z:
                 max_z, min_z = min_z, max_z
 
+            x_width = max(abs(min_x), abs(max_x)) * 5.0
+            z_width = max(abs(min_z), abs(max_z)) * 5.0
+
             self.make_constraint(contact_mch_ik, {
                 'constraint'     : 'TRANSFORM',
                 'subtarget'      : heel,
                 'owner_space'    : 'LOCAL',
                 'target_space'   : 'LOCAL',
                 'map_from'       : 'ROTATION',
-                'from_min_x_rot' : math.radians(-45.0),
-                'from_max_x_rot' : math.radians(45.0),
+                'from_min_x_rot' : math.radians(-10.0),
+                'from_max_x_rot' : math.radians(10.0),
                 'from_min_y_rot' : math.radians(-45.0),
                 'from_max_y_rot' : math.radians(45.0),
                 'map_top'        : 'LOCATION',
                 'map_to_x_from'  : 'Y',
-                'to_min_x'       : min_x * 5.0,
-                'to_max_x'       : max_x * 5.0,
+                'to_min_x'       : -x_width,
+                'to_max_x'       : x_width,
                 'map_to_y_from'  : 'Z',
                 'map_to_z_from'  : 'X',
-                'to_min_z'       : -max_z * 5.0,
-                'to_max_z'       : max_z * 5.0,
+                'to_min_z'       : -z_width,
+                'to_max_z'       : z_width,
                 'mix_mode'       : 'REPLACE',
             })
             self.make_constraint(contact_mch_ik, {
