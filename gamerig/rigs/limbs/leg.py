@@ -239,6 +239,8 @@ if is_selected( fk_ctrls ):
             # add contact bone mechanism
             contact_mch_ik = get_bone_name( self.conntact_bone, 'mch', 'ik' )
             contact_mch_ik = copy_bone( self.obj, self.conntact_bone, contact_mch_ik )
+            eb[ contact_mch_ik ].use_connect = False
+            eb[ contact_mch_ik ].parent = eb[ ctrl ]
             contact_mch_fk = get_bone_name( self.conntact_bone, 'mch', 'fk' )
             contact_mch_fk = copy_bone( self.obj, self.conntact_bone, contact_mch_fk )
 
