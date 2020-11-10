@@ -101,6 +101,21 @@ def create_bone_widget(rig, bone_name, bone_transform_name=None):
         mesh.update()
 
 
+def create_box_widget(rig, bone_name, bone_transform_name=None):
+    """ Creates a box widget aligns bone.
+    """
+    obj = create_widget(rig, bone_name, bone_transform_name)
+    if obj is not None:
+        bone = rig.data.bones[bone_name]
+        w = bone.bbone_x / bone.length
+        d = bone.bbone_z / bone.length
+        verts = [(w, 1, d), (w, 0, d), (-w, 0, d), (-w, 1, d), (w, 1, -d), (w, 0, -d), (-w, 0, -d), (-w, 1, -d)]
+        edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)]
+        mesh = obj.data
+        mesh.from_pydata(verts, edges, [])
+        mesh.update()
+
+
 def create_compass_widget(rig, bone_name, bone_transform_name=None):
     """ Creates a compass-shaped widget.
     """

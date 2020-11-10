@@ -211,9 +211,31 @@ def copy_bone(obj, bone_name, assign_name=''):
         edit_bone_2.use_local_location = edit_bone_1.use_local_location
 
         edit_bone_2.use_deform = edit_bone_1.use_deform
-        edit_bone_2.bbone_segments = edit_bone_1.bbone_segments
+
+        edit_bone_2.bbone_curveinx = edit_bone_1.bbone_curveinx
+        edit_bone_2.bbone_curveiny = edit_bone_1.bbone_curveiny
+        edit_bone_2.bbone_curveoutx = edit_bone_1.bbone_curveoutx
+        edit_bone_2.bbone_curveouty = edit_bone_1.bbone_curveouty
+        edit_bone_2.bbone_custom_handle_end = edit_bone_1.bbone_custom_handle_end
+        edit_bone_2.bbone_custom_handle_start = edit_bone_1.bbone_custom_handle_start
         edit_bone_2.bbone_easein = edit_bone_1.bbone_easein
         edit_bone_2.bbone_easeout = edit_bone_1.bbone_easeout
+        edit_bone_2.bbone_handle_type_end = edit_bone_1.bbone_handle_type_end
+        edit_bone_2.bbone_handle_type_start = edit_bone_1.bbone_handle_type_start
+        edit_bone_2.bbone_rollin = edit_bone_1.bbone_rollin
+        edit_bone_2.bbone_rollout = edit_bone_1.bbone_rollout
+        edit_bone_2.bbone_scaleinx = edit_bone_1.bbone_scaleinx
+        edit_bone_2.bbone_scaleiny = edit_bone_1.bbone_scaleiny
+        edit_bone_2.bbone_scaleoutx = edit_bone_1.bbone_scaleoutx
+        edit_bone_2.bbone_scaleouty = edit_bone_1.bbone_scaleouty
+        edit_bone_2.bbone_segments = edit_bone_1.bbone_segments
+        edit_bone_2.bbone_x = edit_bone_1.bbone_x
+        edit_bone_2.bbone_z = edit_bone_1.bbone_z
+
+        edit_bone_2.head_radius = edit_bone_1.head_radius
+        edit_bone_2.tail_radius = edit_bone_1.tail_radius
+        edit_bone_2.envelope_distance = edit_bone_1.envelope_distance
+        edit_bone_2.envelope_weight = edit_bone_1.envelope_weight
 
         return bone_name_2
     else:

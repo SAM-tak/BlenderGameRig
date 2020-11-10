@@ -21,7 +21,7 @@
 import bpy
 from rna_prop_ui import rna_idprop_ui_prop_get
 from ..utils import copy_bone, ctrlname, mchname, bone_prop_link_driver, bone_props_ui_string
-from .widgets import create_bone_widget, create_circle_widget
+from .widgets import create_bone_widget, create_circle_widget, create_box_widget
 
 class Rig:
     """ A "copy" rig.  All it does is duplicate the original bone and
@@ -131,7 +131,9 @@ if is_selected('{self.bone}'):
         bone_prop_link_driver(self.obj, self.bone, self.org_bone)
 
         # Create control widget
-        if self.metabone.gamerig.control_widget_type == 'Circle':
+        if self.metabone.gamerig.control_widget_type == 'Box':
+            create_box_widget(self.obj, self.bone)
+        elif self.metabone.gamerig.control_widget_type == 'Circle':
             create_circle_widget(self.obj, self.bone, radius = 0.5)
         else:
             create_bone_widget(self.obj, self.bone)
@@ -250,7 +252,7 @@ def add_parameters(params):
         name        = "Control Widget Type",
         default     = 'Frustum',
         description = "Choose a widget for the bone control",
-        items = [('Frustum', 'Frustum', ''), ('Circle', 'Circle', '')]
+        items = [('Frustum', 'Frustum', ''), ('Circle', 'Circle', ''), ('Box', 'Box', '')]
     )
     params.constraint_offset_controller = bpy.props.BoolProperty(
         name        = "Offset Controller for Contrainted Bone",
