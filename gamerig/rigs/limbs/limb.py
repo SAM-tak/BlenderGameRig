@@ -218,12 +218,12 @@ class Limb:
         else:
             pb[ ctrl ].rotation_quaternion = Quaternion(
                 (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0),
-                radians(-90.0)
+                radians(-45.0)
             )
             if self.rot_axis == 'x':
-                pb[ ctrl ].rotation_euler.x = radians(-90.0)
+                pb[ ctrl ].rotation_euler.x = radians(-45.0)
             elif self.rot_axis == 'z':
-                pb[ ctrl ].rotation_euler.z = radians(-90.0)
+                pb[ ctrl ].rotation_euler.z = radians(-45.0)
 
         # Locks and Widget
         pb[ dir_ctrl ].lock_location = True, True, True

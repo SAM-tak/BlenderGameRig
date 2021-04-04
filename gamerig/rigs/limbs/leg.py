@@ -142,6 +142,10 @@ if is_selected( fk_ctrls ):
         eb[ heel ].align_roll(eb[ self.footprint_bone ].z_axis)
         eb[ heel ].length = eb[ org_bones[2] ].length / 2
 
+        # Create heel ctrl placeholder bone
+        heel_mch = get_bone_name( org_bones[2], 'mch', 'heel_ik' )
+        heel_mch = copy_bone( self.obj, heel, heel_mch )
+
         # Reset control position and orientation
         l = eb[ ctrl ].length
         self.orient_bone( eb[ ctrl ], 'y', reverse = True )
@@ -150,6 +154,9 @@ if is_selected( fk_ctrls ):
         # Parent
         eb[ heel ].use_connect = False
         eb[ heel ].parent      = eb[ ctrl ]
+
+        eb[ heel_mch ].use_connect = False
+        eb[ heel_mch ].parent      = eb[ ctrl ]
 
         eb[ bones['ik']['mch_target'] ].parent      = eb[ heel ]
         eb[ bones['ik']['mch_target'] ].use_connect = False
@@ -169,22 +176,30 @@ if is_selected( fk_ctrls ):
 
         flip_bone( self.obj, roll1_mch )
 
-        # Create 2nd roll mch, and two rock mch bones
+        # roll2 MCH bone
         roll2_mch = get_bone_name( self.footprint_bone, 'mch', 'roll' )
-        roll2_mch = copy_bone( self.obj, org_bones[2], roll2_mch )
+        roll2_mch = copy_bone( self.obj, roll1_mch, roll2_mch )
 
+        # clear parent
         eb[ roll2_mch ].use_connect = False
         eb[ roll2_mch ].parent      = None
-        # align roll2_mch's height to horizontal
-        eb[ roll2_mch ].tail.z = eb[ roll2_mch ].head.z
-        eb[ roll2_mch ].align_roll(eb[ self.footprint_bone ].z_axis)
 
-        put_bone(self.obj, roll2_mch, ( eb[ self.footprint_bone ].head + eb[ self.footprint_bone ].tail ) / 2)
+        # Create 2nd roll mch, and two rock mch bones
+        roll3_mch = get_bone_name( self.footprint_bone, 'mch', 'roll' )
+        roll3_mch = copy_bone( self.obj, org_bones[2], roll3_mch )
 
-        eb[ roll2_mch ].length /= 4
+        eb[ roll3_mch ].use_connect = False
+        eb[ roll3_mch ].parent      = None
+        # align roll3_mch's height to horizontal
+        eb[ roll3_mch ].tail.z = eb[ roll3_mch ].head.z
+        eb[ roll3_mch ].align_roll(eb[ self.footprint_bone ].z_axis)
 
-        # align ctrl's height to roll2_mch
-        eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ roll2_mch ].center.z
+        put_bone(self.obj, roll3_mch, ( eb[ self.footprint_bone ].head + eb[ self.footprint_bone ].tail ) / 2)
+
+        eb[ roll3_mch ].length /= 4
+
+        # align ctrl's height to roll3_mch
+        eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ roll3_mch ].center.z
 
         # Rock MCH bones
         rock1_mch = get_bone_name( self.footprint_bone, 'mch', 'rock' )
@@ -207,14 +222,17 @@ if is_selected( fk_ctrls ):
 
         # Parent rock and roll MCH bones
         eb[ roll1_mch ].parent = eb[ roll2_mch ]
-        eb[ roll2_mch ].parent = eb[ rock1_mch ]
+        eb[ roll2_mch ].parent = eb[ roll3_mch ]
+        eb[ roll3_mch ].parent = eb[ rock1_mch ]
         eb[ rock1_mch ].parent = eb[ rock2_mch ]
         eb[ rock2_mch ].parent = eb[ ctrl ]
 
         bones['ik']['roll1_mch'] = roll1_mch
         bones['ik']['roll2_mch'] = roll2_mch
+        bones['ik']['roll3_mch'] = roll3_mch
         bones['ik']['rock1_mch'] = rock1_mch
         bones['ik']['rock2_mch'] = rock2_mch
+        bones['ik']['heel_mch'] = heel_mch
         bones['ik']['heel'] = heel
 
         if len( org_bones ) >= 4:
@@ -223,7 +241,7 @@ if is_selected( fk_ctrls ):
             toeik = copy_bone( self.obj, org_bones[3], toeik )
 
             eb[ toeik ].use_connect = False
-            eb[ toeik ].parent      = eb[ roll2_mch ]
+            eb[ toeik ].parent      = eb[ roll3_mch ]
 
             bones['ik']['toe'] = toeik
 
@@ -266,8 +284,10 @@ if is_selected( fk_ctrls ):
 
         roll1_mch = bones['ik']['roll1_mch']
         roll2_mch = bones['ik']['roll2_mch']
+        roll3_mch = bones['ik']['roll3_mch']
         rock1_mch = bones['ik']['rock1_mch']
         rock2_mch = bones['ik']['rock2_mch']
+        heel_mch = bones['ik']['heel_mch']
         heel = bones['ik']['heel']
         mch_ik_socket = bones['ik']['mch_ik_socket']
 
@@ -288,6 +308,10 @@ if is_selected( fk_ctrls ):
             'owner_space' : 'LOCAL'
         })
         self.make_constraint(roll2_mch, {
+            'constraint'  : 'DAMPED_TRACK',
+            'subtarget'   : heel_mch
+        })
+        self.make_constraint(roll3_mch, {
             'constraint'   : 'COPY_ROTATION',
             'subtarget'    : heel,
             'use_y'        : False,
@@ -296,11 +320,15 @@ if is_selected( fk_ctrls ):
             'owner_space'  : 'LOCAL',
             'target_space' : 'LOCAL'
         })
-        self.make_constraint(roll2_mch, {
+        self.make_constraint(roll3_mch, {
             'constraint'  : 'LIMIT_ROTATION',
             'use_limit_x' : True,
             'max_x'       : math.radians(360),
             'owner_space' : 'LOCAL'
+        })
+        self.make_constraint(heel_mch, {
+            'constraint'  : 'COPY_LOCATION',
+            'subtarget'   : heel
         })
 
         # Constrain Ik controller parent
