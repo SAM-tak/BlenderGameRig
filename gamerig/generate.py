@@ -26,7 +26,7 @@ import sys
 from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
     rig_module_name, get_rig_type, create_widget, assign_all_widgets,
-    is_org, is_mch, is_jig, random_id,
+    is_org, is_mch, is_jig, random_id, basename,
     copy_attributes, gamma_correct, get_rig_name, copy_bone,
     begin_progress, update_progress, end_progress,
     MetarigError
@@ -110,10 +110,11 @@ def generate_rig(context, metarig):
                         j.object = metarig
             # Get rid of anim data in case the rig already existed
             print("Clear rig animation data.")
-            previous_action = obj.animation_data.action
-            previous_nla_tracks = tuple(obj.animation_data.nla_tracks)
-            for i in previous_nla_tracks:
-                previous_nla_strips[i] = tuple(i.strips)
+            if obj.animation_data:
+                previous_action = obj.animation_data.action
+                previous_nla_tracks = tuple(obj.animation_data.nla_tracks)
+                for i in previous_nla_tracks:
+                    previous_nla_strips[i] = tuple(i.strips)
             obj.animation_data_clear()
             obj.data.animation_data_clear()
         except KeyError:
@@ -138,15 +139,22 @@ def generate_rig(context, metarig):
 
     # apply rotation for metarig / rig
     bpy.ops.object.select_all(action='DESELECT')
-    metarig.select_set(True)
-    obj.select_set(True)
     metarig_rotation_euler_backup      = metarig.rotation_euler.copy()
     metarig_rotation_quaternion_backup = metarig.rotation_quaternion.copy()
     metarig_rotation_axis_angle_backup = Vector(metarig.rotation_axis_angle)
     rig_rotation_euler_backup      = obj.rotation_euler.copy()
     rig_rotation_quaternion_backup = obj.rotation_quaternion.copy()
     rig_rotation_axis_angle_backup = Vector(obj.rotation_axis_angle)
-    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+    metarig_needs_apply_rot = abs(metarig_rotation_axis_angle_backup.angle) > 0 if metarig.rotation_mode == 'AXIS_ANGLE' else \
+        abs(metarig_rotation_quaternion_backup.angle) > 0 if metarig.rotation_mode == 'QUATERNION' else \
+        abs(metarig_rotation_euler_backup.x) > 0 or abs(metarig_rotation_euler_backup.y) > 0 or abs(metarig_rotation_euler_backup.z) > 0
+    obj_needs_apply_rot = abs(rig_rotation_axis_angle_backup.angle) > 0 if obj.rotation_mode == 'AXIS_ANGLE' else \
+        abs(rig_rotation_quaternion_backup.angle) > 0 if obj.rotation_mode == 'QUATERNION' else \
+        abs(rig_rotation_euler_backup.x) > 0 or abs(rig_rotation_euler_backup.y) > 0 or abs(rig_rotation_euler_backup.z) > 0
+    metarig.select_set(metarig_needs_apply_rot)
+    obj.select_set(obj_needs_apply_rot)
+    if metarig_needs_apply_rot or obj_needs_apply_rot:
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
 
     obj.data.pose_position = 'POSE'
 
@@ -348,7 +356,7 @@ def generate_rig(context, metarig):
                         # Mark targets that may need to be altered after rig generation
                         target = v2.targets[i]
                         # If a custom property
-                        if v2.type == 'SINGLE_PROP' and re.match('^pose.bones\["[^"\]]*"\]\["[^"\]]*"\]$', tar.data_path):
+                        if v2.type == 'SINGLE_PROP' and re.match('^pose.bones\["[^"\]]*"\]\["[^"\]]*"\]$', target.data_path):
                             target.data_path = "GAMERIG-" + target.data_path
 
                 # Copy key frames
@@ -488,34 +496,36 @@ def generate_rig(context, metarig):
 
     # Restore original rotation
 
-    metarig_rotation_euler_inverted = metarig_rotation_euler_backup.copy()
-    metarig_rotation_euler_inverted.x *= -1
-    metarig_rotation_euler_inverted.y *= -1
-    metarig_rotation_euler_inverted.z *= -1
+    if metarig_needs_apply_rot or obj_needs_apply_rot:
 
-    metarig_rotation_axis_angle_inverted = metarig_rotation_axis_angle_backup.copy()
-    metarig_rotation_axis_angle_inverted.w *= -1
+        metarig_rotation_euler_inverted = metarig_rotation_euler_backup.copy()
+        metarig_rotation_euler_inverted.x *= -1
+        metarig_rotation_euler_inverted.y *= -1
+        metarig_rotation_euler_inverted.z *= -1
 
-    metarig.rotation_euler      = metarig_rotation_euler_inverted
-    metarig.rotation_quaternion = metarig_rotation_quaternion_backup.inverted()
-    metarig.rotation_axis_angle = metarig_rotation_axis_angle_inverted
+        metarig_rotation_axis_angle_inverted = metarig_rotation_axis_angle_backup.copy()
+        metarig_rotation_axis_angle_inverted.w *= -1
 
-    rig_rotation_euler_inverted = rig_rotation_euler_backup.copy()
-    rig_rotation_euler_inverted.x *= -1
-    rig_rotation_euler_inverted.y *= -1
-    rig_rotation_euler_inverted.z *= -1
+        metarig.rotation_euler      = metarig_rotation_euler_inverted
+        metarig.rotation_quaternion = metarig_rotation_quaternion_backup.inverted()
+        metarig.rotation_axis_angle = metarig_rotation_axis_angle_inverted
 
-    rig_rotation_axis_angle_inverted = rig_rotation_axis_angle_backup.copy()
-    rig_rotation_axis_angle_inverted.w *= -1
+        rig_rotation_euler_inverted = rig_rotation_euler_backup.copy()
+        rig_rotation_euler_inverted.x *= -1
+        rig_rotation_euler_inverted.y *= -1
+        rig_rotation_euler_inverted.z *= -1
 
-    obj.rotation_euler      = rig_rotation_euler_inverted
-    obj.rotation_quaternion = rig_rotation_quaternion_backup.inverted()
-    obj.rotation_axis_angle = rig_rotation_axis_angle_inverted
+        rig_rotation_axis_angle_inverted = rig_rotation_axis_angle_backup.copy()
+        rig_rotation_axis_angle_inverted.w *= -1
 
-    bpy.ops.object.select_all(action='DESELECT')
-    metarig.select_set(True)
-    obj.select_set(True)
-    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+        obj.rotation_euler      = rig_rotation_euler_inverted
+        obj.rotation_quaternion = rig_rotation_quaternion_backup.inverted()
+        obj.rotation_axis_angle = rig_rotation_axis_angle_inverted
+
+        bpy.ops.object.select_all(action='DESELECT')
+        metarig.select_set(metarig_needs_apply_rot)
+        obj.select_set(obj_needs_apply_rot)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
 
     for ob in bpy.data.objects:
         if ob.parent == obj:
