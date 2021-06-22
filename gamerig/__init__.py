@@ -203,6 +203,30 @@ class PoseBoneProperties(PropertyGroup):
         del bpy.types.PoseBone.gamerig
 
 
+# Parameter update callback
+
+in_update = False
+
+def update_callback(prop_name):
+    def callback(params, context):
+        global in_update
+        # Do not recursively call if the callback updates other parameters
+        if not in_update:
+            try:
+                in_update = True
+                bone = context.active_pose_bone
+
+                if bone and bone.gamerig == params:
+                    rig_info = rig_lists.rigs.get(utils.get_rig_type(bone), None)
+                    if rig_info:
+                        rig_cb = getattr(rig_info["module"].Rig, 'on_parameter_update', None)
+                        if rig_cb:
+                            rig_cb(context, bone, params, prop_name)
+            finally:
+                in_update = False
+
+    return callback
+
 # Remember the initial property set
 PARAMETERS_BASE_DIR = set(dir(PoseBoneProperties))
 
@@ -250,20 +274,33 @@ class ParameterValidator(object):
         if hasattr(ParameterValidator, name):
             return object.__setattr__(self, name, val)
 
+        original_val = val
+
+        # to support 2.93.0 later
+        if isinstance(val, bpy.props._PropertyDeferred):
+            val = (val.function, val.keywords)
+        
         if not (isinstance(val, tuple) and callable(val[0]) and isinstance(val[1], dict)):
             print("!!! GAMERIG RIG %s: INVALID DEFINITION FOR RIG PARAMETER %s: %r\n" % (self.__rig_name, name, val))
             return
 
+        # actually defining the property modifies the dictionary with new parameters, so copy it now
+        new_def = (val[0], val[1].copy())
+
+        if 'poll' in new_def[1]:
+            del new_def[1]['poll']
+        
         if name in self.__prop_table:
             cur_rig, cur_info = self.__prop_table[name]
             if val != cur_info:
                 print("!!! GAMERIG RIG %s: REDEFINING PARAMETER %s AS:\n\n    %s\n" % (self.__rig_name, name, format_property_spec(val)))
                 print("!!! PREVIOUS DEFINITION BY %s:\n\n    %s\n" % (cur_rig, format_property_spec(cur_info)))
 
-        # actually defining the property modifies the dictionary with new parameters, so copy it now
-        new_def = (val[0], val[1].copy())
+        # inject a generic update callback that calls the appropriate rig classmethod
+        if val[0] != bpy.props.CollectionProperty:
+            val[1]['update'] = update_callback(name)
 
-        setattr(self.__params, name, val)
+        setattr(self.__params, name, original_val)
         self.__prop_table[name] = (self.__rig_name, new_def)
 
 
