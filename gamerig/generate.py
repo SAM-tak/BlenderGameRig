@@ -476,7 +476,12 @@ def generate_rig(context, metarig):
     script.use_module = True
 
     # Register UI script
-    script.as_module().register()
+    try:
+        script.as_module().register()
+    except AttributeError:
+        pass
+    else:
+        operator_scripts += rigt.operator_script(rig_id)
 
     # Create Selection Sets
     create_selection_sets(obj, metarig)

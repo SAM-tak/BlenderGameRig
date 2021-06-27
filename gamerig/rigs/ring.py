@@ -169,7 +169,7 @@ class Rig:
                 var.name = 'rig_phy_switch'
                 var.type = "SINGLE_PROP"
                 var.targets[0].id = self.obj
-                var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["Rig/Phy"]'
+                var.targets[0].data_path = pb[ctrls[0]].path_from_id() + '["Rig/Phy"]'
 
                 drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
 
