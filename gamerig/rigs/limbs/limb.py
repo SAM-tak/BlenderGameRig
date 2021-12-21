@@ -1,14 +1,10 @@
 import bpy, itertools
-from rna_prop_ui import rna_idprop_ui_prop_get
-from math import ( trunc, radians )
-from mathutils import ( Vector, Quaternion )
-from ...utils import (
-    copy_bone, ctrlname, mchname, insert_before_first_period,
-    connected_children_names, find_root_bone,
-    create_widget,
-    MetarigError
-)
-from ..widgets import create_sphere_widget, create_limb_widget, create_ikarrow_widget, create_ikdir_widget, create_directed_circle_widget
+from rna_prop_ui import rna_idprop_ui_create
+from math import radians
+from mathutils import Vector, Quaternion
+from ...utils import copy_bone, ctrlname, mchname, insert_before_first_period, find_root_bone, MetarigError
+from ..widgets import create_limb_widget, create_ikarrow_widget, create_ikdir_widget, create_directed_circle_widget
+
 
 class Limb:
     def __init__(self, obj, bone_name, metabone):
@@ -318,13 +314,7 @@ class Limb:
 
         # Toggle Pole Driver
         pb[ ik['ctrl']['limb'][1] ]['IK Pole Mode'] = 0
-        prop = rna_idprop_ui_prop_get( pb[ ik['ctrl']['limb'][1] ], 'IK Pole Mode', create = True )
-
-        prop["min"]         = 0
-        prop["max"]         = 1
-        prop["soft_min"]    = None
-        prop["soft_max"]    = None
-        prop["description"] = 'IK solver using Pole Target'
+        rna_idprop_ui_create( pb[ ik['ctrl']['limb'][1] ], 'IK Pole Mode', default=0.0, description='IK solver using Pole Target' )
 
         drv = pb[ ik['mch'] ].constraints[ 0 ].driver_add("mute").driver
         drv.type = 'AVERAGE'
@@ -332,7 +322,7 @@ class Limb:
         var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
 
         drv = pb[ ik['mch'] ].constraints[ 1 ].driver_add("mute").driver
         drv.type = 'AVERAGE'
@@ -340,7 +330,7 @@ class Limb:
         var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
 
         drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
         drv_modifier.mode            = 'POLYNOMIAL'
@@ -354,7 +344,7 @@ class Limb:
         var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
 
         fcu = pb[ ik['ctrl']['limb'][1] ].bone.driver_add("hide")
         drv = fcu.driver
@@ -363,7 +353,7 @@ class Limb:
         var.name = 'ik_pole_mode'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
 
         drv_modifier = fcu.modifiers.new('GENERATOR')
         drv_modifier.mode            = 'POLYNOMIAL'
@@ -374,13 +364,7 @@ class Limb:
 
         # Limb Follow Driver
         pb[fk[0]]['FK Limb Follow'] = 0.0
-        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'FK Limb Follow', create = True )
-
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'FK Limb Follow'
+        rna_idprop_ui_create( pb[fk[0]], 'FK Limb Follow', default=0.0, description='FK Limb Follow' )
 
         drv = pb[ parent ].constraints[ 0 ].driver_add("influence").driver
 
@@ -389,16 +373,11 @@ class Limb:
         var.name = 'fk_limb_follow'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[fk[0]].path_from_id() + '[' + '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[fk[0]].path_from_id() + '["FK Limb Follow"]'
 
         # Create IK/FK switch property
         pb[fk[0]]['IK/FK']  = 0.0
-        prop = rna_idprop_ui_prop_get( pb[fk[0]], 'IK/FK', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'IK/FK Switch'
+        rna_idprop_ui_create( pb[fk[0]], 'IK/FK', default=0.0, description='IK/FK Switch' )
 
         # Constrain org to IK and FK bones
         for o, i, f in itertools.zip_longest( org, [ ik['ctrl']['limb'][0], ik['mch'], ik['mch_target'] ], fk ):
@@ -420,7 +399,7 @@ class Limb:
             var.name = 'ik_fk_switch'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
-            var.targets[0].data_path = pb[fk[0]].path_from_id() + '['+ '"' + prop.name + '"' + ']'
+            var.targets[0].data_path = pb[fk[0]].path_from_id() + '["IK/FK"]'
 
             self.make_constraint(o, {
                 'constraint'  : 'MAINTAIN_VOLUME'
@@ -510,12 +489,7 @@ class Limb:
             
             # Create ik stretch property
             pb_master['IK Stretch'] = 1.0
-            prop = rna_idprop_ui_prop_get( pb_master, 'IK Stretch', create=True )
-            prop["min"]         = 0.0
-            prop["max"]         = 1.0
-            prop["soft_min"]    = 0.0
-            prop["soft_max"]    = 1.0
-            prop["description"] = 'IK Stretch'
+            rna_idprop_ui_create( pb_master, 'IK Stretch', default=1.0, description='IK Stretch' )
 
             # Add driver to limit scale constraint influence
             b        = bones['ik']['mch_str']
@@ -526,7 +500,7 @@ class Limb:
             var.name = 'ik_stretch'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
-            var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+            var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
 
             drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
 
@@ -560,12 +534,7 @@ class Limb:
             })
 
             pb_master['IK Follow'] = 1.0
-            prop = rna_idprop_ui_prop_get( pb_master, 'IK Follow', create=True )
-            prop["min"]         = 0.0
-            prop["max"]         = 1.0
-            prop["soft_min"]    = 0.0
-            prop["soft_max"]    = 1.0
-            prop["description"] = 'IK Follow'
+            rna_idprop_ui_create( pb_master, 'IK Follow', default=1.0, description='IK Follow' )
 
             drv      = pb[mch_ik_socket].constraints[-1].driver_add("influence").driver
             drv.type = 'SUM'
@@ -574,7 +543,7 @@ class Limb:
             var.name = 'ik_follow'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
-            var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+            var.targets[0].data_path = pb_master.path_from_id() + '["IK Follow"]'
 
 
     def create_script(self, bones, script_template):

@@ -1,12 +1,7 @@
 import bpy, re, mathutils
-from rna_prop_ui import rna_idprop_ui_prop_get
-from ..utils import (
-    copy_bone, flip_bone, ctrlname, mchname, basename, connected_children_names,
-    insert_before_first_period,
-    create_widget,
-    MetarigError
-)
-from .widgets import create_upper_arc_widget, create_lower_arc_widget, create_left_arc_widget, create_right_arc_widget
+from rna_prop_ui import rna_idprop_ui_create
+from ..utils import copy_bone, flip_bone, ctrlname, mchname, connected_children_names, MetarigError
+from .widgets import create_upper_arc_widget
 
 
 class Rig:
@@ -154,12 +149,7 @@ class Rig:
                 if not 'Rig/Phy' in pb[ctrls[0]]:
                     # Create Rig/Physics switch property
                     pb[ctrls[0]]['Rig/Phy'] = 0.0
-                    prop = rna_idprop_ui_prop_get( pb[ctrls[0]], 'Rig/Phy', create=True )
-                    prop["min"]         = 0.0
-                    prop["max"]         = 1.0
-                    prop["soft_min"]    = 0.0
-                    prop["soft_max"]    = 1.0
-                    prop["description"] = 'Rig/Phy Switch'
+                    rna_idprop_ui_create( pb[ctrls[0]], 'Rig/Phy', default=0.0, description='Rig/Phy Switch')
                 
                 # Add driver to relevant constraint
                 drv = pb[org].constraints[-1].driver_add("influence").driver

@@ -1,9 +1,8 @@
 import bpy
-from rna_prop_ui import rna_idprop_ui_prop_get
+from rna_prop_ui import rna_idprop_ui_create
 from ..utils import (
-    copy_bone, flip_bone, ctrlname, mchname, basename, children_names,
+    copy_bone, flip_bone, ctrlname, mchname, children_names,
     insert_before_first_period,
-    create_widget,
     MetarigError
 )
 from .widgets import create_sphere_widget, create_cube_widget
@@ -287,12 +286,7 @@ class Rig:
                 if not 'Rig/Phy' in pb[fk_ctrls[0]]:
                     # Create Rig/Physics switch property
                     pb[fk_ctrls[0]]['Rig/Phy'] = 0.0
-                    prop = rna_idprop_ui_prop_get( pb[fk_ctrls[0]], 'Rig/Phy', create=True )
-                    prop["min"]         = 0.0
-                    prop["max"]         = 1.0
-                    prop["soft_min"]    = 0.0
-                    prop["soft_max"]    = 1.0
-                    prop["description"] = 'Rig/Phy Switch'
+                    rna_idprop_ui_create( pb[fk_ctrls[0]], 'Rig/Phy', default=0.0, description='Rig/Phy Switch' )
                 
                 # Add driver to relevant constraint
                 drv = pb[org].constraints[-1].driver_add("influence").driver
@@ -433,22 +427,12 @@ if is_selected( controls ):
         if not self.params.fk_only:
             # Create IK/FK switch property
             pb[self.ctrls[0][0]]['IK/FK'] = 1.0
-            prop = rna_idprop_ui_prop_get( pb[self.ctrls[0][0]], 'IK/FK', create=True )
-            prop["min"]         = 0.0
-            prop["max"]         = 1.0
-            prop["soft_min"]    = 0.0
-            prop["soft_max"]    = 1.0
-            prop["description"] = 'IK/FK Switch'
+            rna_idprop_ui_create( pb[self.ctrls[0][0]], 'IK/FK', default=1.0, description='IK/FK Switch' )
         
         if self.params.stretchable:
             # Create Maintain Volume property
             pb[self.ctrls[0][0]]['Maintain Volume'] = 1.0
-            prop = rna_idprop_ui_prop_get( pb[self.ctrls[0][0]], 'Maintain Volume', create=True )
-            prop["min"]         = 0.0
-            prop["max"]         = 1.0
-            prop["soft_min"]    = 0.0
-            prop["soft_max"]    = 1.0
-            prop["description"] = 'Maintain Volume Influence'
+            rna_idprop_ui_create( pb[self.ctrls[0][0]], 'Maintain Volume', default=1.0, description='Maintain Volume Influence' )
 
         all_bones = {
             'fk_ctrls'   : self.ctrls[0],

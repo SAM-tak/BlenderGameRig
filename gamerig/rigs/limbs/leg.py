@@ -18,7 +18,7 @@
 
 # <pep8 compliant>
 import bpy, math
-from rna_prop_ui import rna_idprop_ui_prop_get
+from rna_prop_ui import rna_idprop_ui_create
 from ...utils import MetarigError, connected_children_names, copy_bone, put_bone, flip_bone, ctrlname
 from ..widgets import create_foot_widget, create_ballsocket_widget, create_toe_widget, create_circle_widget
 from .limb import *
@@ -352,12 +352,7 @@ if is_selected( fk_ctrls ):
         # Find IK toe follow property
         ik_dir_ctrl = bones['ik']['ctrl']['limb'][1]
         pb[ik_dir_ctrl]['IK Toe Follow']  = 1.0
-        prop = rna_idprop_ui_prop_get( pb[ik_dir_ctrl], 'IK Toe Follow', create=True )
-        prop["min"]         = 0.0
-        prop["max"]         = 1.0
-        prop["soft_min"]    = 0.0
-        prop["soft_max"]    = 1.0
-        prop["description"] = 'Rate of facing knee to toe forward'
+        rna_idprop_ui_create( pb[ik_dir_ctrl], 'IK Toe Follow', default=1.0, description='Rate of facing knee to toe forward' )
         # Add driver to limit scale constraint influence
         drv      = pb[mch_ctrl_parent].constraints[-1].driver_add("influence").driver
         drv.type = 'SUM'
@@ -366,7 +361,7 @@ if is_selected( fk_ctrls ):
         var.name = 'ik_toe_follow'
         var.type = "SINGLE_PROP"
         var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ik_dir_ctrl].path_from_id() + '['+ '"' + prop.name + '"' + ']'
+        var.targets[0].data_path = pb[ik_dir_ctrl].path_from_id() + '["IK Toe Follow"]'
 
         drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
 
@@ -468,7 +463,7 @@ if is_selected( fk_ctrls ):
             #pb[ toeik ].lock_location = True, True, True
 
             # Find IK/FK switch property
-            prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
+            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0 )
 
             # Add driver to limit scale constraint influence
             b        = org_bones[3]
@@ -479,7 +474,7 @@ if is_selected( fk_ctrls ):
             var.name = 'ik_fk_switch'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
-            var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+            var.targets[0].data_path = pb_master.path_from_id() + '["IK/FK"]'
 
             drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
 

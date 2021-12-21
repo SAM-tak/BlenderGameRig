@@ -1,7 +1,7 @@
 import bpy
 import re
 from mathutils import Vector
-from rna_prop_ui import rna_idprop_ui_prop_get
+from rna_prop_ui import rna_idprop_ui_create
 from ..utils import (
     copy_bone, connected_children_names,
     ctrlname, mchname, insert_before_first_period,

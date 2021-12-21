@@ -23,7 +23,6 @@ import re
 import time
 import traceback
 import sys
-from rna_prop_ui import rna_idprop_ui_prop_get
 from .utils import (
     rig_module_name, get_rig_type, create_widget, assign_all_widgets,
     is_org, is_mch, is_jig, random_id, basename,
@@ -128,7 +127,6 @@ def generate_rig(context, metarig):
         obj.display_type = 'WIRE'
         collection.objects.link(obj)
         # Put the rig_name in the armature custom properties
-        rna_idprop_ui_prop_get(obj.data, "gamerig_id", create=True)
         obj.data["gamerig_id"] = rig_id
         obj.location            = metarig.location
         obj.rotation_mode       = metarig.rotation_mode
@@ -476,12 +474,7 @@ def generate_rig(context, metarig):
     script.use_module = True
 
     # Register UI script
-    try:
-        script.as_module().register()
-    except AttributeError:
-        pass
-    else:
-        operator_scripts += rigt.operator_script(rig_id)
+    script.as_module().register()
 
     # Create Selection Sets
     create_selection_sets(obj, metarig)

@@ -20,9 +20,9 @@
 
 bl_info = {
     "name": "GameRig",
-    "version": (1, 3, 1),
+    "version": (1, 4, 0),
     "author": "Osamu Takasugi, (Rigify : Nathan Vegdahl, Lucio Rossi, Ivan Cappiello)",
-    "blender": (2, 80, 0),
+    "blender": (3, 0, 0),
     "description": "Character Rigging framework for Game / Realtime content",
     "location": "Armature properties, Bone properties, View3d tools panel, Armature Add menu",
     "support": "COMMUNITY",
@@ -43,8 +43,6 @@ else:
     from . import utils, rig_lists, generate, ui, metarig_menu
 
 import bpy
-import sys
-import os
 from bpy.types import (
     AddonPreferences,
     PropertyGroup

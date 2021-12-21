@@ -18,8 +18,8 @@
 
 # <pep8 compliant>
 import bpy
-from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import MetarigError, copy_bone
+from rna_prop_ui import rna_idprop_ui_create
+from ...utils import MetarigError, copy_bone, connected_children_names
 from ..widgets import create_hand_widget
 from .limb import *
 

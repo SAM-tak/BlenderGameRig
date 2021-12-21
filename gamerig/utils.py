@@ -19,16 +19,12 @@
 # <pep8 compliant>
 
 import bpy
-import imp
 import importlib
-import math
 import random
 import string
-import time
 import re
-import os
-from mathutils import Vector, Matrix, Color
-from rna_prop_ui import rna_idprop_ui_prop_get
+from mathutils import Vector, Color
+from rna_prop_ui import rna_idprop_ui_create
 
 RIG_DIR = "rigs"  # Name of the directory where rig types are kept
 METARIG_DIR = "metarigs"  # Name of the directory where metarigs are kept
@@ -212,30 +208,53 @@ def copy_bone(obj, bone_name, assign_name=''):
 
         edit_bone_2.use_deform = edit_bone_1.use_deform
 
-        edit_bone_2.bbone_curveinx = edit_bone_1.bbone_curveinx
-        edit_bone_2.bbone_curveiny = edit_bone_1.bbone_curveiny
-        edit_bone_2.bbone_curveoutx = edit_bone_1.bbone_curveoutx
-        edit_bone_2.bbone_curveouty = edit_bone_1.bbone_curveouty
-        edit_bone_2.bbone_custom_handle_end = edit_bone_1.bbone_custom_handle_end
-        edit_bone_2.bbone_custom_handle_start = edit_bone_1.bbone_custom_handle_start
-        edit_bone_2.bbone_easein = edit_bone_1.bbone_easein
-        edit_bone_2.bbone_easeout = edit_bone_1.bbone_easeout
-        edit_bone_2.bbone_handle_type_end = edit_bone_1.bbone_handle_type_end
-        edit_bone_2.bbone_handle_type_start = edit_bone_1.bbone_handle_type_start
-        edit_bone_2.bbone_rollin = edit_bone_1.bbone_rollin
-        edit_bone_2.bbone_rollout = edit_bone_1.bbone_rollout
-        edit_bone_2.bbone_scaleinx = edit_bone_1.bbone_scaleinx
-        edit_bone_2.bbone_scaleiny = edit_bone_1.bbone_scaleiny
-        edit_bone_2.bbone_scaleoutx = edit_bone_1.bbone_scaleoutx
-        edit_bone_2.bbone_scaleouty = edit_bone_1.bbone_scaleouty
-        edit_bone_2.bbone_segments = edit_bone_1.bbone_segments
-        edit_bone_2.bbone_x = edit_bone_1.bbone_x
-        edit_bone_2.bbone_z = edit_bone_1.bbone_z
+        if hasattr(edit_bone_1, 'bbone_curveinx'):
+            edit_bone_2.bbone_curveinx = edit_bone_1.bbone_curveinx
+        if hasattr(edit_bone_1, 'bbone_curveiny'):
+            edit_bone_2.bbone_curveiny = edit_bone_1.bbone_curveiny
+        if hasattr(edit_bone_1, 'bbone_curveoutx'):
+            edit_bone_2.bbone_curveoutx = edit_bone_1.bbone_curveoutx
+        if hasattr(edit_bone_1, 'bbone_curveouty'):
+            edit_bone_2.bbone_curveouty = edit_bone_1.bbone_curveouty
+        if hasattr(edit_bone_1, 'bbone_custom_handle_end'):
+            edit_bone_2.bbone_custom_handle_end = edit_bone_1.bbone_custom_handle_end
+        if hasattr(edit_bone_1, 'bbone_custom_handle_start'):
+            edit_bone_2.bbone_custom_handle_start = edit_bone_1.bbone_custom_handle_start
+        if hasattr(edit_bone_1, 'bbone_easein'):
+            edit_bone_2.bbone_easein = edit_bone_1.bbone_easein
+        if hasattr(edit_bone_1, 'bbone_easeout'):
+            edit_bone_2.bbone_easeout = edit_bone_1.bbone_easeout
+        if hasattr(edit_bone_1, 'bbone_handle_type_end'):
+            edit_bone_2.bbone_handle_type_end = edit_bone_1.bbone_handle_type_end
+        if hasattr(edit_bone_1, 'bbone_handle_type_start'):
+            edit_bone_2.bbone_handle_type_start = edit_bone_1.bbone_handle_type_start
+        if hasattr(edit_bone_1, 'bbone_rollin'):
+            edit_bone_2.bbone_rollin = edit_bone_1.bbone_rollin
+        if hasattr(edit_bone_1, 'bbone_rollout'):
+            edit_bone_2.bbone_rollout = edit_bone_1.bbone_rollout
+        if hasattr(edit_bone_1, 'bbone_scaleinx'):
+            edit_bone_2.bbone_scaleinx = edit_bone_1.bbone_scaleinx
+        if hasattr(edit_bone_1, 'bbone_scaleiny'):
+            edit_bone_2.bbone_scaleiny = edit_bone_1.bbone_scaleiny
+        if hasattr(edit_bone_1, 'bbone_scaleoutx'):
+            edit_bone_2.bbone_scaleoutx = edit_bone_1.bbone_scaleoutx
+        if hasattr(edit_bone_1, 'bbone_scaleouty'):
+            edit_bone_2.bbone_scaleouty = edit_bone_1.bbone_scaleouty
+        if hasattr(edit_bone_1, 'bbone_segments'):
+            edit_bone_2.bbone_segments = edit_bone_1.bbone_segments
+        if hasattr(edit_bone_1, 'bbone_x'):
+            edit_bone_2.bbone_x = edit_bone_1.bbone_x
+        if hasattr(edit_bone_1, 'bbone_z'):
+            edit_bone_2.bbone_z = edit_bone_1.bbone_z
 
-        edit_bone_2.head_radius = edit_bone_1.head_radius
-        edit_bone_2.tail_radius = edit_bone_1.tail_radius
-        edit_bone_2.envelope_distance = edit_bone_1.envelope_distance
-        edit_bone_2.envelope_weight = edit_bone_1.envelope_weight
+        if hasattr(edit_bone_1, 'head_radius'):
+            edit_bone_2.head_radius = edit_bone_1.head_radius
+        if hasattr(edit_bone_1, 'tail_radius'):
+            edit_bone_2.tail_radius = edit_bone_1.tail_radius
+        if hasattr(edit_bone_1, 'envelope_distance'):
+            edit_bone_2.envelope_distance = edit_bone_1.envelope_distance
+        if hasattr(edit_bone_1, 'envelope_weight'):
+            edit_bone_2.envelope_weight = edit_bone_1.envelope_weight
 
         return bone_name_2
     else:
@@ -385,10 +404,10 @@ def bone_prop_link_driver(obj, bone_name, org_bone_name):
         if key1 == '_RNA_UI' or key1 in rna_properties:
             continue
         if isinstance(org_bone[key1], float):
-            prop1 = rna_idprop_ui_prop_get(org_bone, key1, create=False)
+            prop1 = org_bone.id_properties_ui(key1)
             if prop1 is not None:
                 key2 = f'{key1}({org_bone_name})'
-                prop2 = rna_idprop_ui_prop_get(bone, key2, create=True)
+                prop2 = rna_idprop_ui_create(bone, key2, default=0.0)
                 for k in prop1.keys():
                     prop2[k] = prop1[k]
 

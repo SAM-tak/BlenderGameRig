@@ -19,14 +19,11 @@
 # <pep8 compliant>
 
 import bpy
-from bpy.props import BoolProperty, IntProperty, EnumProperty, StringProperty
+from bpy.props import IntProperty, EnumProperty, StringProperty
 from mathutils import Color
 import re
 
-from .utils import (
-    get_rig_type, MetarigError, write_metarig, write_widget, unique_name, get_keyed_frames,
-    bones_in_frame, overwrite_prop_animation, get_rig_name, copy_attributes
-)
+from .utils import get_rig_type, write_metarig, write_widget, unique_name, get_rig_name
 from . import rig_lists, generate
 
 

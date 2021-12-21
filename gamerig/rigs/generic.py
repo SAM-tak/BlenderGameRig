@@ -19,7 +19,7 @@
 # <pep8 compliant>
 
 import bpy
-from rna_prop_ui import rna_idprop_ui_prop_get
+from rna_prop_ui import rna_idprop_ui_create
 from ..utils import copy_bone, ctrlname, mchname, bone_prop_link_driver, bone_props_ui_string
 from .widgets import create_bone_widget, create_circle_widget, create_box_widget, create_sphere_widget
 
@@ -80,12 +80,7 @@ if is_selected('{self.bone}'):
             if not 'Rig/Phy' in pb[bone]:
                 # Create Rig/Physics switch property
                 pb[bone]['Rig/Phy'] = 0.0
-                prop = rna_idprop_ui_prop_get( pb[bone], 'Rig/Phy', create=True )
-                prop["min"]         = 0.0
-                prop["max"]         = 1.0
-                prop["soft_min"]    = 0.0
-                prop["soft_max"]    = 1.0
-                prop["description"] = 'Rig/Phy Switch'
+                prop = rna_idprop_ui_create( pb[bone], 'Rig/Phy', default=0.0, description='Rig/Phy Switch' )
             
             stashed = self.stash_constraint()
 

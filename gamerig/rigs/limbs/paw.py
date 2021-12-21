@@ -18,13 +18,9 @@
 
 # <pep8 compliant>
 import bpy
-from rna_prop_ui import rna_idprop_ui_prop_get
-from ...utils import (
-    connected_children_names,
-    flip_bone, copy_bone,
-    MetarigError
-)
-from ..widgets import create_paw_widget, create_ballsocket_widget, create_toe_widget
+from rna_prop_ui import rna_idprop_ui_create
+from ...utils import connected_children_names, flip_bone, copy_bone, MetarigError
+from ..widgets import create_paw_widget, create_ballsocket_widget
 from .limb import *
 
 class Rig(Limb):
@@ -198,7 +194,7 @@ if is_selected( fk_ctrls ):
             })
 
             # Find IK/FK switch property
-            prop = rna_idprop_ui_prop_get( pb_master, 'IK/FK' )
+            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0 )
 
             # Add driver to limit scale constraint influence
             b        = org_bones[3]

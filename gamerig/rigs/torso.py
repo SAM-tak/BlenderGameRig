@@ -1,6 +1,6 @@
 import bpy
 from mathutils import Vector
-from rna_prop_ui import rna_idprop_ui_prop_get
+from rna_prop_ui import rna_idprop_ui_create
 from ..utils import (
     copy_bone, put_bone,
     ctrlname, basename, mchname, connected_children_names,
@@ -444,13 +444,7 @@ class Rig:
                 torso[pname] = 0.5
             else:
                 torso[pname] = 0.0
-
-            prop = rna_idprop_ui_prop_get( torso, pname, create=True )
-            prop["min"]         = 0.0
-            prop["max"]         = 1.0
-            prop["soft_min"]    = 0.0
-            prop["soft_max"]    = 1.0
-            prop["description"] = pname
+            rna_idprop_ui_create( torso, pname, default=0.0, description = pname )
 
         # driving the follow rotation switches for neck and head
         for bone, prop, in zip( owners, props ):
@@ -475,14 +469,7 @@ class Rig:
             # Add driver to stretch constraint
             tweaks =  bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['tweak'] + [ bones['neck']['ctrl'] ]
             for bone, t in zip(self.org_bones, tweaks):
-                pb[t]['Tweak Stretch'] = 1.0
-
-                prop = rna_idprop_ui_prop_get( pb[t], 'Tweak Stretch', create=True )
-                prop["min"]         = 0.0
-                prop["max"]         = 1.0
-                prop["soft_min"]    = 0.0
-                prop["soft_max"]    = 1.0
-                prop["description"] = 'Tweak Stretch'
+                rna_idprop_ui_create( pb[t], 'Tweak Stretch', default=1.0, description='Tweak Stretch' )
 
                 tidx = tweaks.index(t)
                 if tidx != len(tweaks) - 1:
@@ -493,7 +480,7 @@ class Rig:
                     var.name = 'tweak_stretch'
                     var.type = "SINGLE_PROP"
                     var.targets[0].id = self.obj
-                    var.targets[0].data_path = pb[t].path_from_id() + '['+ '"' + prop.name + '"' + ']'
+                    var.targets[0].data_path = pb[t].path_from_id() + '["Tweak Stretch"]'
 
 
     def locks_and_widgets( self, bones ):
