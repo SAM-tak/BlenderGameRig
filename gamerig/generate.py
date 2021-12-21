@@ -473,8 +473,14 @@ def generate_rig(context, metarig):
     )
     script.use_module = True
 
+    print("GameRig: try  to register ui script.")
     # Register UI script
-    script.as_module().register()
+    try:
+        script.as_module().register()
+    except AttributeError:
+        pass
+    
+    t.tick("register ui script done: ")
 
     # Create Selection Sets
     create_selection_sets(obj, metarig)
