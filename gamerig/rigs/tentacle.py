@@ -286,7 +286,7 @@ class Rig:
                 if not 'Rig/Phy' in pb[fk_ctrls[0]]:
                     # Create Rig/Physics switch property
                     pb[fk_ctrls[0]]['Rig/Phy'] = 0.0
-                    rna_idprop_ui_create( pb[fk_ctrls[0]], 'Rig/Phy', default=0.0, description='Rig/Phy Switch' )
+                    rna_idprop_ui_create( pb[fk_ctrls[0]], 'Rig/Phy', default=0.0, description='Rig/Phy Switch', overridable=True )
                 
                 # Add driver to relevant constraint
                 drv = pb[org].constraints[-1].driver_add("influence").driver
@@ -427,12 +427,12 @@ if is_selected( controls ):
         if not self.params.fk_only:
             # Create IK/FK switch property
             pb[self.ctrls[0][0]]['IK/FK'] = 1.0
-            rna_idprop_ui_create( pb[self.ctrls[0][0]], 'IK/FK', default=1.0, description='IK/FK Switch' )
+            rna_idprop_ui_create( pb[self.ctrls[0][0]], 'IK/FK', default=1.0, description='IK/FK Switch', overridable=True )
         
         if self.params.stretchable:
             # Create Maintain Volume property
             pb[self.ctrls[0][0]]['Maintain Volume'] = 1.0
-            rna_idprop_ui_create( pb[self.ctrls[0][0]], 'Maintain Volume', default=1.0, description='Maintain Volume Influence' )
+            rna_idprop_ui_create( pb[self.ctrls[0][0]], 'Maintain Volume', default=1.0, description='Maintain Volume Influence', overridable=True )
 
         all_bones = {
             'fk_ctrls'   : self.ctrls[0],

@@ -407,7 +407,7 @@ def bone_prop_link_driver(obj, bone_name, org_bone_name):
             prop1 = org_bone.id_properties_ui(key1)
             if prop1 is not None:
                 key2 = f'{key1}({org_bone_name})'
-                prop2 = rna_idprop_ui_create(bone, key2, default=0.0)
+                prop2 = rna_idprop_ui_create(bone, key2, default=0.0, overridable=True)
                 if hasattr(prop1, 'keys'):
                     for k in prop1.keys():
                         prop2[k] = prop1[k]

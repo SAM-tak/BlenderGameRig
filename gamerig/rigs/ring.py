@@ -149,7 +149,7 @@ class Rig:
                 if not 'Rig/Phy' in pb[ctrls[0]]:
                     # Create Rig/Physics switch property
                     pb[ctrls[0]]['Rig/Phy'] = 0.0
-                    rna_idprop_ui_create( pb[ctrls[0]], 'Rig/Phy', default=0.0, description='Rig/Phy Switch')
+                    rna_idprop_ui_create( pb[ctrls[0]], 'Rig/Phy', default=0.0, description='Rig/Phy Switch', overridable=True )
                 
                 # Add driver to relevant constraint
                 drv = pb[org].constraints[-1].driver_add("influence").driver

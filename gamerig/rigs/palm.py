@@ -38,10 +38,13 @@ def bone_siblings(obj, bone):
 
     bones = []
 
-    namebase = bone.split('.', 1)
+    namebase = next((e for e in filter(lambda x: re.fullmatch(r'index|middle|ring|pinky|\d+', x, re.IGNORECASE) == None, re.split(r'\.|_', bone))), None)
+
+    if namebase == None:
+        raise MetarigError("GAMERIG ERROR: Bone '%s': must have a valid name" % bone)
 
     for b in parent.children:
-        if b.name != bone and b.name.startswith(namebase[0]):
+        if b.name != bone and (True if namebase in re.split(r'\.|_', b.name) else False):
             bones.append(b.name)
 
     return bones

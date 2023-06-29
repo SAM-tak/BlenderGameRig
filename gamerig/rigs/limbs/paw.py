@@ -194,7 +194,7 @@ if is_selected( fk_ctrls ):
             })
 
             # Find IK/FK switch property
-            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0 )
+            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0, overridable=True )
 
             # Add driver to limit scale constraint influence
             b        = org_bones[3]

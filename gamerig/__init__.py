@@ -20,9 +20,9 @@
 
 bl_info = {
     "name": "GameRig",
-    "version": (1, 4, 1),
+    "version": (1, 5, 0),
     "author": "Osamu Takasugi, (Rigify : Nathan Vegdahl, Lucio Rossi, Ivan Cappiello)",
-    "blender": (3, 0, 0),
+    "blender": (3, 1, 0),
     "description": "Character Rigging framework for Game / Realtime content",
     "location": "Armature properties, Bone properties, View3d tools panel, Armature Add menu",
     "support": "COMMUNITY",

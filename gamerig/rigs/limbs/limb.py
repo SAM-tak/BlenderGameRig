@@ -314,7 +314,7 @@ class Limb:
 
         # Toggle Pole Driver
         pb[ ik['ctrl']['limb'][1] ]['IK Pole Mode'] = 0
-        rna_idprop_ui_create( pb[ ik['ctrl']['limb'][1] ], 'IK Pole Mode', default=0.0, description='IK solver using Pole Target' )
+        rna_idprop_ui_create( pb[ ik['ctrl']['limb'][1] ], 'IK Pole Mode', default=0.0, description='IK solver using Pole Target', overridable=True )
 
         drv = pb[ ik['mch'] ].constraints[ 0 ].driver_add("mute").driver
         drv.type = 'AVERAGE'
@@ -364,7 +364,7 @@ class Limb:
 
         # Limb Follow Driver
         pb[fk[0]]['FK Limb Follow'] = 0.0
-        rna_idprop_ui_create( pb[fk[0]], 'FK Limb Follow', default=0.0, description='FK Limb Follow' )
+        rna_idprop_ui_create( pb[fk[0]], 'FK Limb Follow', default=0.0, description='FK Limb Follow', overridable=True )
 
         drv = pb[ parent ].constraints[ 0 ].driver_add("influence").driver
 
@@ -377,7 +377,7 @@ class Limb:
 
         # Create IK/FK switch property
         pb[fk[0]]['IK/FK']  = 0.0
-        rna_idprop_ui_create( pb[fk[0]], 'IK/FK', default=0.0, description='IK/FK Switch' )
+        rna_idprop_ui_create( pb[fk[0]], 'IK/FK', default=0.0, description='IK/FK Switch', overridable=True )
 
         # Constrain org to IK and FK bones
         for o, i, f in itertools.zip_longest( org, [ ik['ctrl']['limb'][0], ik['mch'], ik['mch_target'] ], fk ):
@@ -489,7 +489,7 @@ class Limb:
             
             # Create ik stretch property
             pb_master['IK Stretch'] = 1.0
-            rna_idprop_ui_create( pb_master, 'IK Stretch', default=1.0, description='IK Stretch' )
+            rna_idprop_ui_create( pb_master, 'IK Stretch', default=1.0, description='IK Stretch', overridable=True )
 
             # Add driver to limit scale constraint influence
             b        = bones['ik']['mch_str']
@@ -534,7 +534,7 @@ class Limb:
             })
 
             pb_master['IK Follow'] = 1.0
-            rna_idprop_ui_create( pb_master, 'IK Follow', default=1.0, description='IK Follow' )
+            rna_idprop_ui_create( pb_master, 'IK Follow', default=1.0, description='IK Follow', overridable=True )
 
             drv      = pb[mch_ik_socket].constraints[-1].driver_add("influence").driver
             drv.type = 'SUM'

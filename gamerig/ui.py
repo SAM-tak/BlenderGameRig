@@ -513,6 +513,7 @@ class DevToolsPanel(bpy.types.Panel):
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label       = "GameRig Dev Tools"
+    bl_category = "Tool"
 
     @classmethod
     def poll(cls, context):
@@ -871,6 +872,7 @@ class RenameBatchPanel(bpy.types.Panel):
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label       = "Rename Batch"
+    bl_category = "Tool"
 
     @classmethod
     def poll(cls, context):
@@ -1195,6 +1197,7 @@ class Q2EPanel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_context = "posemode"
     bl_label = 'Convert Quat/Euler'
+    bl_category = "Tool"
 
     # draw the gui
     def draw(self, context):

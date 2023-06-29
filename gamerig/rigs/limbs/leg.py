@@ -352,7 +352,7 @@ if is_selected( fk_ctrls ):
         # Find IK toe follow property
         ik_dir_ctrl = bones['ik']['ctrl']['limb'][1]
         pb[ik_dir_ctrl]['IK Toe Follow']  = 1.0
-        rna_idprop_ui_create( pb[ik_dir_ctrl], 'IK Toe Follow', default=1.0, description='Rate of facing knee to toe forward' )
+        rna_idprop_ui_create( pb[ik_dir_ctrl], 'IK Toe Follow', default=1.0, description='Rate of facing knee to toe forward', overridable=True )
         # Add driver to limit scale constraint influence
         drv      = pb[mch_ctrl_parent].constraints[-1].driver_add("influence").driver
         drv.type = 'SUM'
@@ -463,7 +463,7 @@ if is_selected( fk_ctrls ):
             #pb[ toeik ].lock_location = True, True, True
 
             # Find IK/FK switch property
-            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0 )
+            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0, overridable=True )
 
             # Add driver to limit scale constraint influence
             b        = org_bones[3]

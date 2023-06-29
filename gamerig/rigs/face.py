@@ -1134,7 +1134,7 @@ class Rig:
             ctrl_bone = rbn(ctrl)
             prop_name = 'Mouth Lock'
             pb[ ctrl_bone ][ prop_name ] = 0.0
-            rna_idprop_ui_create( pb[ ctrl_bone ], prop_name, default=0.0, description="Mouth bones don't move if jaw moves" )
+            rna_idprop_ui_create( pb[ ctrl_bone ], prop_name, default=0.0, description="Mouth bones don't move if jaw moves", overridable=True )
             mch_jaws = all_bones['mch']['jaw'][1:-1]
 
             # Jaw drivers
@@ -1154,7 +1154,7 @@ class Rig:
             ctrl_bone = rbn(ctrl)
             prop_name = 'Eyes Follow'
             pb[ ctrl_bone ][ prop_name ] = 1.0
-            rna_idprop_ui_create( pb[ ctrl_bone ], prop_name, default=1.0, description='Switch eyes follow to face' )
+            rna_idprop_ui_create( pb[ ctrl_bone ], prop_name, default=1.0, description='Switch eyes follow to face', overridable=True )
 
             # Eyes driver
             mch_eyes_parent = all_bones['mch']['eyes_parent'][0]
@@ -1174,7 +1174,7 @@ class Rig:
             ctrl_bone = rbn(ctrl)
             prop_name = 'Tongue Follow'
             pb[ ctrl_bone ][ 'Tongue Follow' ] = 1.0
-            rna_idprop_ui_create( pb[ ctrl_bone ], 'Tongue Follow', default=1.0, description='Switch tongue follow to jaw or face' )
+            rna_idprop_ui_create( pb[ ctrl_bone ], 'Tongue Follow', default=1.0, description='Switch tongue follow to jaw or face', overridable=True )
 
             # Tongue driver
             mch_tongue_parent = all_bones['mch']['tongue_parent'][0]
@@ -1194,7 +1194,7 @@ class Rig:
             ctrl_bone = rbn(ctrl)
             prop_name = 'Chin Follow'
             pb[ ctrl_bone ][ 'Chin Follow' ] = 1.0
-            rna_idprop_ui_create( pb[ ctrl_bone ], 'Chin Follow', default=1.0, description='Switch chin follow to jaw or face' )
+            rna_idprop_ui_create( pb[ ctrl_bone ], 'Chin Follow', default=1.0, description='Switch chin follow to jaw or face', overridable=True )
 
             # Tongue driver
             mch_chin_parent = all_bones['mch']['chin_parent'][0]

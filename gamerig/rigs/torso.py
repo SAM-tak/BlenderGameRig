@@ -444,7 +444,7 @@ class Rig:
                 torso[pname] = 0.5
             else:
                 torso[pname] = 0.0
-            rna_idprop_ui_create( torso, pname, default=0.0, description = pname )
+            rna_idprop_ui_create( torso, pname, default=0.0, description = pname, overridable=True )
 
         # driving the follow rotation switches for neck and head
         for bone, prop, in zip( owners, props ):
@@ -469,7 +469,7 @@ class Rig:
             # Add driver to stretch constraint
             tweaks =  bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['tweak'] + [ bones['neck']['ctrl'] ]
             for bone, t in zip(self.org_bones, tweaks):
-                rna_idprop_ui_create( pb[t], 'Tweak Stretch', default=1.0, description='Tweak Stretch' )
+                rna_idprop_ui_create( pb[t], 'Tweak Stretch', default=1.0, description='Tweak Stretch', overridable=True )
 
                 tidx = tweaks.index(t)
                 if tidx != len(tweaks) - 1:
