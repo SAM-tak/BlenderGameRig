@@ -491,6 +491,7 @@ class Rig:
 
         # Tweak bones locks
         for bone in tweaks:
+            pb[bone].rotation_mode = 'ZXY'
             pb[bone].lock_rotation = True, False, True
             pb[bone].lock_scale    = False, True, False
 
