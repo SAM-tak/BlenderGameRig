@@ -14,6 +14,8 @@ class Limb:
 
         self.rot_axis  = self.params.rotation_axis
         self.allow_ik_stretch = self.params.allow_ik_stretch
+        self.root_vector_ik = self.params.support_ik_mode == 'root' or self.params.support_ik_mode == 'both'
+        self.pole_vector_ik = self.params.support_ik_mode == 'pole' or self.params.support_ik_mode == 'both'
 
         # Assign values to FK layers props if opted by user
         if self.params.fk_extra_layers:
@@ -81,16 +83,76 @@ class Limb:
 
         eb = self.obj.data.edit_bones
 
-        ctrl = copy_bone(
-            self.obj,
-            org_bones[0],
-            get_bone_name( org_bones[0], 'ctrl',  'ik' )
-        )
-        mch = copy_bone(
-            self.obj,
-            org_bones[1],
-            get_bone_name( org_bones[1], 'mch',  'ik' )
-        )
+        ctrl = None
+        mch = None
+        mch_nostr_1 = None
+        mch_nostr_2 = None
+        mch_pole_1 = None
+        mch_pole_2 = None
+        mch_pole_nostr_1 = None
+        mch_pole_nostr_2 = None
+        mch_final_1 = None
+        mch_final_2 = None
+        if self.root_vector_ik:
+            ctrl = copy_bone(
+                self.obj,
+                org_bones[0],
+                get_bone_name( org_bones[0], 'ctrl',  'ik' )
+            )
+            mch = copy_bone(
+                self.obj,
+                org_bones[1],
+                get_bone_name( org_bones[1], 'mch',  'ik' )
+            )
+            if self.allow_ik_stretch:
+                mch_nostr_1 = copy_bone(
+                    self.obj,
+                    org_bones[0],
+                    get_bone_name( org_bones[1], 'mch',  'ik1_nostr' )
+                )
+                mch_nostr_2 = copy_bone(
+                    self.obj,
+                    org_bones[1],
+                    get_bone_name( org_bones[1], 'mch',  'ik2_nostr' )
+                )
+        if self.pole_vector_ik:
+            mch_pole_1 = copy_bone(
+                self.obj,
+                org_bones[0],
+                get_bone_name( org_bones[0], 'mch',  'ik_pole1' )
+            )
+            mch_pole_2 = copy_bone(
+                self.obj,
+                org_bones[1],
+                get_bone_name( org_bones[1], 'mch',  'ik_pole2' )
+            )
+            if self.allow_ik_stretch:
+                mch_pole_nostr_1 = copy_bone(
+                    self.obj,
+                    org_bones[0],
+                    get_bone_name( org_bones[0], 'mch',  'ik_pole1_nostr' )
+                )
+                mch_pole_nostr_2 = copy_bone(
+                    self.obj,
+                    org_bones[1],
+                    get_bone_name( org_bones[1], 'mch',  'ik_pole2_nostr' )
+                )
+
+        if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
+            mch_final_1 = copy_bone(
+                self.obj,
+                org_bones[0],
+                get_bone_name(org_bones[0], 'mch',  'ik_final')
+            )
+            mch_final_1 = copy_bone(
+                self.obj,
+                org_bones[1],
+                get_bone_name(org_bones[1], 'mch',  'ik_final')
+            )
+        else:
+            mch_final_1 = ctrl if ctrl else mch_pole_1
+            mch_final_2 = mch if mch else mch_pole_2
+
         mch_target = copy_bone(
             self.obj,
             org_bones[2],
@@ -107,52 +169,78 @@ class Limb:
 
         eb[ mch_str ].tail = eb[ org_bones[2] ].head
 
-        # Create IK Direction Controller
-        dir_ctrl = copy_bone(
-            self.obj,
-            mch_str,
-            get_bone_name( org_bones[0], 'ctrl', 'ik_direction' )
-        )
+        dir_ctrl = None
+        mch_pole_target = None
+        if self.pole_vector_ik:
+            # Create IK Direction Controller
+            dir_ctrl = copy_bone(
+                self.obj,
+                mch_str,
+                get_bone_name( org_bones[0], 'ctrl', 'ik_direction' )
+            )
 
-        eb[ dir_ctrl ].head = eb[ mch_str ].head + (eb[ mch_str ].tail - eb[ mch_str ].head) / 2
-        eb[ dir_ctrl ].tail = eb[ dir_ctrl ].head + ( -eb[ dir_ctrl ].z_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].x_axis ) * eb[ dir_ctrl ].length
-        eb[ dir_ctrl ].align_roll(eb[ mch_str ].y_axis)
-        eb[ dir_ctrl ].inherit_scale = 'NONE'
+            eb[ dir_ctrl ].head = eb[ mch_str ].head + (eb[ mch_str ].tail - eb[ mch_str ].head) / 2
+            eb[ dir_ctrl ].tail = eb[ dir_ctrl ].head + ( -eb[ dir_ctrl ].z_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].x_axis ) * eb[ dir_ctrl ].length
+            eb[ dir_ctrl ].align_roll(eb[ mch_str ].y_axis)
+            eb[ dir_ctrl ].inherit_scale = 'NONE'
 
-        mch_pole_target = copy_bone(
-            self.obj,
-            ctrl,
-            get_bone_name( org_bones[0], 'mch', 'ik_pole_target' )
-        )
-        eb[ mch_pole_target ].tail = eb[ dir_ctrl ].head + ( eb[ dir_ctrl ].x_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].z_axis ) * eb[ dir_ctrl ].length * 1.1
-        eb[ mch_pole_target ].head = eb[ dir_ctrl ].head + ( eb[ dir_ctrl ].x_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].z_axis ) * eb[ dir_ctrl ].length
+            mch_pole_target = copy_bone(
+                self.obj,
+                org_bones[0],
+                get_bone_name( org_bones[0], 'mch', 'ik_pole_target' )
+            )
+            eb[ mch_pole_target ].tail = eb[ dir_ctrl ].head + ( eb[ dir_ctrl ].x_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].z_axis ) * eb[ dir_ctrl ].length * 1.1
+            eb[ mch_pole_target ].head = eb[ dir_ctrl ].head + ( eb[ dir_ctrl ].x_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].z_axis ) * eb[ dir_ctrl ].length
+
+
+        # Parenting
+        eb[mch_str].parent = eb[parent]
+        if self.root_vector_ik:
+            eb[ctrl].parent = eb[parent]
+            eb[mch].parent = eb[ctrl]
+            if self.allow_ik_stretch:
+                eb[mch_nostr_1].parent = eb[parent]
+                eb[mch_nostr_2].parent = eb[mch_nostr_1]
+        if self.pole_vector_ik:
+            eb[mch_pole_1].parent = eb[parent]
+            eb[mch_pole_2].parent = eb[mch_pole_1]
+            if self.allow_ik_stretch:
+                eb[mch_pole_nostr_1].parent = eb[parent]
+                eb[mch_pole_nostr_2].parent = eb[mch_pole_nostr_1]
+        if not (self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik):
+            print(org_bones[0], self.allow_ik_stretch, self.root_vector_ik, self.pole_vector_ik, not (
+                self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik))
+            eb[mch_final_1].parent = eb[parent]
+            eb[mch_final_2].parent = eb[mch_final_1]
 
         if needs_controller_parent:
-            mch_ctrl_parent = copy_bone(
-                self.obj,
-                dir_ctrl,
-                get_bone_name( org_bones[0], 'mch', 'ik_ctrl_parent' )
-            )
-            eb[ mch_ctrl_parent ].length /= 6
-            eb[ mch_ctrl_parent ].inherit_scale = 'NONE'
-
-            mch_ctrl_parent_target = copy_bone(
-                self.obj,
-                mch_target,
-                get_bone_name( org_bones[0], 'mch', 'ik_ctrl_parent_target' )
-            )
-
             # Parenting
-            eb[ mch_str         ].parent = eb[ parent ]
-            eb[ ctrl            ].parent = eb[ parent ]
-            eb[ mch             ].parent = eb[ ctrl ]
-            eb[ mch_ctrl_parent ].parent = eb[ mch_str ]
-            eb[ dir_ctrl        ].parent = eb[ mch_ctrl_parent ]
-            eb[ mch_pole_target ].parent = eb[ dir_ctrl ]
+            if self.pole_vector_ik:
+                mch_ctrl_parent = copy_bone(
+                    self.obj,
+                    dir_ctrl,
+                    get_bone_name( org_bones[0], 'mch', 'ik_ctrl_parent' )
+                )
+                eb[ mch_ctrl_parent ].length /= 6
+                eb[ mch_ctrl_parent ].inherit_scale = 'NONE'
+
+                mch_ctrl_parent_target = copy_bone(
+                    self.obj,
+                    mch_target,
+                    get_bone_name( org_bones[0], 'mch', 'ik_ctrl_parent_target' )
+                )
+
+                eb[mch_ctrl_parent].parent = eb[mch_str]
+                eb[dir_ctrl].parent = eb[mch_ctrl_parent]
+                eb[mch_pole_target].parent = eb[dir_ctrl]
 
             return {
                 'ctrl'                   : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
                 'mch'                    : mch,
+                'mch_nostr'              : [mch_nostr_1, mch_nostr_2],
+                'mch_pole'               : [mch_pole_1, mch_pole_2],
+                'mch_pole_nostr'         : [mch_pole_nostr_1, mch_pole_nostr_2],
+                'mch_final'              : [mch_final_1, mch_final_2],
                 'mch_target'             : mch_target,
                 'mch_str'                : mch_str,
                 'mch_pole_target'        : mch_pole_target,
@@ -163,15 +251,17 @@ class Limb:
         else:
 
             # Parenting
-            eb[ mch_str         ].parent = eb[ parent ]
-            eb[ ctrl            ].parent = eb[ parent ]
-            eb[ mch             ].parent = eb[ ctrl ]
-            eb[ dir_ctrl        ].parent = eb[ mch_str ]
-            eb[ mch_pole_target ].parent = eb[ dir_ctrl ]
+            if self.pole_vector_ik:
+                eb[dir_ctrl].parent = eb[mch_str]
+                eb[mch_pole_target].parent = eb[dir_ctrl]
 
             return {
                 'ctrl'            : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
                 'mch'             : mch,
+                'mch_nostr'       : [mch_nostr_1, mch_nostr_2],
+                'mch_pole'        : [mch_pole_1, mch_pole_2],
+                'mch_pole_nostr'  : [mch_pole_nostr_1, mch_pole_nostr_2],
+                'mch_final'       : [mch_final_1, mch_final_2],
                 'mch_target'      : mch_target,
                 'mch_str'         : mch_str,
                 'mch_pole_target' : mch_pole_target
@@ -181,59 +271,99 @@ class Limb:
     def postprocess_ik( self, reverse_ik_widget ):
         ctrl = self.bones['ik']['ctrl']['limb'][0]
         dir_ctrl = self.bones['ik']['ctrl']['limb'][1]
-        mch_str = self.bones['ik']['mch_str']
         mch = self.bones['ik']['mch']
+        mch_nostr = self.bones['ik']['mch_nostr']
+        mch_pole = self.bones['ik']['mch_pole']
+        mch_pole_nostr = self.bones['ik']['mch_pole_nostr']
         mch_target = self.bones['ik']['mch_target']
         mch_pole_target = self.bones['ik']['mch_pole_target']
 
-        self.make_constraint( mch, {
-            'constraint'     : 'IK',
-            'subtarget'      : mch_target,
-            'chain_count'    : 2,
-            'use_stretch'    : self.allow_ik_stretch,
-        })
-        self.make_constraint( mch, {
-            'constraint'     : 'IK',
-            'subtarget'      : mch_target,
-            'chain_count'    : 2,
-            'use_stretch'    : self.allow_ik_stretch,
-            'pole_target'    : self.obj,
-            'pole_subtarget' : mch_pole_target
-        })
+        if self.root_vector_ik:
+            self.make_constraint( mch, {
+                'constraint'     : 'IK',
+                'subtarget'      : mch_target,
+                'chain_count'    : 2,
+                'use_stretch'    : self.allow_ik_stretch
+            })
+            if self.allow_ik_stretch:
+                self.make_constraint( mch_nostr[0], {
+                    'constraint'  : 'COPY_TRANSFORMS',
+                    'subtarget'   : ctrl
+                })
+                self.make_constraint( mch_nostr[1], {
+                    'constraint'     : 'IK',
+                    'subtarget'      : mch_target,
+                    'chain_count'    : 2,
+                    'use_stretch'    : False
+                })
+        if self.pole_vector_ik:
+            self.make_constraint( mch_pole[1], {
+                'constraint'     : 'IK',
+                'subtarget'      : mch_target,
+                'chain_count'    : 2,
+                'use_stretch'    : self.allow_ik_stretch,
+                'pole_target'    : self.obj,
+                'pole_subtarget' : mch_pole_target
+            })
+            if self.allow_ik_stretch:
+                self.make_constraint( mch_pole_nostr[1], {
+                    'constraint': 'IK',
+                    'subtarget': mch_target,
+                    'chain_count': 2,
+                    'use_stretch': False,
+                    'pole_target': self.obj,
+                    'pole_subtarget': mch_pole_target
+                })
 
         pb = self.obj.pose.bones
-        pb[ ctrl ].ik_stretch = 0.1
-        pb[ mch ].ik_stretch = 0.1
+        if ctrl:
+            pb[ ctrl ].ik_stretch = 0.1
+        if mch:
+            pb[ mch ].ik_stretch = 0.1
+        for i in mch_nostr:
+            if i:
+                pb[i].ik_stretch = 0.1
+        for i in mch_pole:
+            if i:
+                pb[i].ik_stretch = 0.1
+        for i in mch_pole_nostr:
+            if i:
+                pb[i].ik_stretch = 0.1
 
         # IK constraint Rotation locks
-        for axis in ['x','y','z']:
-            if axis != self.rot_axis:
-               setattr( pb[ mch ], 'lock_ik_' + axis, True )
+        if mch:
+            for axis in ['x','y','z']:
+                if axis != self.rot_axis:
+                    setattr( pb[ mch ], 'lock_ik_' + axis, True )
         if self.rot_axis == 'automatic':
-            pb[ mch ].lock_ik_x = False
+            if mch:
+                pb[ mch ].lock_ik_x = False
         else:
-            pb[ ctrl ].rotation_quaternion = Quaternion(
-                (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0),
-                radians(-45.0)
-            )
-            if self.rot_axis == 'x':
-                pb[ ctrl ].rotation_euler.x = radians(-45.0)
-            elif self.rot_axis == 'z':
-                pb[ ctrl ].rotation_euler.z = radians(-45.0)
+            if ctrl:
+                pb[ ctrl ].rotation_quaternion = Quaternion(
+                    (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0),
+                    radians(-45.0)
+                )
+                if self.rot_axis == 'x':
+                    pb[ ctrl ].rotation_euler.x = radians(-70.0)
+                elif self.rot_axis == 'z':
+                    pb[ ctrl ].rotation_euler.z = radians(-70.0)
 
         # Locks and Widget
-        pb[ dir_ctrl ].lock_location = True, True, True
-        pb[ dir_ctrl ].lock_rotation = self.rot_axis == 'x', True, self.rot_axis != 'x'
-        pb[ dir_ctrl ].rotation_mode = 'XYZ' if self.rot_axis == 'x' else 'ZYX'
-        pb[ dir_ctrl ].lock_scale = True, True, True
+        if dir_ctrl:
+            pb[ dir_ctrl ].lock_location = True, True, True
+            pb[ dir_ctrl ].lock_rotation = self.rot_axis == 'x', True, self.rot_axis != 'x'
+            pb[ dir_ctrl ].rotation_mode = 'XYZ' if self.rot_axis == 'x' else 'ZYX'
+            pb[ dir_ctrl ].lock_scale = True, True, True
 
-        create_ikdir_widget( self.obj, dir_ctrl, -1.0 if reverse_ik_widget else 1.0 )
+            create_ikdir_widget( self.obj, dir_ctrl, -1.0 if reverse_ik_widget else 1.0 )
 
-        pb[ ctrl ].lock_rotation = True, False, True
-        pb[ ctrl ].rotation_mode = 'ZXY' if self.rot_axis == 'x' else 'XZY'
-        pb[ ctrl ].lock_scale = True, True, True
+        if ctrl:
+            pb[ ctrl ].lock_rotation = True, False, True
+            pb[ ctrl ].rotation_mode = 'ZXY' if self.rot_axis == 'x' else 'XZY'
+            pb[ ctrl ].lock_scale = True, True, True
 
-        create_ikarrow_widget( self.obj, ctrl )
+            create_ikarrow_widget( self.obj, ctrl )
 
 
     def create_fk( self, parent ):
@@ -278,7 +408,6 @@ class Limb:
 
     def postprocess_fk(self):
         ctrls = self.bones['fk']['ctrl']
-        mch = self.bones['fk']['mch']
 
         # Locks and widgets
         pb = self.obj.pose.bones
@@ -311,56 +440,35 @@ class Limb:
 
     def setup_switch( self, org, ik, fk, parent ):
         pb = self.obj.pose.bones
+        pb_master = pb[ik['ctrl']['limb'][0] if ik['ctrl']['limb'][0] else ik['ctrl']['limb'][1]]
 
         # Toggle Pole Driver
-        pb[ ik['ctrl']['limb'][1] ]['IK Pole Mode'] = 0
-        rna_idprop_ui_create( pb[ ik['ctrl']['limb'][1] ], 'IK Pole Mode', default=0.0, description='IK solver using Pole Target', overridable=True )
+        if self.root_vector_ik and self.pole_vector_ik:
+            pb_master['IK Pole Mode'] = 0
+            rna_idprop_ui_create( pb_master, 'IK Pole Mode', default=0.0, description='IK solver using Pole Target', overridable=True )
 
-        drv = pb[ ik['mch'] ].constraints[ 0 ].driver_add("mute").driver
-        drv.type = 'AVERAGE'
-        var = drv.variables.new()
-        var.name = 'ik_pole_mode'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
+            drv = pb[ ik['ctrl']['limb'][0] ].bone.driver_add("hide").driver
+            drv.type = 'AVERAGE'
+            var = drv.variables.new()
+            var.name = 'ik_pole_mode'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb_master.path_from_id() + '["IK Pole Mode"]'
 
-        drv = pb[ ik['mch'] ].constraints[ 1 ].driver_add("mute").driver
-        drv.type = 'AVERAGE'
-        var = drv.variables.new()
-        var.name = 'ik_pole_mode'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
+            fcu = pb[ ik['ctrl']['limb'][1] ].bone.driver_add("hide")
+            drv = fcu.driver
+            drv.type = 'AVERAGE'
+            var = drv.variables.new()
+            var.name = 'ik_pole_mode'
+            var.type = "SINGLE_PROP"
+            var.targets[0].id = self.obj
+            var.targets[0].data_path = pb_master.path_from_id() + '["IK Pole Mode"]'
 
-        drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-        drv_modifier.mode            = 'POLYNOMIAL'
-        drv_modifier.poly_order      = 1
-        drv_modifier.coefficients[0] = 1.0
-        drv_modifier.coefficients[1] = -1.0
-
-        drv = pb[ ik['ctrl']['limb'][0] ].bone.driver_add("hide").driver
-        drv.type = 'AVERAGE'
-        var = drv.variables.new()
-        var.name = 'ik_pole_mode'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
-
-        fcu = pb[ ik['ctrl']['limb'][1] ].bone.driver_add("hide")
-        drv = fcu.driver
-        drv.type = 'AVERAGE'
-        var = drv.variables.new()
-        var.name = 'ik_pole_mode'
-        var.type = "SINGLE_PROP"
-        var.targets[0].id = self.obj
-        var.targets[0].data_path = pb[ ik['ctrl']['limb'][1] ].path_from_id() + '["IK Pole Mode"]'
-
-        drv_modifier = fcu.modifiers.new('GENERATOR')
-        drv_modifier.mode            = 'POLYNOMIAL'
-        drv_modifier.poly_order      = 1
-        drv_modifier.coefficients[0] = 1.0
-        drv_modifier.coefficients[1] = -1.0
-
+            drv_modifier = fcu.modifiers.new('GENERATOR')
+            drv_modifier.mode            = 'POLYNOMIAL'
+            drv_modifier.poly_order      = 1
+            drv_modifier.coefficients[0] = 1.0
+            drv_modifier.coefficients[1] = -1.0
 
         # Limb Follow Driver
         pb[fk[0]]['FK Limb Follow'] = 0.0
@@ -379,13 +487,150 @@ class Limb:
         pb[fk[0]]['IK/FK']  = 0.0
         rna_idprop_ui_create( pb[fk[0]], 'IK/FK', default=0.0, description='IK/FK Switch', overridable=True )
 
+        # Constrain IK to IK final bones
+        if not (self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik):
+            for f, s1, s1n, s2, s2n in itertools.zip_longest(ik['mch_final'], [ik['ctrl']['limb'][0], ik['mch']], ik['mch_nostr'], ik['mch_pole'], ik['mch_pole_nostr']):
+                if s1:
+                    self.make_constraint(f, {
+                        'constraint'  : 'COPY_TRANSFORMS',
+                        'subtarget'   : s1
+                    })
+
+                if s1n:
+                    self.make_constraint(f, {
+                        'constraint'  : 'COPY_TRANSFORMS',
+                        'subtarget'   : s1n
+                    })
+
+                    drv = pb[o].constraints[-1].driver_add("influence").driver
+                    drv.type = 'SCRIPTED'
+                    drv.expression = '1.0 - ik_stretch'
+
+                    var = drv.variables.new()
+                    var.name = 'ik_stretch'
+                    var.type = "SINGLE_PROP"
+                    var.targets[0].id = self.obj
+                    var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
+                    
+                if s2:
+                    self.make_constraint(f, {
+                        'constraint'  : 'COPY_TRANSFORMS',
+                        'subtarget'   : s2
+                    })
+
+                    if self.root_vector_ik:
+                        drv = pb[o].constraints[-1].driver_add("influence").driver
+                        drv.type = 'AVERAGE'
+
+                        var = drv.variables.new()
+                        var.name = 'ik_pole_mode'
+                        var.type = "SINGLE_PROP"
+                        var.targets[0].id = self.obj
+                        var.targets[0].data_path = pb_master.path_from_id() + '["IK Pole Mode"]'
+
+                if s2n:
+                    self.make_constraint(f, {
+                        'constraint'  : 'COPY_TRANSFORMS',
+                        'subtarget'   : s2n
+                    })
+
+                    if self.root_vector_ik:
+                        drv = pb[o].constraints[-1].driver_add("influence").driver
+                        drv.type = 'SCRIPTED'
+                        drv.expression = '(1.0 - ik_stretch) * ik_pole_mode'
+
+                        var = drv.variables.new()
+                        var.name = 'ik_stretch'
+                        var.type = "SINGLE_PROP"
+                        var.targets[0].id = self.obj
+                        var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
+                        var = drv.variables.new()
+                        var.name = 'ik_pole_mode'
+                        var.type = "SINGLE_PROP"
+                        var.targets[0].id = self.obj
+                        var.targets[0].data_path = pb_master.path_from_id() + '["IK Pole Mode"]'
+                    else:
+                        drv = pb[o].constraints[-1].driver_add("influence").driver
+                        drv.type = 'AVERAGE'
+
+                        var = drv.variables.new()
+                        var.name = 'ik_pole_mode'
+                        var.type = "SINGLE_PROP"
+                        var.targets[0].id = self.obj
+                        var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
+
+        if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
+            first = (ik['ctrl']['limb'][0], ik['mch_nostr'][0], ik['mch_pole'][0], ik['mch_pole_nostr'][0])
+            second = (ik['mch'], ik['mch_nostr'][1], ik['mch_pole'][1], ik['mch_pole_nostr'][1])
+        else:
+            first = (ik['mch_final'][0])
+            second = (ik['mch_final'][1])
+
         # Constrain org to IK and FK bones
-        for o, i, f in itertools.zip_longest( org, [ ik['ctrl']['limb'][0], ik['mch'], ik['mch_target'] ], fk ):
+        for o, i, f in itertools.zip_longest(org, [first, second, ik['mch_target']], fk):
             if i is not None:
-                self.make_constraint(o, {
-                    'constraint'  : 'COPY_TRANSFORMS',
-                    'subtarget'   : i
-                })
+                if isinstance(i, tuple):
+                    for j in i:
+                        if j is not None:
+                            self.make_constraint(o, {
+                                'constraint'  : 'COPY_TRANSFORMS',
+                                'subtarget'   : j
+                            })
+
+                            # Add driver to relevant constraint
+                            if self.allow_ik_stretch and j in ik['mch_nostr']:
+                                drv = pb[o].constraints[-1].driver_add("influence").driver
+                                drv.type = 'SCRIPTED'
+                                drv.expression = '1.0 - ik_stretch'
+
+                                var = drv.variables.new()
+                                var.name = 'ik_stretch'
+                                var.type = "SINGLE_PROP"
+                                var.targets[0].id = self.obj
+                                var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
+                            
+                            if self.root_vector_ik and self.pole_vector_ik:
+                                if j in ik['mch_pole']:
+                                    drv = pb[o].constraints[-1].driver_add("influence").driver
+                                    drv.type = 'AVERAGE'
+
+                                    var = drv.variables.new()
+                                    var.name = 'ik_pole_mode'
+                                    var.type = "SINGLE_PROP"
+                                    var.targets[0].id = self.obj
+                                    var.targets[0].data_path = pb_master.path_from_id() + '["IK Pole Mode"]'
+
+                                if self.allow_ik_stretch and j in ik['mch_pole_nostr']:
+                                    drv = pb[o].constraints[-1].driver_add("influence").driver
+                                    drv.type = 'SCRIPTED'
+                                    drv.expression = '(1.0 - ik_stretch) * ik_pole_mode'
+
+                                    var = drv.variables.new()
+                                    var.name = 'ik_stretch'
+                                    var.type = "SINGLE_PROP"
+                                    var.targets[0].id = self.obj
+                                    var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
+                                    var = drv.variables.new()
+                                    var.name = 'ik_pole_mode'
+                                    var.type = "SINGLE_PROP"
+                                    var.targets[0].id = self.obj
+                                    var.targets[0].data_path = pb_master.path_from_id() + '["IK Pole Mode"]'
+                                
+                            elif self.allow_ik_stretch and j in ik['mch_pole_nostr']:
+                                drv = pb[o].constraints[-1].driver_add("influence").driver
+                                drv.type = 'SCRIPTED'
+                                drv.expression = '1.0 - ik_stretch'
+
+                                var = drv.variables.new()
+                                var.name = 'ik_stretch'
+                                var.type = "SINGLE_PROP"
+                                var.targets[0].id = self.obj
+                                var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
+                else:
+                    self.make_constraint(o, {
+                        'constraint'  : 'COPY_TRANSFORMS',
+                        'subtarget'   : i
+                    })
             self.make_constraint(o, {
                 'constraint'  : 'COPY_TRANSFORMS',
                 'subtarget'   : f
@@ -483,7 +728,7 @@ class Limb:
                 'constraint'  : 'LIMIT_SCALE',
                 'use_min_y'   : True,
                 'use_max_y'   : True,
-                'max_y'       : 1.05,
+                'max_y'       : 1.0,
                 'owner_space' : 'LOCAL'
             })
             
@@ -556,29 +801,47 @@ class Limb:
         # non controller ik staff
         ik_mchs = [bones['ik']['mch'], bones['ik']['mch_target']]
 
-        code = script_template % (
-            ", ".join(["'" + x + "'" for x in controls]),
-            ", ".join(["'" + x + "'" for x in ik_ctrls]),
-            ", ".join(["'" + x + "'" for x in bones['fk']['ctrl']]),
-            ", ".join(["'" + x + "'" for x in ik_mchs]),
-            bones['fk']['ctrl'][0]
-        )
+        code = f"""
+controls = [{", ".join(["'" + x + "'" if x else "''" for x in controls])}]
+ik_ctrls = [{", ".join(["'" + x + "'" if x else "''" for x in ik_ctrls])}]
+fk_ctrls = [{", ".join(["'" + x + "'" for x in bones['fk']['ctrl']])}]
+ik_mchs  = [{", ".join(["'" + x + "'" if x else "''" for x in ik_mchs])}]
+parent   = '{bones['fk']['ctrl'][0]}'
 
-        if self.allow_ik_stretch or self.root_bone:
+if is_selected( controls ):
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK ({self.org_bones[0]})', slider = True )
+
+"""
+        if self.allow_ik_stretch or self.root_bone or (self.root_vector_ik and self.pole_vector_ik):
+            ik_ctrl = bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]
             code += """
 if is_selected( ik_ctrls ):
 """
             if self.allow_ik_stretch:
-                code += """
+                code += f"""
     # IK Stretch on IK Control bone
-    layout.prop( pose_bones[ parent ], '["IK Stretch"]', text = 'IK Stretch (%s)', slider = True )
-""" % bones['fk']['ctrl'][0]
+    layout.prop( pose_bones[ '{ik_ctrl}' ], '["IK Stretch"]', text = 'IK Stretch ({self.org_bones[0]})', slider = True )
+
+"""
             if self.root_bone:
-                code += """
+                code += f"""
     # IK Follow on IK Control bone
-    layout.prop( pose_bones[ parent ], '["IK Follow"]', text = 'IK Follow (%s)', slider = True )
-""" % bones['fk']['ctrl'][0]
-        return code
+    layout.prop( pose_bones[ '{ik_ctrl}' ], '["IK Follow"]', text = 'IK Follow ({self.org_bones[0]})', slider = True )
+
+"""
+            if self.root_vector_ik and self.pole_vector_ik:
+                code += f"""
+    # IK Pole Mode
+    layout.prop(pose_bones[ '{ik_ctrl}' ], '["IK Pole Mode"]', text = 'IK Pole Mode ({self.org_bones[0]})', slider = True )
+
+"""
+        code += f"""
+if is_selected( fk_ctrls ):
+    # FK limb follow
+    layout.prop(pose_bones[ parent ], '["FK Limb Follow"]', text = 'FK Limb Follow ({self.org_bones[0]})', slider = True)
+
+"""
+        return code + script_template
 
 
     @staticmethod
@@ -599,6 +862,16 @@ if is_selected( ik_ctrls ):
             name        = "Allow IK Stretch",
             default     = True,
             description = "Allow IK Stretch"
+        )
+
+        params.support_ik_mode = bpy.props.EnumProperty(
+            items   = [
+                ('root', 'Root Vector', 'Root Vector'),
+                ('pole', 'Pole Vector', 'Pole Vector'),
+                ('both', 'Both', 'Both')
+            ],
+            name    = "Support IK Mode",
+            default = 'both'
         )
 
         # Setting up extra layers for the FK
@@ -623,6 +896,9 @@ if is_selected( ik_ctrls ):
 
         r = layout.row()
         r.prop(params, "allow_ik_stretch")
+
+        r = layout.row()
+        r.prop(params, "support_ik_mode")
 
         r = layout.row()
         r.prop(params, "fk_extra_layers")

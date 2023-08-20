@@ -32,38 +32,23 @@ class Rig(Limb):
 
 
     def generate(self, context):
-        return super().generate(self.create_arm, """
-controls = [%s]
-ik_ctrls = [%s]
-fk_ctrls = [%s]
-ik_mchs  = [%s]
-parent   = '%s'
-
-# IK/FK Switch on all Control Bones
+        return super().generate(self.create_arm, f"""
+# IK/FK Snap Button
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + parent + ')', slider = True )
-    props = layout.operator(Arm_FK2IK.bl_idname, text="Snap FK->IK (" + parent + ")", icon='SNAP_ON')
+    props = layout.operator(Arm_FK2IK.bl_idname, text='Snap FK->IK ({self.org_bones[0]})', icon='SNAP_ON')
     props.uarm_fk = controls[2]
     props.farm_fk = controls[3]
     props.hand_fk = controls[4]
     props.uarm_ik = ik_ctrls[0]
     props.farm_ik = ik_mchs[0]
     props.hand_ik = controls[5]
-    props = layout.operator(Arm_IK2FK.bl_idname, text="Snap IK->FK (" + controls[1] + ")", icon='SNAP_ON')
+    props = layout.operator(Arm_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
     props.uarm_fk = controls[2]
     props.farm_fk = controls[3]
     props.hand_fk = controls[4]
     props.uarm_ik = controls[0]
     props.farm_ik = ik_mchs[0]
     props.hand_ik = controls[5]
-
-# IK Pole Mode
-if is_selected( ik_ctrls ):
-    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
-
-# FK limb follow
-if is_selected( fk_ctrls ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + parent + ')', slider = True )
 """)
 
 
@@ -123,13 +108,13 @@ if is_selected( fk_ctrls ):
 
         pb = self.obj.pose.bones
 
-        pb_master = pb[ bones['fk']['ctrl'][0] ]
+        pb_ik_master = pb[bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]]
 
         # Add IK Stretch property and driver
-        self.setup_ik_stretch(bones, pb, pb_master)
-            
+        self.setup_ik_stretch(bones, pb, pb_ik_master)
+        
         # Add IK Follow property and driver
-        self.setup_ik_follow(pb, pb_master, mch_ik_socket)
+        self.setup_ik_follow(pb, pb_ik_master, mch_ik_socket)
 
         # Create hand widget
         create_hand_widget(self.obj, ctrl)
@@ -152,6 +137,7 @@ class Arm_FK2IK(bpy.types.Operator):
     uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
     farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
     hand_ik : bpy.props.StringProperty(name="Hand IK Name")
+    pole_ik  : bpy.props.StringProperty(name="Pole IK Name")
 
     @classmethod
     def poll(cls, context):

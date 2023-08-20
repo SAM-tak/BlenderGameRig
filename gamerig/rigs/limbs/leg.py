@@ -33,17 +33,15 @@ class Rig(Limb):
 
 
     def generate(self, context):
-        return super().generate(self.create_leg, """
-controls = [%s]
-ik_ctrls = [%s]
-fk_ctrls = [%s]
-ik_mchs  = [%s]
-parent   = '%s'
+        return super().generate(self.create_leg, f"""
+# IK Toe Follow
+if is_selected( ik_ctrls ) and controls[1] and not (controls[0] and pose_bones[controls[0]]['IK Pole Mode'] == 0):
+    layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow ({self.org_bones[0]})', slider = True )
 
 # IK/FK Switch on all Control Bones
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + parent + ')', slider = True )
-    props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + parent + ")", icon='SNAP_ON')
+    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK ({self.org_bones[0]})', slider = True )
+    props = layout.operator(Leg_FK2IK.bl_idname, text='Snap FK->IK ({self.org_bones[0]})', icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
@@ -52,7 +50,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_mchs[0]
     props.foot_ik  = ik_mchs[1]
     props.toe_ik   = ''
-    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + parent + ")", icon='SNAP_ON')
+    props = layout.operator(Leg_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
@@ -63,29 +61,14 @@ if is_selected( controls ):
     props.footroll = controls[7]
     props.mfoot_ik = ik_mchs[1]
     props.toe_ik   = ''
-
-# IK Pole Mode
-if is_selected( ik_ctrls ):
-    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + parent + ')' )
-
+""" if len(self.org_bones) < 4 else f"""
 # IK Toe Follow
-if controls[1]['IK Pole Mode'] > 0 and is_selected( ik_ctrls ):
-    layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow (' + parent + ')', slider = True )
+if is_selected( ik_ctrls ) and controls[1] and not (controls[0] and pose_bones[controls[0]]['IK Pole Mode'] == 0):
+    layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow ({self.org_bones[0]})', slider = True )
 
-# FK limb follow
-if is_selected( fk_ctrls ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + parent + ')', slider = True )
-""" if len(self.org_bones) < 4 else """
-controls = [%s]
-ik_ctrls = [%s]
-fk_ctrls = [%s]
-ik_mchs  = [%s]
-parent   = '%s'
-
-# IK/FK Switch on all Control Bones
+# IK/FK Snap Button
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + parent + ')', slider = True )
-    props = layout.operator(Leg_FK2IK.bl_idname, text="Snap FK->IK (" + parent + ")", icon='SNAP_ON')
+    props = layout.operator(Leg_FK2IK.bl_idname, text='Snap FK->IK ({self.org_bones[0]})', icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
@@ -94,7 +77,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_mchs[0]
     props.foot_ik  = ik_mchs[1]
     props.toe_ik   = controls[6]
-    props = layout.operator(Leg_IK2FK.bl_idname, text="Snap IK->FK (" + parent + ")", icon='SNAP_ON')
+    props = layout.operator(Leg_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
@@ -105,18 +88,6 @@ if is_selected( controls ):
     props.footroll = controls[7]
     props.mfoot_ik = ik_mchs[1]
     props.toe_ik   = controls[6]
-
-# IK Pole Mode
-if is_selected( ik_ctrls ):
-    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
-
-# IK Toe Follow
-if pose_bones[ controls[1] ]['IK Pole Mode'] > 0 and is_selected( ik_ctrls ):
-    layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow (' + controls[1] + ')', slider = True )
-
-# FK limb follow
-if is_selected( fk_ctrls ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + parent + ')', slider = True )
 """, True)
 
 
@@ -432,12 +403,13 @@ if is_selected( fk_ctrls ):
         })
 
         pb_master = pb[ bones['fk']['ctrl'][0] ]
+        pb_ik_master = pb[bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]]
 
         # Add IK Stretch property and driver
-        self.setup_ik_stretch(bones, pb, pb_master)
+        self.setup_ik_stretch(bones, pb, pb_ik_master)
         
         # Add IK Follow property and driver
-        self.setup_ik_follow(pb, pb_master, mch_ik_socket)
+        self.setup_ik_follow(pb, pb_ik_master, mch_ik_socket)
 
         # Create leg widget
         create_foot_widget(self.obj, ctrl)
@@ -584,6 +556,7 @@ class Leg_FK2IK(bpy.types.Operator):
     shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
     foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
     toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
+    pole_ik  : bpy.props.StringProperty(name="Pole IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -610,10 +583,11 @@ class Leg_FK2IK(bpy.types.Operator):
                 toei   = obj.pose.bones[self.toe_ik]
 
             # Thigh position
-            match_pose_translation(thigh, thighi)
-            match_pose_rotation(thigh, thighi)
-            match_pose_scale(thigh, thighi)
-            insert_keyframe_by_mode(context, thigh)
+            if thighi:
+                match_pose_translation(thigh, thighi)
+                match_pose_rotation(thigh, thighi)
+                match_pose_scale(thigh, thighi)
+                insert_keyframe_by_mode(context, thigh)
 
             # Shin position
             match_pose_rotation(shin, shini)

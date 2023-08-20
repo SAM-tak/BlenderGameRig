@@ -35,17 +35,10 @@ class Rig(Limb):
         if len(self.org_bones) < 4:
             raise MetarigError("gamerig.limb.paw: rig '%s' have no enough length " % self.org_bones[0])
         
-        return super().generate(self.create_paw, """
-controls = [%s]
-ik_ctrls = [%s]
-fk_ctrls = [%s]
-ik_mchs  = [%s]
-parent   = '%s'
-
-# IK/FK Switch on all Control Bones
+        return super().generate(self.create_paw, f"""
+# IK/FK Snap Button
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK (' + parent + ')', slider = True )
-    props = layout.operator(Paw_FK2IK.bl_idname, text="Snap FK->IK (" + parent + ")", icon='SNAP_ON')
+    props = layout.operator(Paw_FK2IK.bl_idname, text='Snap FK->IK ({self.org_bones[0]})', icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
@@ -54,7 +47,7 @@ if is_selected( controls ):
     props.shin_ik  = ik_mchs[0]
     props.foot_ik  = ik_mchs[1]
     props.toe_ik   = controls[7]
-    props = layout.operator(Paw_IK2FK.bl_idname, text="Snap IK->FK (" + controls[1] + ")", icon='SNAP_ON')
+    props = layout.operator(Paw_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
     props.thigh_fk = controls[2]
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
@@ -65,14 +58,6 @@ if is_selected( controls ):
     props.mfoot_ik = ik_mchs[1]
     props.toe_ik   = controls[8]
     props.mtoe_ik  = controls[7]
-
-# IK Pole Mode
-if is_selected( ik_ctrls ):
-    layout.prop( pose_bones[ controls[1] ], '["IK Pole Mode"]', text='IK Pole Mode (' + controls[1] + ')' )
-
-# FK limb follow
-if is_selected( fk_ctrls ):
-    layout.prop( pose_bones[ parent ], '["FK Limb Follow"]', text='FK Limb Follow (' + parent + ')', slider = True )
 """)
 
 
@@ -173,12 +158,13 @@ if is_selected( fk_ctrls ):
         pb = self.obj.pose.bones
 
         pb_master = pb[ bones['fk']['ctrl'][0] ]
+        pb_ik_master = pb[bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]]
 
         # Add IK Stretch property and driver
-        self.setup_ik_stretch(bones, pb, pb_master)
+        self.setup_ik_stretch(bones, pb, pb_ik_master)
         
         # Add IK Follow property and driver
-        self.setup_ik_follow(pb, pb_master, mch_ik_socket)
+        self.setup_ik_follow(pb, pb_ik_master, mch_ik_socket)
 
         # Create paw widget
         create_paw_widget(self.obj, ctrl)
