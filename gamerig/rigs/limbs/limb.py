@@ -24,6 +24,15 @@ class Limb:
             self.fk_layers = None
         
         self.root_bone = find_root_bone(obj, bone_name)
+        self.virtual_root_bone = self.root_bone
+        if not self.virtual_root_bone:
+            virtual_root_bone_name = get_bone_name('virtual', 'mch', 'root')
+            if virtual_root_bone_name in self.obj.data.edit_bones:
+                self.virtual_root_bone = virtual_root_bone_name
+            else:
+                self.virtual_root_bone = virtual_root_bone_name
+                virtual_root_bone = obj.data.edit_bones.new(virtual_root_bone_name)
+                virtual_root_bone.length = 0.5
 
 
     def create_parent( self ):
@@ -33,16 +42,10 @@ class Limb:
 
         mch = copy_bone( self.obj, org_bones[0], get_bone_name( org_bones[0], 'mch', 'parent' ) )
         
-        if self.root_bone:
-            eb[ mch ].tail[:] = eb[ mch ].head + eb[ self.root_bone ].vector
-            eb[ mch ].length = eb[ org_bones[0] ].length / 4
-            eb[ mch ].parent = eb[ org_bones[0] ].parent
-            eb[ mch ].roll = eb[ self.root_bone ].roll
-        else:
-            self.orient_bone( eb[mch], 'y' )
-            eb[ mch ].length = eb[ org_bones[0] ].length / 4
-            eb[ mch ].parent = eb[ org_bones[0] ].parent
-            eb[ mch ].roll = 0.0
+        eb[ mch ].tail[:] = eb[ mch ].head + eb[ self.virtual_root_bone ].vector
+        eb[ mch ].length = eb[ org_bones[0] ].length / 4
+        eb[ mch ].parent = eb[ org_bones[0] ].parent
+        eb[ mch ].roll = eb[ self.virtual_root_bone ].roll
 
         return mch
 
@@ -52,30 +55,15 @@ class Limb:
         mch = self.bones['parent']
 
         # Constraints
-        if self.root_bone:
-            self.make_constraint( mch, {
-                'constraint'  : 'COPY_ROTATION',
-                'subtarget'   : self.root_bone
-            })
+        self.make_constraint( mch, {
+            'constraint'  : 'COPY_ROTATION',
+            'subtarget'   : self.virtual_root_bone
+        })
 
-            self.make_constraint( mch, {
-                'constraint'  : 'COPY_SCALE',
-                'subtarget'   : self.root_bone
-            })
-        else:
-            self.make_constraint( mch, {
-                'constraint'   : 'LIMIT_ROTATION',
-                'use_limit_x'  : True,
-                'min_x'        : 0,
-                'max_x'        : 0,
-                'use_limit_y'  : True,
-                'min_y'        : 0,
-                'max_y'        : 0,
-                'use_limit_z'  : True,
-                'min_z'        : 0,
-                'max_z'        : 0,
-                'owner_space'  : 'POSE'
-            })
+        self.make_constraint( mch, {
+            'constraint'  : 'COPY_SCALE',
+            'subtarget'   : self.virtual_root_bone
+        })
 
 
     def create_ik( self, parent, needs_controller_parent ):
@@ -831,13 +819,13 @@ if is_selected( ik_ctrls ):
             if self.root_vector_ik and self.pole_vector_ik:
                 code += f"""
     # IK Pole Mode
-    layout.prop(pose_bones[ '{ik_master}' ], '["IK Pole Mode"]', text = 'IK Pole Mode ({self.org_bones[0]})', slider = True )
+    layout.prop( pose_bones[ '{ik_master}' ], '["IK Pole Mode"]', text = 'IK Pole Mode ({self.org_bones[0]})', slider = True )
 
 """
         code += f"""
 if is_selected( fk_ctrls ):
     # FK limb follow
-    layout.prop(pose_bones[ '{ik_master}' ], '["FK Limb Follow"]', text = 'FK Limb Follow ({self.org_bones[0]})', slider = True)
+    layout.prop( pose_bones[ '{bones['fk']['ctrl'][0]}' ], '["FK Limb Follow"]', text = 'FK Limb Follow ({self.org_bones[0]})', slider = True)
 
 """
         return code + script_template

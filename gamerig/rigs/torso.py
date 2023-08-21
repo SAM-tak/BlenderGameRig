@@ -572,18 +572,17 @@ class Rig:
         # Create UI
         controls_string = ", ".join(["'" + x + "'" for x in controls])
 
-        return """
-controls = [%s]
-torso    = '%s'
+        return f"""
+controls = [{controls_string}]
 if is_selected( controls ):
-    layout.prop( pose_bones[ torso ], '["Head Follow"]', text='Head Follow (' + torso + ')', slider = True )
-    layout.prop( pose_bones[ torso ], '["Neck Follow"]', text='Neck Follow (' + torso + ')', slider = True )
-""" % (controls_string, bones['pivot']['ctrl']) + ("""
-tweaks = %s
+    layout.prop( pose_bones[ '{bones['pivot']['ctrl']}' ], '["Head Follow"]', text='Head Follow ({bones['pivot']['ctrl']})', slider = True )
+    layout.prop( pose_bones[ '{bones['pivot']['ctrl']}' ], '["Neck Follow"]', text='Neck Follow ({bones['pivot']['ctrl']})', slider = True )
+""" + (f"""
+tweaks = {bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['tweak'] + [ bones['neck']['ctrl'] ]}
 for tweak in tweaks:
     if is_selected( tweak ):
         layout.prop( pose_bones[ tweak ], '["Tweak Stretch"]', text='Tweak Stretch (' + tweak + ')', slider = True )
-""" % (bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['tweak'] + [ bones['neck']['ctrl'] ]) if self.stretchable_tweak else "")
+""" if self.stretchable_tweak else "")
 
 
     def postprocess(self, context):

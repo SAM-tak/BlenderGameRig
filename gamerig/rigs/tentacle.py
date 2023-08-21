@@ -384,29 +384,29 @@ class Rig:
         if self.params.fk_only and not self.params.stretchable and not self.switchable_rig:
             return ''
         else:
-            return """
-controls = %s
+            return f"""
+controls = {self.ctrls[0] + self.ctrls[1] + self.ctrls[2]}
 
 if is_selected( controls ):
-""" % (self.ctrls[0] + self.ctrls[1] + self.ctrls[2]) + ("""
+""" + (f"""
     # IK/FK Switch on all Control Bones
-    layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK (' + controls[0] + ')', slider = True )
-""" if not self.params.fk_only else '') + ("""
-    layout.prop( pose_bones[ controls[0] ], '["Maintain Volume"]', text='Maintain Volume (' + controls[0] + ')', slider = True )
-""" if self.params.stretchable else '') + ("""
-    layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy (' + controls[0] + ')', slider = True )
-""" if self.switchable_rig else '') + ("""
-    props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK (" + controls[0] + ")", icon='SNAP_ON')
-    props.fk_ctrls = "%s"
-    props.ik_chain = "%s"
-    props = layout.operator(Tentacle_IK2FK.bl_idname, text="Snap IK->FK (" + controls[0] + ")", icon='SNAP_ON')
-    props.ik_ctrls = "%s"
-    props.fk_chain = "%s"
-""" % (self.ctrls[0], self.mchs[1][1:], self.ctrls[1], ik_fk_snap_target) if not self.params.fk_only else '') + ("""
+    layout.prop( pose_bones[ controls[0] ], '["IK/FK"]', text='IK/FK ({self.org_bones[0]})', slider = True )
+""" if not self.params.fk_only else '') + (f"""
+    layout.prop( pose_bones[ controls[0] ], '["Maintain Volume"]', text='Maintain Volume ({self.org_bones[0]})', slider = True )
+""" if self.params.stretchable else '') + (f"""
+    layout.prop( pose_bones[ controls[0] ], '["Rig/Phy"]', text='Rig/Phy ({self.org_bones[0]})', slider = True )
+""" if self.switchable_rig else '') + (f"""
+    props = layout.operator(Tentacle_FK2IK.bl_idname, text="Snap FK->IK ({self.org_bones[0]})", icon='SNAP_ON')
+    props.fk_ctrls = "{self.ctrls[0]}"
+    props.ik_chain = "{self.mchs[1][1:]}"
+    props = layout.operator(Tentacle_IK2FK.bl_idname, text="Snap IK->FK ({self.org_bones[0]})", icon='SNAP_ON')
+    props.ik_ctrls = "{self.ctrls[1]}"
+    props.fk_chain = "{ik_fk_snap_target}"
+""" if not self.params.fk_only else '') + (f"""
     props = layout.operator(Tentacle_FK2Target.bl_idname, text="Snap FK->Target (" + controls[0] + ")", icon='SNAP_ON')
-    props.fk_ctrls = "%s"
-    props.targets  = "%s"
-""" % (self.ctrls[0], self.org_bones[1:]) if self.switchable_rig else '')
+    props.fk_ctrls = "{self.ctrls[0]}"
+    props.targets  = "{self.org_bones[1:]}"
+""" if self.switchable_rig else '')
 
     def postprocess(self, context):
         pb = self.obj.pose.bones

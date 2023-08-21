@@ -56,8 +56,8 @@ class Rig:
 if is_selected('{self.bone}'):
 """ + (props_ui_str if props_ui_str else "") + (f"""
     # Rig/Phy Switch on all Control Bones
-    layout.prop( pose_bones['{self.bone}'], '["Rig/Phy"]', text='Rig/Phy ({self.bone})', slider = True )
-    props = layout.operator(Generic_Snap.bl_idname, text="Snap to Target ({self.bone})", icon='SNAP_ON')
+    layout.prop( pose_bones['{self.bone}'], '["Rig/Phy"]', text='Rig/Phy ({self.org_bone})', slider = True )
+    props = layout.operator(Generic_Snap.bl_idname, text="Snap to Target ({self.org_bone})", icon='SNAP_ON')
     props.ctrl = control
     props.target  = "{self.org_bone}"
 """ if self.has_physics() else "")
