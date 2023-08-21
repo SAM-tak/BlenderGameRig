@@ -224,6 +224,34 @@ def insert_keyframe_by_mode(context, pb):
         pb.keyframe_insert(data_path='rotation_euler', group='Bone', options=option)
 
 
+def match_pole_direction(context, pb_ik_pole, pb_fk_chain1, pb_fk_chain2, pb_fk_chain3):
+    if pb_ik_pole.lock_rotation[0]:
+        # X axis limb, Z axis pole rot
+        # Reset pole vector
+        prev = pb_ik_pole.rotation_euler.z
+        pb_ik_pole.rotation_euler.z = 0
+        context.view_layer.update()
+        x = Vector((pb_ik_pole.matrix[0][0], pb_ik_pole.matrix[1][0], pb_ik_pole.matrix[2][0])).normalized()
+        y = (pb_fk_chain3.matrix.to_translation() - pb_fk_chain1.matrix.to_translation()).normalized()
+        z = x.cross(y)
+        # Make inverted IK space rotation matrix
+        mi = Matrix(((x[0],y[0],z[0]),(x[1],y[1],z[1]),(x[2],y[2],z[2]))).inverted()
+        x2 = mi @ (pb_fk_chain2.matrix.to_translation() - pb_fk_chain1.matrix.to_translation()).normalized().cross(y)
+        pb_ik_pole.rotation_euler.z = Vector((1, 0)).angle_signed(Vector((x2[0], x2[2])), prev)
+    else:
+        # Z axis limb, X axis pole rot
+        # Reset pole vector
+        prev = pb_ik_pole.rotation_euler.x
+        pb_ik_pole.rotation_euler.x = 0
+        context.view_layer.update()
+        z = Vector((pb_ik_pole.matrix[0][2], pb_ik_pole.matrix[1][2], pb_ik_pole.matrix[2][2])).normalized()
+        y = (pb_fk_chain3.matrix.to_translation() - pb_fk_chain1.matrix.to_translation()).normalized()
+        x = y.cross(z)
+        # Make inverted IK space rotation matrix
+        mi = Matrix(((x[0],y[0],z[0]),(x[1],y[1],z[1]),(x[2],y[2],z[2]))).inverted()
+        z2 = mi @ (pb_fk_chain2.matrix.to_translation() - pb_fk_chain1.matrix.to_translation()).normalized().cross(y)
+        pb_ik_pole.rotation_euler.x = Vector((1, 0)).angle_signed(Vector((z2[0], z2[1])), prev)
+
 classes = []
 
 ###########################

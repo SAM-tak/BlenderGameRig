@@ -144,7 +144,7 @@ class Limb:
                 org_bones[0],
                 get_bone_name(org_bones[0], 'mch',  'ik_final')
             )
-            mch_final_1 = copy_bone(
+            mch_final_2 = copy_bone(
                 self.obj,
                 org_bones[1],
                 get_bone_name(org_bones[1], 'mch',  'ik_final')
@@ -207,9 +207,7 @@ class Limb:
             if self.allow_ik_stretch:
                 eb[mch_pole_nostr_1].parent = eb[parent]
                 eb[mch_pole_nostr_2].parent = eb[mch_pole_nostr_1]
-        if not (self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik):
-            print(org_bones[0], self.allow_ik_stretch, self.root_vector_ik, self.pole_vector_ik, not (
-                self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik))
+        if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
             eb[mch_final_1].parent = eb[parent]
             eb[mch_final_2].parent = eb[mch_final_1]
 
@@ -488,7 +486,7 @@ class Limb:
         rna_idprop_ui_create( pb[fk[0]], 'IK/FK', default=0.0, description='IK/FK Switch', overridable=True )
 
         # Constrain IK to IK final bones
-        if not (self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik):
+        if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
             for f, s1, s1n, s2, s2n in itertools.zip_longest(ik['mch_final'], [ik['ctrl']['limb'][0], ik['mch']], ik['mch_nostr'], ik['mch_pole'], ik['mch_pole_nostr']):
                 if s1:
                     self.make_constraint(f, {
@@ -502,7 +500,7 @@ class Limb:
                         'subtarget'   : s1n
                     })
 
-                    drv = pb[o].constraints[-1].driver_add("influence").driver
+                    drv = pb[f].constraints[-1].driver_add("influence").driver
                     drv.type = 'SCRIPTED'
                     drv.expression = '1.0 - ik_stretch'
 
@@ -519,7 +517,7 @@ class Limb:
                     })
 
                     if self.root_vector_ik:
-                        drv = pb[o].constraints[-1].driver_add("influence").driver
+                        drv = pb[f].constraints[-1].driver_add("influence").driver
                         drv.type = 'AVERAGE'
 
                         var = drv.variables.new()
@@ -535,7 +533,7 @@ class Limb:
                     })
 
                     if self.root_vector_ik:
-                        drv = pb[o].constraints[-1].driver_add("influence").driver
+                        drv = pb[f].constraints[-1].driver_add("influence").driver
                         drv.type = 'SCRIPTED'
                         drv.expression = '(1.0 - ik_stretch) * ik_pole_mode'
 
@@ -550,7 +548,7 @@ class Limb:
                         var.targets[0].id = self.obj
                         var.targets[0].data_path = pb_master.path_from_id() + '["IK Pole Mode"]'
                     else:
-                        drv = pb[o].constraints[-1].driver_add("influence").driver
+                        drv = pb[f].constraints[-1].driver_add("influence").driver
                         drv.type = 'AVERAGE'
 
                         var = drv.variables.new()
@@ -560,11 +558,11 @@ class Limb:
                         var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
 
         if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
-            first = (ik['ctrl']['limb'][0], ik['mch_nostr'][0], ik['mch_pole'][0], ik['mch_pole_nostr'][0])
-            second = (ik['mch'], ik['mch_nostr'][1], ik['mch_pole'][1], ik['mch_pole_nostr'][1])
-        else:
             first = (ik['mch_final'][0])
             second = (ik['mch_final'][1])
+        else:
+            first = (ik['ctrl']['limb'][0], ik['mch_nostr'][0], ik['mch_pole'][0], ik['mch_pole_nostr'][0])
+            second = (ik['mch'], ik['mch_nostr'][1], ik['mch_pole'][1], ik['mch_pole_nostr'][1])
 
         # Constrain org to IK and FK bones
         for o, i, f in itertools.zip_longest(org, [first, second, ik['mch_target']], fk):
@@ -801,44 +799,45 @@ class Limb:
         # non controller ik staff
         ik_mchs = [bones['ik']['mch'], bones['ik']['mch_target']]
 
+        ik_master = bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]
+
         code = f"""
 controls = [{", ".join(["'" + x + "'" if x else "''" for x in controls])}]
 ik_ctrls = [{", ".join(["'" + x + "'" if x else "''" for x in ik_ctrls])}]
 fk_ctrls = [{", ".join(["'" + x + "'" for x in bones['fk']['ctrl']])}]
 ik_mchs  = [{", ".join(["'" + x + "'" if x else "''" for x in ik_mchs])}]
-parent   = '{bones['fk']['ctrl'][0]}'
+ik_final = [{", ".join(["'" + x + "'" if x else "''" for x in bones['ik']['mch_final']])}]
 
 if is_selected( controls ):
-    layout.prop( pose_bones[ parent ], '["IK/FK"]', text='IK/FK ({self.org_bones[0]})', slider = True )
+    layout.prop( pose_bones[ '{bones['fk']['ctrl'][0]}' ], '["IK/FK"]', text='IK/FK ({self.org_bones[0]})', slider = True )
 
 """
         if self.allow_ik_stretch or self.root_bone or (self.root_vector_ik and self.pole_vector_ik):
-            ik_ctrl = bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]
             code += """
 if is_selected( ik_ctrls ):
 """
             if self.allow_ik_stretch:
                 code += f"""
     # IK Stretch on IK Control bone
-    layout.prop( pose_bones[ '{ik_ctrl}' ], '["IK Stretch"]', text = 'IK Stretch ({self.org_bones[0]})', slider = True )
+    layout.prop( pose_bones[ '{ik_master}' ], '["IK Stretch"]', text = 'IK Stretch ({self.org_bones[0]})', slider = True )
 
 """
             if self.root_bone:
                 code += f"""
     # IK Follow on IK Control bone
-    layout.prop( pose_bones[ '{ik_ctrl}' ], '["IK Follow"]', text = 'IK Follow ({self.org_bones[0]})', slider = True )
+    layout.prop( pose_bones[ '{ik_master}' ], '["IK Follow"]', text = 'IK Follow ({self.org_bones[0]})', slider = True )
 
 """
             if self.root_vector_ik and self.pole_vector_ik:
                 code += f"""
     # IK Pole Mode
-    layout.prop(pose_bones[ '{ik_ctrl}' ], '["IK Pole Mode"]', text = 'IK Pole Mode ({self.org_bones[0]})', slider = True )
+    layout.prop(pose_bones[ '{ik_master}' ], '["IK Pole Mode"]', text = 'IK Pole Mode ({self.org_bones[0]})', slider = True )
 
 """
         code += f"""
 if is_selected( fk_ctrls ):
     # FK limb follow
-    layout.prop(pose_bones[ parent ], '["FK Limb Follow"]', text = 'FK Limb Follow ({self.org_bones[0]})', slider = True)
+    layout.prop(pose_bones[ '{ik_master}' ], '["FK Limb Follow"]', text = 'FK Limb Follow ({self.org_bones[0]})', slider = True)
 
 """
         return code + script_template

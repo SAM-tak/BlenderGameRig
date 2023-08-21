@@ -46,8 +46,8 @@ if is_selected( controls ):
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
     props.toe_fk   = ''
-    props.thigh_ik = ik_ctrls[0]
-    props.shin_ik  = ik_mchs[0]
+    props.thigh_ik = ik_final[0]
+    props.shin_ik  = ik_final[1]
     props.foot_ik  = ik_mchs[1]
     props.toe_ik   = ''
     props = layout.operator(Leg_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
@@ -56,11 +56,11 @@ if is_selected( controls ):
     props.foot_fk  = controls[4]
     props.toe_fk   = ''
     props.thigh_ik = ik_ctrls[0]
-    props.shin_ik  = ik_mchs[0]
     props.foot_ik  = controls[8]
     props.footroll = controls[7]
     props.mfoot_ik = ik_mchs[1]
     props.toe_ik   = ''
+    props.pole_ik  = ik_ctrls[1]
 """ if len(self.org_bones) < 4 else f"""
 # IK Toe Follow
 if is_selected( ik_ctrls ) and controls[1] and not (controls[0] and pose_bones[controls[0]]['IK Pole Mode'] == 0):
@@ -73,8 +73,8 @@ if is_selected( controls ):
     props.shin_fk  = controls[3]
     props.foot_fk  = controls[4]
     props.toe_fk   = controls[5]
-    props.thigh_ik = ik_ctrls[0]
-    props.shin_ik  = ik_mchs[0]
+    props.thigh_ik = ik_final[0]
+    props.shin_ik  = ik_final[1]
     props.foot_ik  = ik_mchs[1]
     props.toe_ik   = controls[6]
     props = layout.operator(Leg_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
@@ -83,11 +83,11 @@ if is_selected( controls ):
     props.foot_fk  = controls[4]
     props.toe_fk   = controls[5]
     props.thigh_ik = ik_ctrls[0]
-    props.shin_ik  = ik_mchs[0]
     props.foot_ik  = controls[8]
     props.footroll = controls[7]
     props.mfoot_ik = ik_mchs[1]
     props.toe_ik   = controls[6]
+    props.pole_ik  = ik_ctrls[1]
 """, True)
 
 
@@ -556,7 +556,6 @@ class Leg_FK2IK(bpy.types.Operator):
     shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
     foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
     toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
-    pole_ik  : bpy.props.StringProperty(name="Pole IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -623,11 +622,11 @@ class Leg_IK2FK(bpy.types.Operator):
     toe_fk   : bpy.props.StringProperty(name="Toe FK Name")
 
     thigh_ik : bpy.props.StringProperty(name="Thigh IK Name")
-    shin_ik  : bpy.props.StringProperty(name="Shin IK Name")
     foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
     footroll : bpy.props.StringProperty(name="Foot Roll Name")
     mfoot_ik : bpy.props.StringProperty(name="MFoot IK Name")
     toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
+    pole_ik  : bpy.props.StringProperty(name="Pole IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -647,8 +646,8 @@ class Leg_IK2FK(bpy.types.Operator):
             if self.toe_fk in obj.pose.bones:
                 toe = obj.pose.bones[self.toe_fk]
 
-            thighi   = obj.pose.bones[self.thigh_ik]
-            shini    = obj.pose.bones[self.shin_ik]
+            if self.thigh_ik in obj.pose.bones:
+                thighi   = obj.pose.bones[self.thigh_ik]
             footi    = obj.pose.bones[self.foot_ik]
             footroll = obj.pose.bones[self.footroll]
             mfooti   = obj.pose.bones[self.mfoot_ik]
@@ -668,7 +667,7 @@ class Leg_IK2FK(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='POSE')
             insert_keyframe_by_mode(context, footi)
 
-            if self.toe_fk in obj.pose.bones:
+            if self.toe_ik in obj.pose.bones:
                 # Toe position
                 match_pose_translation(toei, toe)
                 match_pose_rotation(toei, toe)
@@ -676,12 +675,19 @@ class Leg_IK2FK(bpy.types.Operator):
                 insert_keyframe_by_mode(context, toei)
 
             # Thigh position
-            match_pose_translation(thighi, thigh)
-            match_pose_rotation(thighi, thigh)
-            match_pose_scale(thighi, thigh)
-            # Rotation Correction
-            correct_rotation(thighi,thigh)
-            insert_keyframe_by_mode(context, thighi)
+            if self.thigh_ik in obj.pose.bones:
+                match_pose_translation(thighi, thigh)
+                match_pose_rotation(thighi, thigh)
+                match_pose_scale(thighi, thigh)
+                # Rotation Correction
+                correct_rotation(thighi,thigh)
+                insert_keyframe_by_mode(context, thighi)
+            
+            # Pole direction
+            if self.pole_ik in obj.pose.bones:
+                polei = obj.pose.bones[self.pole_ik]
+                match_pole_direction(context, polei, thigh, shin, foot)
+                insert_keyframe_by_mode(context, polei)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}

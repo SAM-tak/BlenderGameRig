@@ -39,16 +39,16 @@ if is_selected( controls ):
     props.uarm_fk = controls[2]
     props.farm_fk = controls[3]
     props.hand_fk = controls[4]
-    props.uarm_ik = ik_ctrls[0]
-    props.farm_ik = ik_mchs[0]
+    props.uarm_ik = ik_final[0]
+    props.farm_ik = ik_final[1]
     props.hand_ik = controls[5]
     props = layout.operator(Arm_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
     props.uarm_fk = controls[2]
     props.farm_fk = controls[3]
     props.hand_fk = controls[4]
     props.uarm_ik = controls[0]
-    props.farm_ik = ik_mchs[0]
     props.hand_ik = controls[5]
+    props.pole_ik = controls[1]
 """)
 
 
@@ -137,7 +137,6 @@ class Arm_FK2IK(bpy.types.Operator):
     uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
     farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
     hand_ik : bpy.props.StringProperty(name="Hand IK Name")
-    pole_ik  : bpy.props.StringProperty(name="Pole IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -193,8 +192,8 @@ class Arm_IK2FK(bpy.types.Operator):
     hand_fk : bpy.props.StringProperty(name="Hand FK Name")
 
     uarm_ik : bpy.props.StringProperty(name="Upper Arm IK Name")
-    farm_ik : bpy.props.StringProperty(name="Forearm IK Name")
     hand_ik : bpy.props.StringProperty(name="Hand IK Name")
+    pole_ik : bpy.props.StringProperty(name="Pole IK Name")
 
     @classmethod
     def poll(cls, context):
@@ -209,8 +208,10 @@ class Arm_IK2FK(bpy.types.Operator):
             obj = context.active_object
 
             uarm  = obj.pose.bones[self.uarm_fk]
+            farm  = obj.pose.bones[self.farm_fk]
             hand  = obj.pose.bones[self.hand_fk]
-            uarmi = obj.pose.bones[self.uarm_ik]
+            if self.uarm_ik in obj.pose.bones:
+                uarmi = obj.pose.bones[self.uarm_ik]
             handi = obj.pose.bones[self.hand_ik]
 
             # Hand position
@@ -220,12 +221,19 @@ class Arm_IK2FK(bpy.types.Operator):
             insert_keyframe_by_mode(context, handi)
 
             # Upper Arm position
-            match_pose_translation(uarmi, uarm)
-            match_pose_rotation(uarmi, uarm)
-            match_pose_scale(uarmi, uarm)
-            # Rotation Correction
-            correct_rotation(uarmi, uarm)
-            insert_keyframe_by_mode(context, uarmi)
+            if self.uarm_ik in obj.pose.bones:
+                match_pose_translation(uarmi, uarm)
+                match_pose_rotation(uarmi, uarm)
+                match_pose_scale(uarmi, uarm)
+                # Rotation Correction
+                correct_rotation(uarmi, uarm)
+                insert_keyframe_by_mode(context, uarmi)
+            
+            # Pole direction
+            if self.pole_ik in obj.pose.bones:
+                polei = obj.pose.bones[self.pole_ik]
+                match_pole_direction(context, polei, uarm, farm, hand)
+                insert_keyframe_by_mode(context, polei)
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         return {{'FINISHED'}}
