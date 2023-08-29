@@ -84,7 +84,7 @@ if is_selected( controls ):
 
         bones = self.bones
         
-        ctrl = bones['ik']['ctrl']['terminal'][0]
+        ctrl = bones['ik']['ctrl']['terminal'][-1]
         mch_ik_socket = bones['ik']['mch_ik_socket']
 
         # Set up constraints
@@ -108,13 +108,11 @@ if is_selected( controls ):
 
         pb = self.obj.pose.bones
 
-        pb_ik_master = pb[bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]]
-
         # Add IK Stretch property and driver
-        self.setup_ik_stretch(bones, pb, pb_ik_master)
+        self.setup_ik_stretch(bones, pb, pb[ctrl])
         
         # Add IK Follow property and driver
-        self.setup_ik_follow(pb, pb_ik_master, mch_ik_socket)
+        self.setup_ik_follow(pb, pb[ctrl], mch_ik_socket)
 
         # Create hand widget
         create_hand_widget(self.obj, ctrl)

@@ -157,14 +157,11 @@ if is_selected( controls ):
 
         pb = self.obj.pose.bones
 
-        pb_master = pb[ bones['fk']['ctrl'][0] ]
-        pb_ik_master = pb[bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]]
-
         # Add IK Stretch property and driver
-        self.setup_ik_stretch(bones, pb, pb_ik_master)
+        self.setup_ik_stretch(bones, pb, pb[ctrl])
         
         # Add IK Follow property and driver
-        self.setup_ik_follow(pb, pb_ik_master, mch_ik_socket)
+        self.setup_ik_follow(pb, pb[ctrl], mch_ik_socket)
 
         # Create paw widget
         create_paw_widget(self.obj, ctrl)
@@ -178,6 +175,8 @@ if is_selected( controls ):
                 'constraint'  : 'COPY_TRANSFORMS',
                 'subtarget'   : toes_mch
             })
+
+            pb_master = pb[ bones['fk']['ctrl'][0] ]
 
             # Find IK/FK switch property
             prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0, overridable=True )

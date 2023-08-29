@@ -35,7 +35,7 @@ class Rig(Limb):
     def generate(self, context):
         return super().generate(self.create_leg, f"""
 # IK Toe Follow
-if is_selected( ik_ctrls ) and controls[1] and not (controls[0] and pose_bones[controls[0]]['IK Pole Mode'] == 0):
+if is_selected( ik_ctrls ) and controls[1] and not (controls[8] and pose_bones[controls[8]]['IK Pole Mode'] == 0):
     layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow ({self.org_bones[0]})', slider = True )
 
 # IK/FK Switch on all Control Bones
@@ -63,7 +63,7 @@ if is_selected( controls ):
     props.pole_ik  = ik_ctrls[1]
 """ if len(self.org_bones) < 4 else f"""
 # IK Toe Follow
-if is_selected( ik_ctrls ) and controls[1] and not (controls[0] and pose_bones[controls[0]]['IK Pole Mode'] == 0):
+if is_selected( ik_ctrls ) and controls[1] and not (controls[8] and pose_bones[controls[8]]['IK Pole Mode'] == 0):
     layout.prop( pose_bones[ controls[1] ], '["IK Toe Follow"]', text='IK Toe Follow ({self.org_bones[0]})', slider = True )
 
 # IK/FK Snap Button
@@ -348,7 +348,6 @@ if is_selected( controls ):
         })
 
         for i,b in enumerate([ rock1_mch, rock2_mch ]):
-            head_tail = pb[b].head - pb[self.footprint_bone].head
             if '.L' in b:
                 if not i:
                     min_y = 0
@@ -402,14 +401,11 @@ if is_selected( controls ):
             'head_tail'   : 1.0
         })
 
-        pb_master = pb[ bones['fk']['ctrl'][0] ]
-        pb_ik_master = pb[bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]]
-
         # Add IK Stretch property and driver
-        self.setup_ik_stretch(bones, pb, pb_ik_master)
+        self.setup_ik_stretch(bones, pb, pb[ctrl])
         
         # Add IK Follow property and driver
-        self.setup_ik_follow(pb, pb_ik_master, mch_ik_socket)
+        self.setup_ik_follow(pb, pb[ctrl], mch_ik_socket)
 
         # Create leg widget
         create_foot_widget(self.obj, ctrl)
@@ -434,8 +430,10 @@ if is_selected( controls ):
 
             #pb[ toeik ].lock_location = True, True, True
 
+
+            pb_master = pb[ bones['fk']['ctrl'][0] ]
             # Find IK/FK switch property
-            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0, overridable=True )
+            rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0, overridable=True )
 
             # Add driver to limit scale constraint influence
             b        = org_bones[3]

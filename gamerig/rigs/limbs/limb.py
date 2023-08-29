@@ -266,38 +266,38 @@ class Limb:
 
         if self.root_vector_ik:
             self.make_constraint( mch, {
-                'constraint'     : 'IK',
-                'subtarget'      : mch_target,
-                'chain_count'    : 2,
-                'use_stretch'    : self.allow_ik_stretch
+                'constraint'        : 'IK',
+                'subtarget'         : mch_target,
+                'chain_count'       : 2,
+                'use_stretch'       : self.allow_ik_stretch
             })
             if self.allow_ik_stretch:
                 self.make_constraint( mch_nostr[0], {
-                    'constraint'  : 'COPY_TRANSFORMS',
-                    'subtarget'   : ctrl
+                    'constraint'    : 'COPY_TRANSFORMS',
+                    'subtarget'     : ctrl
                 })
                 self.make_constraint( mch_nostr[1], {
-                    'constraint'     : 'IK',
-                    'subtarget'      : mch_target,
-                    'chain_count'    : 2,
-                    'use_stretch'    : False
+                    'constraint'    : 'IK',
+                    'subtarget'     : mch_target,
+                    'chain_count'   : 2,
+                    'use_stretch'   : False
                 })
         if self.pole_vector_ik:
             self.make_constraint( mch_pole[1], {
-                'constraint'     : 'IK',
-                'subtarget'      : mch_target,
-                'chain_count'    : 2,
-                'use_stretch'    : self.allow_ik_stretch,
-                'pole_target'    : self.obj,
-                'pole_subtarget' : mch_pole_target
+                'constraint'        : 'IK',
+                'subtarget'         : mch_target,
+                'chain_count'       : 2,
+                'use_stretch'       : self.allow_ik_stretch,
+                'pole_target'       : self.obj,
+                'pole_subtarget'    : mch_pole_target
             })
             if self.allow_ik_stretch:
                 self.make_constraint( mch_pole_nostr[1], {
-                    'constraint': 'IK',
-                    'subtarget': mch_target,
-                    'chain_count': 2,
-                    'use_stretch': False,
-                    'pole_target': self.obj,
+                    'constraint'    : 'IK',
+                    'subtarget'     : mch_target,
+                    'chain_count'   : 2,
+                    'use_stretch'   : False,
+                    'pole_target'   : self.obj,
                     'pole_subtarget': mch_pole_target
                 })
 
@@ -321,19 +321,8 @@ class Limb:
             for axis in ['x','y','z']:
                 if axis != self.rot_axis:
                     setattr( pb[ mch ], 'lock_ik_' + axis, True )
-        if self.rot_axis == 'automatic':
-            if mch:
+            if self.rot_axis == 'automatic':
                 pb[ mch ].lock_ik_x = False
-        else:
-            if ctrl:
-                pb[ ctrl ].rotation_quaternion = Quaternion(
-                    (1.0 if self.rot_axis == 'x' else 0.0, 1.0 if self.rot_axis == 'y' else 0.0, 1.0 if self.rot_axis == 'z' else 0.0),
-                    radians(-45.0)
-                )
-                if self.rot_axis == 'x':
-                    pb[ ctrl ].rotation_euler.x = radians(-70.0)
-                elif self.rot_axis == 'z':
-                    pb[ ctrl ].rotation_euler.z = radians(-70.0)
 
         # Locks and Widget
         if dir_ctrl:
@@ -345,8 +334,6 @@ class Limb:
             create_ikdir_widget( self.obj, dir_ctrl, -1.0 if reverse_ik_widget else 1.0 )
 
         if ctrl:
-            pb[ ctrl ].lock_rotation = True, False, True
-            pb[ ctrl ].rotation_mode = 'ZXY' if self.rot_axis == 'x' else 'XZY'
             pb[ ctrl ].lock_scale = True, True, True
 
             create_ikarrow_widget( self.obj, ctrl )
@@ -426,7 +413,7 @@ class Limb:
 
     def setup_switch( self, org, ik, fk, parent ):
         pb = self.obj.pose.bones
-        pb_master = pb[ik['ctrl']['limb'][0] if ik['ctrl']['limb'][0] else ik['ctrl']['limb'][1]]
+        pb_master = pb[ik['ctrl']['terminal'][-1]]
 
         # Toggle Pole Driver
         if self.root_vector_ik and self.pole_vector_ik:
@@ -787,7 +774,7 @@ class Limb:
         # non controller ik staff
         ik_mchs = [bones['ik']['mch'], bones['ik']['mch_target']]
 
-        ik_master = bones['ik']['ctrl']['limb'][0] if bones['ik']['ctrl']['limb'][0] else bones['ik']['ctrl']['limb'][1]
+        ik_master = bones['ik']['ctrl']['terminal'][-1]
 
         code = f"""
 controls = [{", ".join(["'" + x + "'" if x else "''" for x in controls])}]

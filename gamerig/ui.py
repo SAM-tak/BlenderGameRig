@@ -1036,7 +1036,7 @@ class Convert():
             bone.rotation_mode = order
 
     # One Action - One Bone
-    def one_act_one_bon(self, obj, action, bone, order):
+    def one_act_one_bone(self, obj, action, bone, order):
         do = False
         bone_prefix = ''
 
@@ -1092,12 +1092,12 @@ class Convert():
         bone.rotation_mode = order
 
     # One Action, selected bones
-    def one_act_sel_bon(self, obj, action, pose_bones, order):
+    def one_act_sel_bone(self, obj, action, pose_bones, order):
         for bone in pose_bones:
-            self.one_act_one_bon(obj, action, bone, order)
+            self.one_act_one_bone(obj, action, bone, order)
 
     # One action, all Bones (in Action)
-    def one_act_every_bon(self, obj, action, order):
+    def one_act_every_bone(self, obj, action, order):
 
         # Collects pose_bones that are in the action
         pose_bones = set()
@@ -1125,18 +1125,18 @@ class Convert():
 
         # Convert current action and pose_bones that are in each action
         for bone in pose_bones:
-            self.one_act_one_bon(obj, action, bone, order)
+            self.one_act_one_bone(obj, action, bone, order)
 
     # All Actions, selected bones
-    def all_act_sel_bon(self, obj, pose_bones, order):
+    def all_act_sel_bone(self, obj, pose_bones, order):
         for action in bpy.data.actions:
             for bone in pose_bones:
-                self.one_act_one_bon(obj, action, bone, order)
+                self.one_act_one_bone(obj, action, bone, order)
 
     # All actions, All Bones (in each Action)
-    def all_act_every_bon(self, obj, order):
+    def all_act_every_bone(self, obj, order):
         for action in bpy.data.actions:
-            self.one_act_every_bon(obj, action, order)
+            self.one_act_every_bone(obj, action, order)
 
 
 convert = Convert()
@@ -1160,9 +1160,9 @@ class Q2ECurrentActionOperator(bpy.types.Operator):
         param = context.window_manager.gamerig
 
         if param.q2e_convert_only_selected:
-            convert.one_act_sel_bon(obj, action, pose_bones, param.q2e_order_list)
+            convert.one_act_sel_bone(obj, action, pose_bones, param.q2e_order_list)
         else:
-            convert.one_act_every_bon(obj, action, param.q2e_order_list)
+            convert.one_act_every_bone(obj, action, param.q2e_order_list)
 
         return {'FINISHED'}
 
@@ -1184,9 +1184,9 @@ class Q2EAllActionsOperator(bpy.types.Operator):
         param = context.window_manager.gamerig
 
         if param.q2e_convert_only_selected:
-            convert.all_act_sel_bon(obj, pose_bones, param.q2e_order_list)
+            convert.all_act_sel_bone(obj, pose_bones, param.q2e_order_list)
         else:
-            convert.all_act_every_bon(obj, param.q2e_order_list)
+            convert.all_act_every_bone(obj, param.q2e_order_list)
 
         return {'FINISHED'}
 
