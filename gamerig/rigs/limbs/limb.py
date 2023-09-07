@@ -72,7 +72,8 @@ class Limb:
         eb = self.obj.data.edit_bones
 
         ctrl = None
-        mch = None
+        mch_1 = None
+        mch_2 = None
         mch_nostr_1 = None
         mch_nostr_2 = None
         mch_pole_1 = None
@@ -87,10 +88,15 @@ class Limb:
                 org_bones[0],
                 get_bone_name( org_bones[0], 'ctrl',  'ik' )
             )
-            mch = copy_bone(
+            mch_1 = copy_bone(
+                self.obj,
+                org_bones[0],
+                get_bone_name( org_bones[0], 'mch',  'ik1' )
+            )
+            mch_2 = copy_bone(
                 self.obj,
                 org_bones[1],
-                get_bone_name( org_bones[1], 'mch',  'ik' )
+                get_bone_name( org_bones[1], 'mch',  'ik2' )
             )
             if self.allow_ik_stretch:
                 mch_nostr_1 = copy_bone(
@@ -156,7 +162,7 @@ class Limb:
         )
 
         eb[ mch_str ].tail = eb[ org_bones[2] ].head
-        eb[ mch_str ].length = eb[ org_bones[0] ].length + eb[ org_bones[1] ].length
+        self.max_scale = max(1.0, (eb[ org_bones[0] ].length + eb[ org_bones[1] ].length) / eb[ mch_str ].length)
 
         dir_ctrl = None
         mch_pole_target = None
@@ -186,7 +192,8 @@ class Limb:
         eb[mch_str].parent = eb[parent]
         if self.root_vector_ik:
             eb[ctrl].parent = eb[parent]
-            eb[mch].parent = eb[ctrl]
+            eb[mch_1].parent = eb[parent]
+            eb[mch_2].parent = eb[mch_1]
             if self.allow_ik_stretch:
                 eb[mch_nostr_1].parent = eb[parent]
                 eb[mch_nostr_2].parent = eb[mch_nostr_1]
@@ -223,7 +230,7 @@ class Limb:
 
             return {
                 'ctrl'                   : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
-                'mch'                    : mch,
+                'mch'                    : [mch_1, mch_2],
                 'mch_nostr'              : [mch_nostr_1, mch_nostr_2],
                 'mch_pole'               : [mch_pole_1, mch_pole_2],
                 'mch_pole_nostr'         : [mch_pole_nostr_1, mch_pole_nostr_2],
@@ -244,7 +251,7 @@ class Limb:
 
             return {
                 'ctrl'            : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
-                'mch'             : mch,
+                'mch'             : [mch_1, mch_2],
                 'mch_nostr'       : [mch_nostr_1, mch_nostr_2],
                 'mch_pole'        : [mch_pole_1, mch_pole_2],
                 'mch_pole_nostr'  : [mch_pole_nostr_1, mch_pole_nostr_2],
@@ -266,7 +273,11 @@ class Limb:
         mch_pole_target = self.bones['ik']['mch_pole_target']
 
         if self.root_vector_ik:
-            self.make_constraint( mch, {
+            self.make_constraint( mch[0], {
+                'constraint'    : 'COPY_TRANSFORMS',
+                'subtarget'     : ctrl
+            })
+            self.make_constraint( mch[1], {
                 'constraint'        : 'IK',
                 'subtarget'         : mch_target,
                 'chain_count'       : 2,
@@ -305,8 +316,9 @@ class Limb:
         pb = self.obj.pose.bones
         if ctrl:
             pb[ ctrl ].ik_stretch = 0.1
-        if mch:
-            pb[ mch ].ik_stretch = 0.1
+        for i in mch:
+            if i:
+                pb[i].ik_stretch = 0.1
         for i in mch_nostr:
             if i:
                 pb[i].ik_stretch = 0.1
@@ -321,9 +333,15 @@ class Limb:
         if mch:
             for axis in ['x','y','z']:
                 if axis != self.rot_axis:
-                    setattr( pb[ mch ], 'lock_ik_' + axis, True )
+                    setattr( pb[ mch[1]            ], 'lock_ik_' + axis, True )
+                    setattr( pb[ mch_nostr[1]      ], 'lock_ik_' + axis, True )
+                    setattr( pb[ mch_pole[1]       ], 'lock_ik_' + axis, True )
+                    setattr( pb[ mch_pole_nostr[1] ], 'lock_ik_' + axis, True )
             if self.rot_axis == 'automatic':
-                pb[ mch ].lock_ik_x = False
+                pb[ mch[1]            ].lock_ik_x = False
+                pb[ mch_nostr[1]      ].lock_ik_x = False
+                pb[ mch_pole[1]       ].lock_ik_x = False
+                pb[ mch_pole_nostr[1] ].lock_ik_x = False
 
         # Locks and Widget
         if dir_ctrl:
@@ -448,8 +466,8 @@ class Limb:
         pb[fk[0]]['FK Limb Follow'] = 0.0
         rna_idprop_ui_create( pb[fk[0]], 'FK Limb Follow', default=0.0, description='FK Limb Follow', overridable=True )
 
-        drv = pb[ parent ].constraints[ 0 ].driver_add("influence").driver
-
+        fcu = pb[ parent ].constraints[ 0 ].driver_add("influence")
+        drv = fcu.driver
         drv.type = 'AVERAGE'
         var = drv.variables.new()
         var.name = 'fk_limb_follow'
@@ -457,13 +475,19 @@ class Limb:
         var.targets[0].id = self.obj
         var.targets[0].data_path = pb[fk[0]].path_from_id() + '["FK Limb Follow"]'
 
+        drv_modifier = fcu.modifiers.new('GENERATOR')
+        drv_modifier.mode            = 'POLYNOMIAL'
+        drv_modifier.poly_order      = 1
+        drv_modifier.coefficients[0] = 1.0
+        drv_modifier.coefficients[1] = -1.0
+
         # Create IK/FK switch property
         pb[fk[0]]['IK/FK']  = 0.0
         rna_idprop_ui_create( pb[fk[0]], 'IK/FK', default=0.0, description='IK/FK Switch', overridable=True )
 
         # Constrain IK to IK final bones
         if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
-            for f, s1, s1n, s2, s2n in itertools.zip_longest(ik['mch_final'], [ik['ctrl']['limb'][0], ik['mch']], ik['mch_nostr'], ik['mch_pole'], ik['mch_pole_nostr']):
+            for f, s1, s1n, s2, s2n in itertools.zip_longest(ik['mch_final'], ik['mch'], ik['mch_nostr'], ik['mch_pole'], ik['mch_pole_nostr']):
                 if s1:
                     self.make_constraint(f, {
                         'constraint'  : 'COPY_TRANSFORMS',
@@ -537,8 +561,8 @@ class Limb:
             first = (ik['mch_final'][0])
             second = (ik['mch_final'][1])
         else:
-            first = (ik['ctrl']['limb'][0], ik['mch_nostr'][0], ik['mch_pole'][0], ik['mch_pole_nostr'][0])
-            second = (ik['mch'], ik['mch_nostr'][1], ik['mch_pole'][1], ik['mch_pole_nostr'][1])
+            first = (ik['mch'][0], ik['mch_nostr'][0], ik['mch_pole'][0], ik['mch_pole_nostr'][0])
+            second = (ik['mch'][1], ik['mch_nostr'][1], ik['mch_pole'][1], ik['mch_pole_nostr'][1])
 
         # Constrain org to IK and FK bones
         for o, i, f in itertools.zip_longest(org, [first, second, ik['mch_target']], fk):
@@ -702,7 +726,7 @@ class Limb:
                 'constraint'  : 'LIMIT_SCALE',
                 'use_min_y'   : True,
                 'use_max_y'   : True,
-                'max_y'       : 1.0,
+                'max_y'       : self.max_scale,
                 'owner_space' : 'LOCAL'
             })
             
@@ -773,16 +797,14 @@ class Limb:
         ik_ctrls = bones['ik']['ctrl']['limb'] + bones['ik']['ctrl']['terminal'] + bones['ik']['ctrl']['additional']
 
         # non controller ik staff
-        ik_mchs = [bones['ik']['mch'], bones['ik']['mch_target']]
-
         ik_master = bones['ik']['ctrl']['terminal'][-1]
 
         code = f"""
-controls = [{", ".join(["'" + x + "'" if x else "''" for x in controls])}]
-ik_ctrls = [{", ".join(["'" + x + "'" if x else "''" for x in ik_ctrls])}]
-fk_ctrls = [{", ".join(["'" + x + "'" for x in bones['fk']['ctrl']])}]
-ik_mchs  = [{", ".join(["'" + x + "'" if x else "''" for x in ik_mchs])}]
-ik_final = [{", ".join(["'" + x + "'" if x else "''" for x in bones['ik']['mch_final']])}]
+controls  = [{", ".join(["'" + x + "'" if x else "''" for x in controls])}]
+ik_ctrls  = [{", ".join(["'" + x + "'" if x else "''" for x in ik_ctrls])}]
+fk_ctrls  = [{", ".join(["'" + x + "'" for x in bones['fk']['ctrl']])}]
+ik_target = '{bones['ik']['mch_target']}'
+ik_final  = [{", ".join(["'" + x + "'" if x else "''" for x in bones['ik']['mch_final']])}]
 
 if is_selected( controls ):
     layout.prop( pose_bones[ '{bones['fk']['ctrl'][0]}' ], '["IK/FK"]', text='IK/FK ({self.org_bones[0]})', slider = True )

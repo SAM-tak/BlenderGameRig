@@ -45,7 +45,7 @@ if is_selected( controls ):
     props.toe_fk   = controls[5]
     props.thigh_ik = ik_final[0]
     props.shin_ik  = ik_final[1]
-    props.foot_ik  = ik_mchs[1]
+    props.foot_ik  = ik_target
     props.toe_ik   = controls[7]
     props = layout.operator(Paw_IK2FK.bl_idname, text='Snap IK->FK ({self.org_bones[0]})', icon='SNAP_ON')
     props.thigh_fk = controls[2]
@@ -54,7 +54,7 @@ if is_selected( controls ):
     props.toe_fk   = controls[5]
     props.thigh_ik = controls[0]
     props.foot_ik  = controls[6]
-    props.mfoot_ik = ik_mchs[1]
+    props.mfoot_ik = ik_target
     props.toe_ik   = controls[8]
     props.mtoe_ik  = controls[7]
     props.pole_ik  = controls[1]
