@@ -156,6 +156,7 @@ class Limb:
         )
 
         eb[ mch_str ].tail = eb[ org_bones[2] ].head
+        eb[ mch_str ].length = eb[ org_bones[0] ].length + eb[ org_bones[1] ].length
 
         dir_ctrl = None
         mch_pole_target = None
