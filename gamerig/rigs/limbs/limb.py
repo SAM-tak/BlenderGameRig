@@ -72,8 +72,7 @@ class Limb:
         eb = self.obj.data.edit_bones
 
         ctrl = None
-        mch_1 = None
-        mch_2 = None
+        mch = None
         mch_nostr_1 = None
         mch_nostr_2 = None
         mch_pole_1 = None
@@ -88,15 +87,10 @@ class Limb:
                 org_bones[0],
                 get_bone_name( org_bones[0], 'ctrl',  'ik' )
             )
-            mch_1 = copy_bone(
-                self.obj,
-                org_bones[0],
-                get_bone_name( org_bones[0], 'mch',  'ik1' )
-            )
-            mch_2 = copy_bone(
+            mch = copy_bone(
                 self.obj,
                 org_bones[1],
-                get_bone_name( org_bones[1], 'mch',  'ik2' )
+                get_bone_name( org_bones[1], 'mch',  'ik' )
             )
             if self.allow_ik_stretch:
                 mch_nostr_1 = copy_bone(
@@ -162,6 +156,7 @@ class Limb:
         )
 
         eb[ mch_str ].tail = eb[ org_bones[2] ].head
+        eb[ mch_str ].align_roll(eb[org_bones[0]].z_axis)
         self.max_scale = max(1.0, (eb[ org_bones[0] ].length + eb[ org_bones[1] ].length) / eb[ mch_str ].length)
 
         dir_ctrl = None
@@ -184,16 +179,17 @@ class Limb:
                 org_bones[0],
                 get_bone_name( org_bones[0], 'mch', 'ik_pole_target' )
             )
-            eb[ mch_pole_target ].tail = eb[ dir_ctrl ].head + ( eb[ dir_ctrl ].x_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].z_axis ) * eb[ dir_ctrl ].length * 1.1
-            eb[ mch_pole_target ].head = eb[ dir_ctrl ].head + ( eb[ dir_ctrl ].x_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].z_axis ) * eb[ dir_ctrl ].length
+
+            dir = eb[org_bones[0]].x_axis if self.rot_axis == 'x' else eb[org_bones[0]].z_axis
+            eb[ mch_pole_target ].head = eb[ dir_ctrl ].head + dir * eb[ dir_ctrl ].length
+            eb[ mch_pole_target ].tail = eb[ dir_ctrl ].head + dir * eb[ dir_ctrl ].length * 1.1
 
 
         # Parenting
         eb[mch_str].parent = eb[parent]
         if self.root_vector_ik:
             eb[ctrl].parent = eb[parent]
-            eb[mch_1].parent = eb[parent]
-            eb[mch_2].parent = eb[mch_1]
+            eb[mch].parent = eb[ctrl]
             if self.allow_ik_stretch:
                 eb[mch_nostr_1].parent = eb[parent]
                 eb[mch_nostr_2].parent = eb[mch_nostr_1]
@@ -230,7 +226,7 @@ class Limb:
 
             return {
                 'ctrl'                   : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
-                'mch'                    : [mch_1, mch_2],
+                'mch'                    : mch,
                 'mch_nostr'              : [mch_nostr_1, mch_nostr_2],
                 'mch_pole'               : [mch_pole_1, mch_pole_2],
                 'mch_pole_nostr'         : [mch_pole_nostr_1, mch_pole_nostr_2],
@@ -251,7 +247,7 @@ class Limb:
 
             return {
                 'ctrl'            : { 'limb' : [ctrl, dir_ctrl], 'additional' : [] },
-                'mch'             : [mch_1, mch_2],
+                'mch'             : mch,
                 'mch_nostr'       : [mch_nostr_1, mch_nostr_2],
                 'mch_pole'        : [mch_pole_1, mch_pole_2],
                 'mch_pole_nostr'  : [mch_pole_nostr_1, mch_pole_nostr_2],
@@ -273,11 +269,7 @@ class Limb:
         mch_pole_target = self.bones['ik']['mch_pole_target']
 
         if self.root_vector_ik:
-            self.make_constraint( mch[0], {
-                'constraint'    : 'COPY_TRANSFORMS',
-                'subtarget'     : ctrl
-            })
-            self.make_constraint( mch[1], {
+            self.make_constraint( mch, {
                 'constraint'        : 'IK',
                 'subtarget'         : mch_target,
                 'chain_count'       : 2,
@@ -285,7 +277,11 @@ class Limb:
             })
             if self.allow_ik_stretch:
                 self.make_constraint( mch_nostr[0], {
-                    'constraint'    : 'COPY_TRANSFORMS',
+                    'constraint'    : 'COPY_LOCATION',
+                    'subtarget'     : ctrl
+                })
+                self.make_constraint( mch_nostr[0], {
+                    'constraint'    : 'COPY_ROTATION',
                     'subtarget'     : ctrl
                 })
                 self.make_constraint( mch_nostr[1], {
@@ -316,9 +312,8 @@ class Limb:
         pb = self.obj.pose.bones
         if ctrl:
             pb[ ctrl ].ik_stretch = 0.1
-        for i in mch:
-            if i:
-                pb[i].ik_stretch = 0.1
+        if mch:
+            pb[ mch ].ik_stretch = 0.1
         for i in mch_nostr:
             if i:
                 pb[i].ik_stretch = 0.1
@@ -333,12 +328,12 @@ class Limb:
         if mch:
             for axis in ['x','y','z']:
                 if axis != self.rot_axis:
-                    setattr( pb[ mch[1]            ], 'lock_ik_' + axis, True )
+                    setattr( pb[ mch               ], 'lock_ik_' + axis, True )
                     setattr( pb[ mch_nostr[1]      ], 'lock_ik_' + axis, True )
                     setattr( pb[ mch_pole[1]       ], 'lock_ik_' + axis, True )
                     setattr( pb[ mch_pole_nostr[1] ], 'lock_ik_' + axis, True )
             if self.rot_axis == 'automatic':
-                pb[ mch[1]            ].lock_ik_x = False
+                pb[ mch               ].lock_ik_x = False
                 pb[ mch_nostr[1]      ].lock_ik_x = False
                 pb[ mch_pole[1]       ].lock_ik_x = False
                 pb[ mch_pole_nostr[1] ].lock_ik_x = False
@@ -487,7 +482,7 @@ class Limb:
 
         # Constrain IK to IK final bones
         if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
-            for f, s1, s1n, s2, s2n in itertools.zip_longest(ik['mch_final'], ik['mch'], ik['mch_nostr'], ik['mch_pole'], ik['mch_pole_nostr']):
+            for f, s1, s1n, s2, s2n in itertools.zip_longest(ik['mch_final'], [ik['ctrl']['limb'][0], ik['mch']], ik['mch_nostr'], ik['mch_pole'], ik['mch_pole_nostr']):
                 if s1:
                     self.make_constraint(f, {
                         'constraint'  : 'COPY_TRANSFORMS',
@@ -561,8 +556,8 @@ class Limb:
             first = (ik['mch_final'][0])
             second = (ik['mch_final'][1])
         else:
-            first = (ik['mch'][0], ik['mch_nostr'][0], ik['mch_pole'][0], ik['mch_pole_nostr'][0])
-            second = (ik['mch'][1], ik['mch_nostr'][1], ik['mch_pole'][1], ik['mch_pole_nostr'][1])
+            first = (ik['ctrl']['limb'][0], ik['mch_nostr'][0], ik['mch_pole'][0], ik['mch_pole_nostr'][0])
+            second = (ik['mch'], ik['mch_nostr'][1], ik['mch_pole'][1], ik['mch_pole_nostr'][1])
 
         # Constrain org to IK and FK bones
         for o, i, f in itertools.zip_longest(org, [first, second, ik['mch_target']], fk):
