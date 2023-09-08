@@ -96,34 +96,34 @@ class Limb:
                 mch_nostr_1 = copy_bone(
                     self.obj,
                     org_bones[0],
-                    get_bone_name( org_bones[1], 'mch',  'ik1_nostr' )
+                    get_bone_name( org_bones[0], 'mch',  'ik_nostr' )
                 )
                 mch_nostr_2 = copy_bone(
                     self.obj,
                     org_bones[1],
-                    get_bone_name( org_bones[1], 'mch',  'ik2_nostr' )
+                    get_bone_name( org_bones[1], 'mch',  'ik_nostr' )
                 )
         if self.pole_vector_ik:
             mch_pole_1 = copy_bone(
                 self.obj,
                 org_bones[0],
-                get_bone_name( org_bones[0], 'mch',  'ik_pole1' )
+                get_bone_name( org_bones[0], 'mch',  'ik_pole' )
             )
             mch_pole_2 = copy_bone(
                 self.obj,
                 org_bones[1],
-                get_bone_name( org_bones[1], 'mch',  'ik_pole2' )
+                get_bone_name( org_bones[1], 'mch',  'ik_pole' )
             )
             if self.allow_ik_stretch:
                 mch_pole_nostr_1 = copy_bone(
                     self.obj,
                     org_bones[0],
-                    get_bone_name( org_bones[0], 'mch',  'ik_pole1_nostr' )
+                    get_bone_name( org_bones[0], 'mch',  'ik_pole_nostr' )
                 )
                 mch_pole_nostr_2 = copy_bone(
                     self.obj,
                     org_bones[1],
-                    get_bone_name( org_bones[1], 'mch',  'ik_pole2_nostr' )
+                    get_bone_name( org_bones[1], 'mch',  'ik_pole_nostr' )
                 )
 
         if self.allow_ik_stretch or self.root_vector_ik and self.pole_vector_ik:
@@ -169,8 +169,12 @@ class Limb:
                 get_bone_name( org_bones[0], 'ctrl', 'ik_direction' )
             )
 
-            eb[ dir_ctrl ].head = eb[ mch_str ].head + (eb[ mch_str ].tail - eb[ mch_str ].head) / 2
-            eb[ dir_ctrl ].tail = eb[ dir_ctrl ].head + ( -eb[ dir_ctrl ].z_axis if self.rot_axis == 'x' else eb[ dir_ctrl ].x_axis ) * eb[ dir_ctrl ].length
+            va = eb[ mch_str ].vector
+            vc = va.dot(eb[org_bones[0]].vector) / va.length_squared * va
+
+            eb[ dir_ctrl ].head = eb[ mch_str ].head + vc
+            vd = (eb[org_bones[0]].tail - eb[ dir_ctrl ].head).normalized()
+            eb[ dir_ctrl ].tail = eb[ dir_ctrl ].head + vd * eb[ mch_str ].length / 2
             eb[ dir_ctrl ].align_roll(eb[ mch_str ].y_axis)
             eb[ dir_ctrl ].inherit_scale = 'NONE'
 
@@ -802,7 +806,10 @@ ik_target = '{bones['ik']['mch_target']}'
 ik_final  = [{", ".join(["'" + x + "'" if x else "''" for x in bones['ik']['mch_final']])}]
 
 if is_selected( controls ):
+    # IK/FK
     layout.prop( pose_bones[ '{bones['fk']['ctrl'][0]}' ], '["IK/FK"]', text='IK/FK ({self.org_bones[0]})', slider = True )
+    # FK limb follow
+    layout.prop( pose_bones[ '{bones['fk']['ctrl'][0]}' ], '["FK Limb Follow"]', text = 'FK Limb Follow ({self.org_bones[0]})', slider = True)
 
 """
         if self.allow_ik_stretch or self.root_bone or (self.root_vector_ik and self.pole_vector_ik):
@@ -825,12 +832,6 @@ if is_selected( ik_ctrls ):
                 code += f"""
     # IK Pole Mode
     layout.prop( pose_bones[ '{ik_master}' ], '["IK Pole Mode"]', text = 'IK Pole Mode ({self.org_bones[0]})', slider = True )
-
-"""
-        code += f"""
-if is_selected( fk_ctrls ):
-    # FK limb follow
-    layout.prop( pose_bones[ '{bones['fk']['ctrl'][0]}' ], '["FK Limb Follow"]', text = 'FK Limb Follow ({self.org_bones[0]})', slider = True)
 
 """
         return code + script_template

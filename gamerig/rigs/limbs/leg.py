@@ -313,17 +313,10 @@ if is_selected( controls ):
             'target_space' : 'POSE'
         })
 
-        self.make_constraint(mch_ctrl_parent, {
-            'constraint'   : 'LIMIT_ROTATION',
-            'use_limit_x'  : True,
-            'use_limit_y'  : True,
-            'owner_space' : 'LOCAL'
-        })
-        
         # Find IK toe follow property
         ik_dir_ctrl = bones['ik']['ctrl']['limb'][1]
-        pb[ik_dir_ctrl]['IK Toe Follow']  = 1.0
-        rna_idprop_ui_create( pb[ik_dir_ctrl], 'IK Toe Follow', default=1.0, description='Rate of facing knee to toe forward', overridable=True )
+        pb[ik_dir_ctrl]['IK Toe Follow']  = 0.0
+        rna_idprop_ui_create( pb[ik_dir_ctrl], 'IK Toe Follow', default=0.0, description='Rate of facing knee to toe forward', overridable=True )
         # Add driver to limit scale constraint influence
         drv      = pb[mch_ctrl_parent].constraints[-1].driver_add("influence").driver
         drv.type = 'SUM'
@@ -340,6 +333,13 @@ if is_selected( controls ):
         drv_modifier.poly_order      = 1
         drv_modifier.coefficients[0] = 0.0
         drv_modifier.coefficients[1] = 1.0
+        
+        self.make_constraint(mch_ctrl_parent, {
+            'constraint'   : 'LIMIT_ROTATION',
+            'use_limit_x'  : True,
+            'use_limit_y'  : True,
+            'owner_space' : 'LOCAL'
+        })
         
         self.make_constraint(bones['ik']['mch_ctrl_parent_target'], {
             'constraint'   : 'COPY_ROTATION',
