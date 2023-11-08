@@ -179,7 +179,7 @@ if is_selected( controls ):
             pb_master = pb[ bones['fk']['ctrl'][0] ]
 
             # Find IK/FK switch property
-            prop = rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0, overridable=True )
+            rna_idprop_ui_create( pb_master, 'IK/FK', default=0.0, overridable=True )
 
             # Add driver to limit scale constraint influence
             b        = org_bones[3]
@@ -190,7 +190,7 @@ if is_selected( controls ):
             var.name = 'ik_fk_switch'
             var.type = "SINGLE_PROP"
             var.targets[0].id = self.obj
-            var.targets[0].data_path = pb_master.path_from_id() + '['+ '"' + prop.name + '"' + ']'
+            var.targets[0].data_path = pb_master.path_from_id() + '["IK/FK"]'
 
             drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
 
@@ -304,13 +304,13 @@ class Paw_IK2FK(bpy.types.Operator):
             foot     = obj.pose.bones[self.foot_fk]
             toe      = obj.pose.bones[self.toe_fk]
 
-            if self.thigh_ik in in obj.pose.bones:
+            if self.thigh_ik in obj.pose.bones:
                 thighi = obj.pose.bones[self.thigh_ik]
             footi    = obj.pose.bones[self.foot_ik]
             mfooti   = obj.pose.bones[self.mfoot_ik]
             toei     = obj.pose.bones[self.toe_ik]
             mtoei    = obj.pose.bones[self.mtoe_ik]
-            if self.pole_ik in in obj.pose.bones:
+            if self.pole_ik in obj.pose.bones:
                 polei = obj.pose.bones[self.pole_ik]
             
             # Toe position
@@ -334,7 +334,7 @@ class Paw_IK2FK(bpy.types.Operator):
             insert_keyframe_by_mode(context, footi)
 
             # Thigh position
-            if self.thigh_ik in in obj.pose.bones:
+            if self.thigh_ik in obj.pose.bones:
                 match_pose_translation(thighi, thigh)
                 match_pose_rotation(thighi, thigh)
                 match_pose_scale(thighi, thigh)

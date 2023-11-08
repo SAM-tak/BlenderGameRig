@@ -332,15 +332,18 @@ class Limb:
         if mch:
             for axis in ['x','y','z']:
                 if axis != self.rot_axis:
+                    print(mch_nostr)
                     setattr( pb[ mch               ], 'lock_ik_' + axis, True )
-                    setattr( pb[ mch_nostr[1]      ], 'lock_ik_' + axis, True )
-                    setattr( pb[ mch_pole[1]       ], 'lock_ik_' + axis, True )
-                    setattr( pb[ mch_pole_nostr[1] ], 'lock_ik_' + axis, True )
+                    if self.allow_ik_stretch:
+                        setattr( pb[ mch_nostr[1]      ], 'lock_ik_' + axis, True )
+                        setattr( pb[ mch_pole[1]       ], 'lock_ik_' + axis, True )
+                        setattr( pb[ mch_pole_nostr[1] ], 'lock_ik_' + axis, True )
             if self.rot_axis == 'automatic':
                 pb[ mch               ].lock_ik_x = False
-                pb[ mch_nostr[1]      ].lock_ik_x = False
-                pb[ mch_pole[1]       ].lock_ik_x = False
-                pb[ mch_pole_nostr[1] ].lock_ik_x = False
+                if self.allow_ik_stretch:
+                    pb[ mch_nostr[1]      ].lock_ik_x = False
+                    pb[ mch_pole[1]       ].lock_ik_x = False
+                    pb[ mch_pole_nostr[1] ].lock_ik_x = False
 
         # Locks and Widget
         if dir_ctrl:

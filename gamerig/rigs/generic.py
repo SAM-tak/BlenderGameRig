@@ -80,7 +80,7 @@ if is_selected('{self.bone}'):
             if not 'Rig/Phy' in pb[bone]:
                 # Create Rig/Physics switch property
                 pb[bone]['Rig/Phy'] = 0.0
-                prop = rna_idprop_ui_create( pb[bone], 'Rig/Phy', default=0.0, description='Rig/Phy Switch', overridable=True )
+                rna_idprop_ui_create( pb[bone], 'Rig/Phy', default=0.0, description='Rig/Phy Switch', overridable=True )
             
             stashed = self.stash_constraint()
 
