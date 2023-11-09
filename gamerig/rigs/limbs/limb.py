@@ -208,6 +208,9 @@ class Limb:
             eb[mch_final_2].parent = eb[mch_final_1]
 
         if needs_controller_parent:
+            mch_ctrl_parent = None
+            mch_ctrl_parent_target = None
+
             # Parenting
             if self.pole_vector_ik:
                 mch_ctrl_parent = copy_bone(
@@ -332,17 +335,20 @@ class Limb:
         if mch:
             for axis in ['x','y','z']:
                 if axis != self.rot_axis:
-                    print(mch_nostr)
                     setattr( pb[ mch               ], 'lock_ik_' + axis, True )
-                    if self.allow_ik_stretch:
+                    if mch_nostr[1]:
                         setattr( pb[ mch_nostr[1]      ], 'lock_ik_' + axis, True )
+                    if mch_pole[1]:
                         setattr( pb[ mch_pole[1]       ], 'lock_ik_' + axis, True )
+                    if mch_pole_nostr[1]:
                         setattr( pb[ mch_pole_nostr[1] ], 'lock_ik_' + axis, True )
             if self.rot_axis == 'automatic':
                 pb[ mch               ].lock_ik_x = False
-                if self.allow_ik_stretch:
+                if mch_nostr[1]:
                     pb[ mch_nostr[1]      ].lock_ik_x = False
+                if mch_pole[1]:
                     pb[ mch_pole[1]       ].lock_ik_x = False
+                if mch_pole_nostr[1]:
                     pb[ mch_pole_nostr[1] ].lock_ik_x = False
 
         # Locks and Widget
