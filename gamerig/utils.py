@@ -189,22 +189,22 @@ def copy_bone(obj, bone_name, assign_name=''):
         # Copy the edit bone
         edit_bone_1 = obj.data.edit_bones[bone_name]
         edit_bone_2 = obj.data.edit_bones.new(assign_name)
-        bone_name_1 = bone_name
         bone_name_2 = edit_bone_2.name
 
         edit_bone_2.parent = edit_bone_1.parent
         edit_bone_2.use_connect = edit_bone_1.use_connect
 
         # Copy edit bone attributes
-        edit_bone_2.layers = list(edit_bone_1.layers)
+        for bcoll in edit_bone_1.collections:
+            bcoll.assign(edit_bone_2)
 
         edit_bone_2.head = Vector(edit_bone_1.head)
         edit_bone_2.tail = Vector(edit_bone_1.tail)
         edit_bone_2.roll = edit_bone_1.roll
 
         edit_bone_2.use_inherit_rotation = edit_bone_1.use_inherit_rotation
-        edit_bone_2.use_inherit_scale = edit_bone_1.use_inherit_scale
         edit_bone_2.use_local_location = edit_bone_1.use_local_location
+        edit_bone_2.inherit_scale = edit_bone_1.inherit_scale
 
         edit_bone_2.use_deform = edit_bone_1.use_deform
 
@@ -291,6 +291,15 @@ def put_bone(obj, bone_name, pos):
         bone.translate(delta)
     else:
         raise RuntimeError("Cannot 'put' bones outside of edit mode")
+
+
+def move_bone_collection_to(obj, bone_name, collection_name):
+    if collection_name in obj.data.collections.keys():
+        bone = obj.data.bones[bone_name]
+        for col in bone.collections:
+            col.unassign(bone)
+        obj.data.collections[collection_name].assign(bone)
+
 
 #=============================================
 # Widget creation
@@ -495,10 +504,7 @@ def children_names(obj, bone_name, depth):
     bone = obj.data.bones[bone_name]
     names = []
 
-    for i in range(depth):
-        connects = 0
-        con_name = ""
-
+    for _ in range(depth):
         if len(bone.children) > 0:
             names.append(bone.children[0].name)
             bone = bone.children[0]
@@ -530,31 +536,6 @@ def has_connected_children(bone):
     for b in bone.children:
         t = t or b.use_connect
     return t
-
-
-def get_layers(layers):
-    """ Does it's best to extract a set of layers from any data thrown at it.
-    """
-    if type(layers) == int:
-        return [x == layers for x in range(0, 32)]
-    elif type(layers) == str:
-        s = layers.split(",")
-        l = []
-        for i in s:
-            try:
-                l.append(int(float(i)))
-            except ValueError:
-                pass
-        return [x in l for x in range(0, 32)]
-    elif type(layers) == tuple or type(layers) == list:
-        return [x in layers for x in range(0, 32)]
-    else:
-        try:
-            list(layers)
-        except TypeError:
-            pass
-        else:
-            return [x in layers for x in range(0, 32)]
 
 
 def write_metarig(obj, func_name="create", metarig=False):
@@ -606,20 +587,15 @@ def write_metarig(obj, func_name="create", metarig=False):
             code.append('    arm.gamerig.colors[' + str(i) + '].select = Color(' + str(select[:]) + ')')
             code.append('    arm.gamerig.colors[' + str(i) + '].standard_colors_lock = ' + str(standard_colors_lock))
 
-    # GameRig layer layout info
-    if metarig and len(arm.gamerig.layers) > 0:
-        code.append("\n    for i in range(" + str(len(arm.gamerig.layers)) + "):")
-        code.append("        arm.gamerig.layers.add()\n")
-
-        for i in range(len(arm.gamerig.layers)):
-            name = arm.gamerig.layers[i].name
-            row = arm.gamerig.layers[i].row
-            set = arm.gamerig.layers[i].selset
-            group = arm.gamerig.layers[i].group
-            code.append('    arm.gamerig.layers[' + str(i) + '].name = "' + name + '"')
-            code.append('    arm.gamerig.layers[' + str(i) + '].row = ' + str(row))
-            code.append('    arm.gamerig.layers[' + str(i) + '].selset = ' + str(set))
-            code.append('    arm.gamerig.layers[' + str(i) + '].group = ' + str(group))
+    # Bone Collection
+    if metarig and len(arm.collections) > 0:
+        code.append('\n    if len(arm.collections) > 0:')
+        code.append('        for i in arm.collections:')
+        code.append('            arm.collections.remove(i)')
+        for col in arm.collections:
+            code.append(f'    arm.collections.new("{col.name}")')
+            code.append(f'    arm.collections[-1].gamerig.row = {col.gamerig.row}')
+            code.append(f'    arm.collections[-1].gamerig.group = {col.gamerig.group}')
 
     # write parents first
     bones = [(len(bone.parent_recursive), bone.name) for bone in arm.edit_bones]
@@ -655,7 +631,8 @@ def write_metarig(obj, func_name="create", metarig=False):
         code.append("    pbone.lock_scale = %s" % str(tuple(pbone.lock_scale)))
         code.append("    pbone.rotation_mode = %r" % pbone.rotation_mode)
         if metarig:
-            code.append("    pbone.bone.layers = %s" % str(list(pbone.bone.layers)))
+            for col in pbone.bone.collections:
+                code.append(f"    arm.collections['{col.name}'].assign(pbone)")
         # Rig type parameters
         if pbone.gamerig.name:
             for i in pbone.gamerig.keys():
@@ -681,20 +658,6 @@ def write_metarig(obj, func_name="create", metarig=False):
     code.append("        bone.select_head = True")
     code.append("        bone.select_tail = True")
     code.append("        arm.edit_bones.active = bone")
-
-    # Set appropriate layers visible
-    if metarig:
-        # Find what layers have bones on them
-        active_layers = []
-        for bone_name in bones:
-            bone = obj.data.bones[bone_name]
-            for i in range(len(bone.layers)):
-                if bone.layers[i]:
-                    if i not in active_layers:
-                        active_layers.append(i)
-        active_layers.sort()
-
-        code.append("\n    arm.layers = [(x in " + str(active_layers) + ") for x in range(" + str(len(arm.layers)) + ")]")
 
     code.append('\nif __name__ == "__main__":')
     code.append("    " + func_name + "(bpy.context.active_object)\n")

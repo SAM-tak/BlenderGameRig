@@ -224,18 +224,6 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    try:
-        pbone.gamerig.separate_extra_layers = True
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig.extra_layers = [False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig.tweak_extra_layers = False
-    except AttributeError:
-        pass
     pbone = obj.pose.bones[bones['thumb.02.L']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)

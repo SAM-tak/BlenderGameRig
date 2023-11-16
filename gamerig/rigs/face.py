@@ -2,7 +2,7 @@ import bpy, re
 from mathutils import Vector
 from rna_prop_ui import rna_idprop_ui_create
 from ..utils import (
-    MetarigError, copy_bone, flip_bone, create_widget,
+    MetarigError, copy_bone, flip_bone, create_widget, move_bone_collection_to,
     basename, ctrlname, mchname, insert_before_first_period
 )
 from .widgets import (
@@ -73,16 +73,6 @@ class Rig:
 
         self.face_length = obj.data.edit_bones[ bone_name ].length
         self.params      = params
-
-        if params.primary_layers_extra:
-            self.primary_layers = list(params.primary_layers)
-        else:
-            self.primary_layers = None
-
-        if params.secondary_layers_extra:
-            self.secondary_layers = list(params.secondary_layers)
-        else:
-            self.secondary_layers = None
 
     def add_chain_to_abs_name_map(self, root, name, depth=0):
         child = next((b for b in root.children if b.name.startswith(name)), None)
@@ -329,9 +319,9 @@ class Rig:
             if bone in self.abs_name_map:
                 tweak_name = ctrlname( bone )
 
-                if tweak_name in self.primary_tweaks and not self.primary_layers:
+                if tweak_name in self.primary_tweaks and not self.params.primary_bone_collection:
                     continue
-                if not tweak_name in self.primary_tweaks and not self.secondary_layers:
+                if not tweak_name in self.primary_tweaks and not self.params.secondary_bone_collection:
                     continue
 
                 # pick name for unique bone from the uniques dictionary
@@ -379,12 +369,10 @@ class Rig:
         for bone in tweaks:
             if bone in self.abs_name_map:
                 if bone in self.primary_tweaks:
-                    if self.primary_layers:
-                        pb[rbn(bone)].bone.layers = self.primary_layers
+                    move_bone_collection_to(self.obj, rbn(bone), self.params.primary_bone_collection)
                     size = 1
                 else:
-                    if self.secondary_layers:
-                        pb[rbn(bone)].bone.layers = self.secondary_layers
+                    move_bone_collection_to(self.obj, rbn(bone), self.params.secondary_bone_collection)
                     size = 0.7
                 
                 if bone == ctrlname('lid.B.L') or bone == ctrlname('lid.T.R') or bone == ctrlname('lips.R'):
@@ -1290,56 +1278,25 @@ def add_parameters(params):
         RigParameters PropertyGroup
     """
 
-    #Setting up extra layers for the tweak bones
-    params.primary_layers_extra = bpy.props.BoolProperty(
-        name        = "primary_layers_extra",
-        default     = True,
-        description = ""
+    # Setting up extra bone collections for the tweak bones
+    params.primary_bone_collection = bpy.props.StringProperty(
+        name        = "Primary Bone Collection",
+        default     = "Face (Primary)",
+        description = "Bone collection for the 1st tweak controls to be on"
     )
-    params.primary_layers = bpy.props.BoolVectorProperty(
-        size        = 32,
-        description = "Layers for the 1st tweak controls to be on",
-        default     = tuple( [ i == 1 for i in range(0, 32) ] )
-    )
-    params.secondary_layers_extra = bpy.props.BoolProperty(
-        name        = "secondary_layers_extra",
-        default     = True,
-        description = ""
-    )
-    params.secondary_layers = bpy.props.BoolVectorProperty(
-        size        = 32,
-        description = "Layers for the 2nd tweak controls to be on",
-        default     = tuple( [ i == 2 for i in range(0, 32) ] )
+    params.secondary_bone_collection = bpy.props.StringProperty(
+        name        = "Secondary Bone Collection",
+        default     = "Face (Secondary)",
+        description = "Bone collection for the 2nd tweak controls to be on"
     )
 
 
 def parameters_ui(layout, params):
     """ Create the ui for the rig parameters."""
-    layers = ["primary_layers", "secondary_layers"]
 
-    for layer in layers:
-        r = layout.row()
-        r.prop( params, layer + "_extra" )
-        r.active = getattr( params, layer + "_extra" )
-
-        col = r.column(align=True)
-        row = col.row(align=True)
-        for i in range(8):
-            row.prop(params, layer, index=i, toggle=True, text="")
-
-        row = col.row(align=True)
-        for i in range(16,24):
-            row.prop(params, layer, index=i, toggle=True, text="")
-
-        col = r.column(align=True)
-        row = col.row(align=True)
-
-        for i in range(8,16):
-            row.prop(params, layer, index=i, toggle=True, text="")
-
-        row = col.row(align=True)
-        for i in range(24,32):
-            row.prop(params, layer, index=i, toggle=True, text="")
+    r = layout.row()
+    r.prop( params, "primary_bone_collection" )
+    r.prop( params, "secondary_bone_collection" )
 
 
 def create_square_widget(rig, bone_name, size=1.0, bone_transform_name=None):
@@ -2036,10 +1993,6 @@ def create_sample(obj):
     pbone.rotation_mode = 'QUATERNION'
     try:
         pbone.gamerig.name = "face"
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig.secondary_layers = [False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['nose']]

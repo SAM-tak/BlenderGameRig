@@ -302,12 +302,12 @@ class PropertiesPanel(bpy.types.Panel):
 
 classes.append(PropertiesPanel)
 
-class LayersPanel(bpy.types.Panel):
-    bl_idname = 'GAMERIG_PT_layers_{rig_id}'
+class BoneCollectionsPanel(bpy.types.Panel):
+    bl_idname = 'GAMERIG_PT_bone_collections_{rig_id}'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'data'
-    bl_label = 'GameRig Layers'
+    bl_label = 'GameRig Bone Collections'
 
     @classmethod
     def poll(cls, context):
@@ -319,9 +319,9 @@ class LayersPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-{layers}
+{bone_collections}
 
-classes.append(LayersPanel)
+classes.append(BoneCollectionsPanel)
 
 register, unregister = bpy.utils.register_classes_factory(classes)
 

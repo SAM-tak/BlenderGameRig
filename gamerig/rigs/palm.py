@@ -101,7 +101,7 @@ class Rig:
 
         # turn off inherit scale for all original bones to prevent undesired transformations
         # for o in self.org_bones:
-        #     eb[o].use_inherit_scale = False
+        #     eb[o].use_inherit_scale = 'None'
 
         #for d, b in zip(def_bones, self.org_bones):
         #    eb[d].use_connect = False

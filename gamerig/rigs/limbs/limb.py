@@ -2,7 +2,7 @@ import bpy, itertools
 from rna_prop_ui import rna_idprop_ui_create
 from math import radians
 from mathutils import Vector, Quaternion
-from ...utils import copy_bone, ctrlname, mchname, insert_before_first_period, find_root_bone, MetarigError
+from ...utils import copy_bone, ctrlname, mchname, insert_before_first_period, find_root_bone, move_bone_collection_to, MetarigError
 from ..widgets import create_limb_widget, create_ikarrow_widget, create_ikdir_widget, create_directed_circle_widget
 
 
@@ -17,12 +17,6 @@ class Limb:
         self.root_vector_ik = self.params.support_ik_mode == 'root' or self.params.support_ik_mode == 'both'
         self.pole_vector_ik = self.params.support_ik_mode == 'pole' or self.params.support_ik_mode == 'both'
 
-        # Assign values to FK layers props if opted by user
-        if self.params.fk_extra_layers:
-            self.fk_layers = list(self.params.fk_layers)
-        else:
-            self.fk_layers = None
-        
         self.root_bone = find_root_bone(obj, bone_name)
         self.virtual_root_bone = self.root_bone
         if not self.virtual_root_bone:
@@ -424,8 +418,7 @@ class Limb:
             create_directed_circle_widget(self.obj, ctrls[3], radius=-0.4, head_tail=0.5) # negative radius is reasonable. to flip xz
         
         for c in ctrls:
-            if self.fk_layers:
-                pb[c].bone.layers = self.fk_layers
+            move_bone_collection_to(self.obj, c, self.params.fk_bone_collection)
 
 
     def org_parenting( self, org ):
@@ -876,17 +869,11 @@ if is_selected( ik_ctrls ):
             default = 'both'
         )
 
-        # Setting up extra layers for the FK
-        params.fk_extra_layers = bpy.props.BoolProperty(
-            name        = "FK Extra Layers",
-            default     = True,
-            description = "FK Extra Layers"
-        )
-
-        params.fk_layers = bpy.props.BoolVectorProperty(
-            size        = 32,
-            description = "Layers for the FK controls to be on",
-            default     = tuple( [ i == 1 for i in range(0, 32) ] )
+        # Setting up extra bone collection for the FK
+        params.fk_bone_collection = bpy.props.StringProperty(
+            name        = "FK Bone Collection",
+            description = "Bone collection for the FK controls to be on",
+            default     = ""
         )
 
 
@@ -903,30 +890,7 @@ if is_selected( ik_ctrls ):
         r.prop(params, "support_ik_mode")
 
         r = layout.row()
-        r.prop(params, "fk_extra_layers")
-        r.active = params.fk_extra_layers
-
-        col = r.column(align=True)
-        row = col.row(align=True)
-
-        for i in range(8):
-            row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-        row = col.row(align=True)
-
-        for i in range(16,24):
-            row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-        col = r.column(align=True)
-        row = col.row(align=True)
-
-        for i in range(8,16):
-            row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-        row = col.row(align=True)
-
-        for i in range(24,32):
-            row.prop(params, "fk_layers", index=i, toggle=True, text="")
+        r.prop(params, "fk_bone_collection")
 
 
 def get_bone_name( name, btype, suffix = '' ):

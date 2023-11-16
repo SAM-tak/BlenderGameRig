@@ -20,9 +20,9 @@
 
 bl_info = {
     "name": "GameRig",
-    "version": (1, 6, 4),
+    "version": (1, 7, 0),
     "author": "Osamu Takasugi, (Rigify : Nathan Vegdahl, Lucio Rossi, Ivan Cappiello)",
-    "blender": (3, 1, 0),
+    "blender": (4, 0, 0),
     "description": "Character Rigging framework for Game / Realtime content",
     "location": "Armature properties, Bone properties, View3d tools panel, Armature Add menu",
     "support": "COMMUNITY",
@@ -117,7 +117,7 @@ class SelectionColors(PropertyGroup):
     )
 
 
-class ArmatureLayer(PropertyGroup):
+class BoneCollectionProperties(PropertyGroup):
     def get_group(self):
         if 'group_prop' in self.keys():
             return self['group_prop']
@@ -131,13 +131,19 @@ class ArmatureLayer(PropertyGroup):
         else:
             self['group_prop'] = value
 
-    name : StringProperty(name="Layer Name", default=" ")
-    row : IntProperty(name="Layer Row", default=1, min=1, max=32, description='UI row for this layer')
-    selset : BoolProperty(name="Selection Set", default=False, description='Add Selection Set for this layer')
+    row : IntProperty(name="Button Row", default=0, min=0, description='UI row for this collection. 0 means hidden.')
     group : IntProperty(
         name="Bone Group", default=0, min=0, max=32,
-        get=get_group, set=set_group, description='Assign Bone Group to this layer'
+        get=get_group, set=set_group, description='Assign Bone Group to this collection'
     )
+
+    @classmethod
+    def register(cls):
+        bpy.types.BoneCollection.gamerig = PointerProperty(type=cls, name='GameRig BoneCollection')
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.BoneCollection.gamerig
 
 
 class ArmatureProperties(PropertyGroup):
@@ -150,7 +156,6 @@ class ArmatureProperties(PropertyGroup):
         description="Defines the name of the Rig."
     )
 
-    layers : CollectionProperty(type=ArmatureLayer)
     colors : CollectionProperty(type=ColorSet)
     selection_colors : PointerProperty(type=SelectionColors)
     colors_index : IntProperty(default=-1)
@@ -313,7 +318,7 @@ class GlobalProperties(PropertyGroup):
     types : CollectionProperty(type=PropertyGroup)
     active_type : IntProperty(name="GameRig Active Rig", description="The selected rig type")
 
-    show_layer_names_pane : BoolProperty(default=False)
+    show_bone_collection_pane : BoolProperty(default=False)
     show_bone_groups_pane : BoolProperty(default=False)
 
     rename_batch_find : StringProperty(name="Find", description="target string for replace")
@@ -378,7 +383,7 @@ class GlobalProperties(PropertyGroup):
 register, unregister = bpy.utils.register_classes_factory((
     ColorSet,
     SelectionColors,
-    ArmatureLayer,
+    BoneCollectionProperties,
     ArmatureProperties,
     PoseBoneProperties,
     Preferences,

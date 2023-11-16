@@ -4,7 +4,7 @@ from rna_prop_ui import rna_idprop_ui_create
 from ..utils import (
     copy_bone, put_bone,
     ctrlname, basename, mchname, connected_children_names,
-    create_widget,
+    create_widget, move_bone_collection_to,
     MetarigError
 )
 from .widgets import create_sphere_widget, create_directed_circle_widget
@@ -47,12 +47,6 @@ class Rig:
         pivot_index = self.pivot_pos - 1
 
         self.stretchable_tweak = self.params.stretchable_tweak
-
-        # Assign values to tweak layers props if opted by user
-        if self.params.tweak_extra_layers:
-            self.tweak_layers = list(self.params.tweak_layers)
-        else:
-            self.tweak_layers = None
 
         # Report error of user created less than the minimum of 4 bones for rig
         if len(self.org_bones) <= 4 or neck_index < 2 or pivot_index < 1:
@@ -521,12 +515,11 @@ class Rig:
 
         pb[ bones['hips']['ctrl'] ].custom_shape_transform = hips_widget_loc
 
-        # Assigning widgets to tweak bones and layers
+        # Assigning widgets to tweak bones and bone collection
         for bone in tweaks:
             create_sphere_widget(self.obj, bone)
 
-            if self.tweak_layers:
-                pb[bone].bone.layers = self.tweak_layers
+            move_bone_collection_to(self.obj, bone, self.params.tweak_bone_collection)
 
 
     def generate(self, context):
@@ -615,17 +608,11 @@ def add_parameters( params ):
         description = "Allow stretch to tweak controllers"
     )
 
-    # Setting up extra layers for the FK and tweak
-    params.tweak_extra_layers = bpy.props.BoolProperty(
-        name        = "Tweak Extra Layers",
-        default     = True,
-        description = "Tweak controllers have own layer"
-    )
-
-    params.tweak_layers = bpy.props.BoolVectorProperty(
-        size        = 32,
-        description = "Layers for the tweak controls to be on",
-        default     = tuple( [ i == 1 for i in range(0, 32) ] )
+    # Setting up extra bone collection for the FK and tweak
+    params.tweak_bone_collection = bpy.props.StringProperty(
+        name        = "Tweak Bone Collection",
+        description = "Bone collection for the tweak controls to be on",
+        default     = "Torso (Tweak)"
     )
 
 
@@ -659,30 +646,7 @@ def parameters_ui(layout, params):
     r.prop(params, "stretchable_tweak")
 
     r = layout.row()
-    r.prop(params, "tweak_extra_layers")
-    r.active = params.tweak_extra_layers
-
-    col = r.column(align=True)
-    row = col.row(align=True)
-
-    for i in range(8):
-        row.prop(params, "tweak_layers", index=i, toggle=True, text="")
-
-    row = col.row(align=True)
-
-    for i in range(16,24):
-        row.prop(params, "tweak_layers", index=i, toggle=True, text="")
-
-    col = r.column(align=True)
-    row = col.row(align=True)
-
-    for i in range(8,16):
-        row.prop(params, "tweak_layers", index=i, toggle=True, text="")
-
-    row = col.row(align=True)
-
-    for i in range(24,32):
-        row.prop(params, "tweak_layers", index=i, toggle=True, text="")
+    r.prop(params, "tweak_bone_collection")
 
 
 def create_sample(obj):
@@ -734,6 +698,11 @@ def create_sample(obj):
     bone.parent = arm.edit_bones[bones['neck']]
     bones['head'] = bone.name
 
+    if not "Torso" in arm.collection.keys():
+        arm.collection.new("Torso")
+    if not "Torso (Tweak)" in obj.data.collection.keys():
+        arm.collection.new("Torso (Tweak)")
+
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['hips']]
     pbone.gamerig.name = 'torso'
@@ -742,6 +711,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
+    obj.data.collection["Face"].assing(pbone)
     try:
         pbone.gamerig.pivot_pos = 2
     except AttributeError:
@@ -755,7 +725,7 @@ def create_sample(obj):
     except AttributeError:
         pass
     try:
-        pbone.gamerig.tweak_layers = [False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+        pbone.gamerig.tweak_bone_collection = "Torso (Tweak)"
     except AttributeError:
         pass
     try:
@@ -769,6 +739,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
+    arm.collection["Face"].assing(pbone)
     pbone = obj.pose.bones[bones['chest']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -776,6 +747,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
+    arm.collection["Face"].assing(pbone)
     pbone = obj.pose.bones[bones['upper_chest']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -783,6 +755,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
+    arm.collection["Face"].assing(pbone)
     pbone = obj.pose.bones[bones['neck']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -790,6 +763,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
+    arm.collection["Face"].assing(pbone)
     pbone = obj.pose.bones[bones['head']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -797,6 +771,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
+    arm.collection["Face"].assing(pbone)
 
     bpy.ops.object.mode_set(mode='EDIT')
     for bone in arm.edit_bones:

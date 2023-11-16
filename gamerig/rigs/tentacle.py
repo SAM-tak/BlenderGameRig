@@ -2,7 +2,7 @@ import bpy
 from rna_prop_ui import rna_idprop_ui_create
 from ..utils import (
     copy_bone, flip_bone, ctrlname, mchname, children_names,
-    insert_before_first_period,
+    insert_before_first_period, move_bone_collection_to,
     MetarigError
 )
 from .widgets import create_sphere_widget, create_cube_widget
@@ -31,12 +31,6 @@ class Rig:
             raise MetarigError(
                 "GAMERIG ERROR: invalid mid ik chain length : rig '%s'" % bone_name
             )
-
-        # Assign values to FK layers props if opted by user
-        if self.params.fk_extra_layers:
-            self.fk_layers = list(self.params.fk_layers)
-        else:
-            self.fk_layers = None
 
 
     def make_controls( self ):
@@ -413,8 +407,7 @@ if is_selected( controls ):
 
         # Make widgets
         for ctrl in self.ctrls[0]:
-            if self.fk_layers:
-                pb[ctrl].bone.layers = self.fk_layers
+            move_bone_collection_to(self.obj, ctrl, self.params.fk_bone_collection)
             create_sphere_widget(self.obj, ctrl)
         for ctrl in self.ctrls[1]:
             create_cube_widget(self.obj, ctrl)
@@ -610,16 +603,10 @@ def add_parameters(params):
     )
 
     # Setting up extra layers for the FK
-    params.fk_extra_layers = bpy.props.BoolProperty(
-        name        = "FK Extra Layers",
-        default     = True,
-        description = "FK Extra Layers"
-    )
-
-    params.fk_layers = bpy.props.BoolVectorProperty(
-        size        = 32,
-        description = "Layers for the FK controls to be on",
-        default     = tuple( [ i == 1 for i in range(0, 32) ] )
+    params.fk_bone_collection = bpy.props.StringProperty(
+        name        = "FK Bone Collection",
+        default     = "",
+        description = "Bone collection for the FK controls to be on"
     )
 
 
@@ -638,30 +625,7 @@ def parameters_ui(layout, params):
     r.prop(params, "add_root_controller")
 
     r = layout.row()
-    r.prop(params, "fk_extra_layers")
-    r.active = params.fk_extra_layers
-
-    col = r.column(align=True)
-    row = col.row(align=True)
-
-    for i in range(8):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-    row = col.row(align=True)
-
-    for i in range(16,24):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-    col = r.column(align=True)
-    row = col.row(align=True)
-
-    for i in range(8,16):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
-
-    row = col.row(align=True)
-
-    for i in range(24,32):
-        row.prop(params, "fk_layers", index=i, toggle=True, text="")
+    r.prop(params, "fk_bone_collection")
 
 
 def create_sample(obj):

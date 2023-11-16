@@ -49,62 +49,26 @@ class ArmaturePanel(bpy.types.Panel):
         gparam = context.window_manager.gamerig
         armature = obj.data
 
-        ## Layers
-        # Ensure that the layers exist
-        # Can't add while drawing, just use button
-        if len(armature.gamerig.layers) < 30:
-            layout.operator(InitLayerOperator.bl_idname)
-        else:
-            box = layout.box()
-            show = gparam.show_layer_names_pane
+        ## Bone collections
+        box = layout.box()
+        show = gparam.show_bone_collection_pane
+        row = box.row()
+        row.prop(gparam, "show_bone_collection_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
+        row.alignment = 'LEFT'
+        row.label(text='Bone Collection Settings')
+        if show:
+            # UI
             row = box.row()
-            row.prop(gparam, "show_layer_names_pane", text="", toggle=True, icon='TRIA_DOWN' if show else 'TRIA_RIGHT', emboss=False)
-            row.alignment = 'LEFT'
-            row.label(text='Layer Name Settings')
-            
-            if show:
-                # UI
-                main_row = box.row(align=True).split(factor=0.06)
-                col1 = main_row.column()
-                col2 = main_row.column()
-                col1.label()
-                for i in range(1, 33):
-                    if i == 17 or i == 31:
-                        col1.label()
-                    col1.label(text=str(i))
-
-                for i, layer in enumerate(armature.gamerig.layers):
-                    # note: layer == armature.gamerig.layers[i]
-                    if (i % 16) == 0:
-                        col = col2.column()
-                        if i == 0:
-                            col.label(text="Top Row:")
-                        else:
-                            col.label(text="Bottom Row:")
-                    if (i % 8) == 0:
-                        col = col2.column()
-                    row = col.row(align=True)
-                    icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
-                    row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
-                    row.prop(layer, "name", text="")
-                    row.prop(layer, "row", text="UI Row")
-                    icon = 'RADIOBUT_ON' if layer.selset else 'RADIOBUT_OFF'
-                    row.prop(layer, "selset", text="", toggle=True, icon=icon)
-                    row.prop(layer, "group", text="Bone Group")
-                    if layer.group == 0:
-                        row.label(text='None')
-                    else:
-                        row.label(text=armature.gamerig.colors[layer.group-1].name)
-
-                # buttons
-                col = col2.column()
-                col.label(text="Reserved:")
-                reserved_names = {30: 'MCH', 31: 'Original'}
-                for i in range(30, 32):
-                    row = col.row(align=True)
-                    icon = 'RESTRICT_VIEW_OFF' if armature.layers[i] else 'RESTRICT_VIEW_ON'
-                    row.prop(armature, "layers", index=i, text="", toggle=True, icon=icon)
-                    row.label(text=reserved_names[i])
+            col = row.column()
+            for collection in armature.collections:
+                row = col.row(align=True)
+                row.label(text=collection.name)
+                row.prop(collection.gamerig, "row", text="UI Row")
+                row.prop(collection.gamerig, "group", text="Bone Group")
+                if collection.gamerig.group == 0:
+                    row.label(text='None')
+                else:
+                    row.label(text=armature.gamerig.colors[collection.gamerig.group-1].name)
 
         ## Bone Groups
         box = layout.box()
@@ -114,9 +78,6 @@ class ArmaturePanel(bpy.types.Panel):
         row.alignment = 'LEFT'
         row.label(text='Bone Group Settings')
         if show:
-            color_sets = obj.data.gamerig.colors
-            idx = obj.data.gamerig.colors_index
-
             row = box.row()
             row.operator(UseStandardColorsOperator.bl_idname, icon='FILE_REFRESH', text='')
             row = row.row(align=True)
@@ -548,22 +509,6 @@ class UtilityPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.operator(RevealUnlinkedWidgetOperator.bl_idname)
-
-
-class InitLayerOperator(bpy.types.Operator):
-    """Initialize armature gamerig layers"""
-
-    bl_idname = "gamerig.init_layer"
-    bl_label = "Add Layer Settings"
-    bl_description = "Add GameRig Layers setting by default values"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        obj = context.object
-        arm = obj.data
-        for i in range(1 + len(arm.gamerig.layers), 31):
-            arm.gamerig.layers.add()
-        return {'FINISHED'}
 
 
 class RevealUnlinkedWidgetOperator(bpy.types.Operator):
@@ -1229,7 +1174,6 @@ register, unregister = bpy.utils.register_classes_factory((
     AddBoneGroupThemeOperator,
     RemoveBoneGroupOperator,
     RemoveAllBoneGroupOperator,
-    InitLayerOperator,
     RevealUnlinkedWidgetOperator,
     # GenerateProgressOperator,
     GenerateOperator,

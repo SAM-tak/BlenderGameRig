@@ -35,8 +35,6 @@ from mathutils import Vector
 
 
 RIG_MODULE = "rigs"
-ORG_LAYER = [n == 31 for n in range(0, 32)]  # Armature layer that original bones should be moved to.
-MCH_LAYER = [n == 30 for n in range(0, 32)]  # Armature layer that mechanism bones should be moved to.
 
 
 class Timer:
@@ -409,35 +407,31 @@ def generate_rig(context, metarig):
             b = obj.data.bones[bone]
             b.use_deform = False
 
-    # Move all the original bones to their layer.
-    for bone in original_bones:
-        obj.data.bones[bone].layers = ORG_LAYER
+    # Reveal all the BoneCollection with control bones on them
+    for col in obj.data.collections:
+        col.is_visible = True
 
-    # Move all the bones with names starting with "MCH-" to their layer.
+    # Unassign all the bones with names starting with "MCH-" or original bones from any collection.
+    for bone in bones:
+        if is_mch(obj.data.bones[bone].name) or bone in original_bones:
+            for col in obj.data.collections:
+                col.unassign(obj.data.bones[bone])
+
+    # Assign all the bones with names starting with "MCH-" to their bone collection.
+    obj.data.collections.new('MCH')
+    obj.data.collections[-1].is_visible = False
     for bone in bones:
         if is_mch(obj.data.bones[bone].name):
-            obj.data.bones[bone].layers = MCH_LAYER
+            obj.data.collections[-1].assign(obj.data.bones[bone])
+
+    # Assign all the original bones to their bone collection.
+    obj.data.collections.new('ORG')
+    obj.data.collections[-1].is_visible = False
+    for bone in original_bones:
+        obj.data.collections[-1].assign(obj.data.bones[bone])
 
     # Assign shapes to bones
     assign_all_widgets(obj)
-    # Reveal all the layers with control bones on them
-    vis_layers = [False for n in range(0, 32)]
-    for bone in bones:
-        for i in range(0, 32):
-            vis_layers[i] = vis_layers[i] or obj.data.bones[bone].layers[i]
-    for i in range(0, 32):
-        vis_layers[i] = vis_layers[i] and not (ORG_LAYER[i] or MCH_LAYER[i])
-    obj.data.layers = vis_layers
-
-    # Ensure the collection of layer names exists
-    for i in range(1 + len(metarig.data.gamerig.layers), 30):
-        metarig.data.gamerig.layers.add()
-
-    # Create list of layer name/row pairs
-    layer_layout = []
-    for l in metarig.data.gamerig.layers:
-        #print(l.name)
-        layer_layout.append((l.name, l.row))
 
     # Generate the UI script
     rig_ui_name = 'gamerig_ui_%s.py' % rig_id
@@ -468,7 +462,7 @@ def generate_rig(context, metarig):
             rig_id=rig_id,
             operators=operator_scripts,
             properties=properties_ui(ui_scripts),
-            layers=layers_ui(vis_layers, layer_layout)
+            bone_collections=bone_collections_ui(metarig.data.collections)
         )
     )
     script.use_module = True
@@ -482,11 +476,8 @@ def generate_rig(context, metarig):
     
     t.tick("register ui script done: ")
 
-    # Create Selection Sets
-    create_selection_sets(obj, metarig)
-
-    # Create Bone Groups
-    create_bone_groups(obj, metarig)
+    # Set up bone colors
+    setup_bone_colors(obj, metarig)
 
     # Remove all jig bones.
     bpy.ops.object.mode_set(mode='EDIT')
@@ -588,72 +579,24 @@ def generate_rig(context, metarig):
     return error
 
 
-def create_selection_sets(obj, metarig):
-
-    # Check if selection sets addon is installed
-    if 'bone_selection_groups' not in bpy.context.preferences.addons and 'bone_selection_sets' not in bpy.context.preferences.addons:
-        return
-
-    bpy.ops.object.mode_set(mode='POSE')
-
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    metarig.select_set(False)
-    pbones = obj.pose.bones
-
-    for i, name in enumerate(metarig.data.gamerig.layers.keys()):
-        if name == '' or not metarig.data.gamerig.layers[i].selset:
-            continue
-
-        bpy.ops.pose.select_all(action='DESELECT')
-        for b in pbones:
-            if b.bone.layers[i]:
-                b.bone.select = True
-
-        #bpy.ops.pose.selection_set_add()
-        obj.selection_sets.add()
-        obj.selection_sets[-1].name = name
-        if 'bone_selection_sets' in bpy.context.preferences.addons:
-            act_sel_set = obj.selection_sets[-1]
-
-            # iterate only the selected bones in current pose that are not hidden
-            for bone in bpy.context.selected_pose_bones:
-                if bone.name not in act_sel_set.bone_ids:
-                    bone_id = act_sel_set.bone_ids.add()
-                    bone_id.name = bone.name
-
-
-def create_bone_groups(obj, metarig):
+def setup_bone_colors(obj, metarig):
 
     bpy.ops.object.mode_set(mode='OBJECT')
-    pb = obj.pose.bones
-    layers = metarig.data.gamerig.layers
+    pbs = obj.pose.bones
+    collections = metarig.data.collections
     groups = metarig.data.gamerig.colors
 
-    # Create BGs
-    for l in layers:
-        if l.group == 0:
-            continue
-        g_id = l.group - 1
-        name = groups[g_id].name
-        if name not in obj.pose.bone_groups.keys():
-            bg = obj.pose.bone_groups.new(name=name)
-            bg.color_set = 'CUSTOM'
-            bg.colors.normal = gamma_correct(groups[g_id].normal)
-            bg.colors.select = gamma_correct(groups[g_id].select)
-            bg.colors.active = gamma_correct(groups[g_id].active)
-
-    for b in pb:
-        try:
-            layer_index = b.bone.layers[:].index(True)
-        except ValueError:
-            continue
-        if layer_index > len(layers) - 1:   # bone is on reserved layers
-            continue
-        g_id = layers[layer_index].group - 1
+    for pb in pbs:
+        g_id = -1
+        for c in pb.bone.collections:
+            if c.name in collections and collections[c.name].gamerig.group > 0:
+                g_id = collections[c.name].gamerig.group - 1
+                break
         if g_id >= 0:
-            name = groups[g_id].name
-            b.bone_group = obj.pose.bone_groups[name]
+            pb.color.palette = 'CUSTOM'
+            pb.color.custom.normal = gamma_correct(groups[g_id].normal)
+            pb.color.custom.select = gamma_correct(groups[g_id].select)
+            pb.color.custom.active = gamma_correct(groups[g_id].active)
 
 
 def get_bone_rig(metarig, obj, bone_name, rigtypes, halt_on_missing=False):
@@ -718,16 +661,16 @@ def properties_ui(scripts):
     return code
 
 
-def layers_ui(layers, layout):
-    """ Turn a list of booleans + a list of names into a layer UI.
+def bone_collections_ui(collections):
+    """ Turn a list of booleans + a list of names into a bone collection UI.
     """
 
     rows = {}
-    for i in range(30):
-        if layers[i]:
-            if layout[i][1] not in rows:
-                rows[layout[i][1]] = []
-            rows[layout[i][1]].append((layout[i][0], i))
+    for c in collections:
+        if c.gamerig.row > 0:
+            if c.gamerig.row not in rows:
+                rows[c.gamerig.row] = []
+            rows[c.gamerig.row].append(c.name)
 
     keys = list(rows.keys())
     keys.sort()
@@ -737,11 +680,11 @@ def layers_ui(layers, layout):
     for key in keys:
         code += "\n        row = col.row()\n"
         i = 0
-        for l in rows[key]:
+        for n in rows[key]:
             if i > 3:
                 code += "\n        row = col.row()\n"
                 i = 0
-            code += "        row.prop(context.active_object.data, 'layers', index=%s, toggle=True, text='%s')\n" % (str(l[1]), l[0])
+            code += f"        row.prop(context.active_object.data.collections['{n}'], 'is_visible', toggle=True, text='{n}')\n"
             i += 1
 
     return code

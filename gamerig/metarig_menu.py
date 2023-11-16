@@ -19,8 +19,6 @@
 # <pep8 compliant>
 
 import os
-from string import capwords
-
 import bpy
 
 from . import utils
