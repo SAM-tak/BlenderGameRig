@@ -223,8 +223,6 @@ class Arm_IK2FK(bpy.types.Operator):
                 match_pose_translation(uarmi, uarm)
                 match_pose_rotation(uarmi, uarm)
                 match_pose_scale(uarmi, uarm)
-                # Rotation Correction
-                correct_rotation(uarmi, uarm)
                 insert_keyframe_by_mode(context, uarmi)
             
             # Pole direction

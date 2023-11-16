@@ -338,8 +338,6 @@ class Paw_IK2FK(bpy.types.Operator):
                 match_pose_translation(thighi, thigh)
                 match_pose_rotation(thighi, thigh)
                 match_pose_scale(thighi, thigh)
-                # Rotation Correction
-                correct_rotation(thighi,thigh)
                 insert_keyframe_by_mode(context, thighi)
             
             # Pole direction

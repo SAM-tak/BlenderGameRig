@@ -26,63 +26,6 @@ import bpy
 from mathutils import Matrix, Vector
 from math import acos, pi, radians
 
-############################
-## Math utility functions ##
-############################
-
-def tail_distance(angle,bone_ik,bone_fk):
-    """ Returns the distance between the tails of two bones
-        after rotating bone_ik in AXIS_ANGLE mode.
-    """
-    rot_mod=bone_ik.rotation_mode
-    if rot_mod != 'AXIS_ANGLE':
-        bone_ik.rotation_mode = 'AXIS_ANGLE'
-    bone_ik.rotation_axis_angle[0] = angle
-    bpy.context.view_layer.update()
-
-    dv = (bone_fk.tail - bone_ik.tail).length
-
-    bone_ik.rotation_mode = rot_mod
-    return dv
-
-def find_min_range(bone_ik,bone_fk,f=tail_distance,delta=pi/8):
-    """ finds the range where lies the minimum of function f applied on bone_ik and bone_fk
-        at a certain angle.
-    """
-    rot_mod=bone_ik.rotation_mode
-    if rot_mod != 'AXIS_ANGLE':
-        bone_ik.rotation_mode = 'AXIS_ANGLE'
-
-    start_angle = bone_ik.rotation_axis_angle[0]
-    angle = start_angle
-    while (angle > (start_angle - 2*pi)) and (angle < (start_angle + 2*pi)):
-        l_dist = f(angle-delta,bone_ik,bone_fk)
-        c_dist = f(angle,bone_ik,bone_fk)
-        r_dist = f(angle+delta,bone_ik,bone_fk)
-        if min((l_dist,c_dist,r_dist)) == c_dist:
-            bone_ik.rotation_mode = rot_mod
-            return (angle-delta,angle+delta)
-        else:
-            angle=angle+delta
-
-def ternarySearch(f, left, right, bone_ik, bone_fk, absolutePrecision):
-    """
-    Find minimum of unimodal function f() within [left, right]
-    To find the maximum, revert the if/else statement or revert the comparison.
-    """
-    while True:
-        #left and right are the current bounds; the maximum is between them
-        if abs(right - left) < absolutePrecision:
-            return (left + right)/2
-
-        leftThird = left + (right - left)/3
-        rightThird = right - (right - left)/3
-
-        if f(leftThird, bone_ik, bone_fk) > f(rightThird, bone_ik, bone_fk):
-            left = leftThird
-        else:
-            right = rightThird
-
 #########################################
 ## "Visual Transform" helper functions ##
 #########################################
@@ -196,20 +139,6 @@ def match_pose_scale(pose_bone, target_bone):
     set_pose_scale(pose_bone, mat)
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.mode_set(mode='POSE')
-
-
-def correct_rotation(bone_ik, bone_fk):
-    """ Corrects the ik rotation in ik2fk snapping functions
-    """
-
-    alfarange = find_min_range(bone_ik,bone_fk)
-    alfamin = ternarySearch(tail_distance,alfarange[0],alfarange[1],bone_ik,bone_fk,0.1)
-
-    rot_mod = bone_ik.rotation_mode
-    if rot_mod != 'AXIS_ANGLE':
-        bone_ik.rotation_mode = 'AXIS_ANGLE'
-    bone_ik.rotation_axis_angle[0] = alfamin
-    bone_ik.rotation_mode = rot_mod
 
 
 def insert_keyframe_by_mode(context, pb):
