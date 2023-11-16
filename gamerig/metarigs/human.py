@@ -1242,7 +1242,7 @@ def create(obj):
     except AttributeError:
         pass
     try:
-        pbone.gamerig.tweak_bone_collection = 'Torso (Tweak)'
+        pbone.gamerig.tweak_bone_collection = "Torso (Tweak)"
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['waist']]
@@ -1279,7 +1279,7 @@ def create(obj):
     except AttributeError:
         pass
     try:
-        pbone.gamerig.fk_bone_collection = "Leg.L (FK)"
+        pbone.gamerig.fk_bone_collection = "Leg.R (FK)"
     except AttributeError:
         pass
     try:
@@ -1749,7 +1749,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections['Fingers.L'].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     try:
         pbone.gamerig.name = "palm"
     except AttributeError:

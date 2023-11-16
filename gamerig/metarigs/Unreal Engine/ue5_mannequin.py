@@ -768,7 +768,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Root"].assign(pbone)
+    arm.collections['Root'].assign(pbone)
     try:
         pbone.gamerig.name = "root"
     except AttributeError:
@@ -783,7 +783,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     try:
         pbone.gamerig.name = "torso"
     except AttributeError:
@@ -806,14 +806,14 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['thigh_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.R (IK)"].assign(pbone)
+    arm.collections['Leg.R (IK)'].assign(pbone)
     try:
         pbone.gamerig.name = "limbs.leg"
     except AttributeError:
@@ -832,7 +832,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     try:
         pbone.gamerig.name = "limbs.leg"
     except AttributeError:
@@ -851,147 +851,147 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['calf_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.R (IK)"].assign(pbone)
+    arm.collections['Leg.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['thigh_twist_01_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.R (IK)"].assign(pbone)
+    arm.collections['Leg.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['thigh_twist_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['calf_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['thigh_twist_01_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['thigh_twist_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['spine_03']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['foot_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.R (IK)"].assign(pbone)
+    arm.collections['Leg.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['calf_twist_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['calf_twist_01_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.R (IK)"].assign(pbone)
+    arm.collections['Leg.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['calf_twist_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['calf_twist_01_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['foot_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['spine_04']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['JIG-heel_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.R (IK)"].assign(pbone)
+    arm.collections['Leg.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['ball_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.R (IK)"].assign(pbone)
+    arm.collections['Leg.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['ball_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['JIG-heel_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Leg.L (IK)"].assign(pbone)
+    arm.collections['Leg.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['spine_05']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['clavicle_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     try:
         pbone.gamerig.name = "generic"
     except AttributeError:
@@ -1002,14 +1002,14 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['clavicle_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     try:
         pbone.gamerig.name = "generic"
     except AttributeError:
@@ -1020,7 +1020,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     try:
         pbone.gamerig.name = "limbs.arm"
     except AttributeError:
@@ -1035,14 +1035,14 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['upperarm_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.R (IK)"].assign(pbone)
+    arm.collections['Arm.R (IK)'].assign(pbone)
     try:
         pbone.gamerig.name = "limbs.arm"
     except AttributeError:
@@ -1057,98 +1057,99 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['upperarm_twist_01_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['upperarm_twist_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['head']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Torso"].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
+    arm.collections['Face'].assign(pbone)
     pbone = obj.pose.bones[bones['lowerarm_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.R (IK)"].assign(pbone)
+    arm.collections['Arm.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['upperarm_twist_01_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.R (IK)"].assign(pbone)
+    arm.collections['Arm.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['upperarm_twist_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['hand_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['lowerarm_twist_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['lowerarm_twist_01_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['hand_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.R (IK)"].assign(pbone)
+    arm.collections['Arm.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['lowerarm_twist_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.L (IK)"].assign(pbone)
+    arm.collections['Arm.L (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['lowerarm_twist_01_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Arm.R (IK)"].assign(pbone)
+    arm.collections['Arm.R (IK)'].assign(pbone)
     pbone = obj.pose.bones[bones['thumb_01_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     try:
         pbone.gamerig.name = "thumb"
     except AttributeError:
@@ -1159,28 +1160,28 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['ring_metacarpal_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['middle_metacarpal_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['index_metacarpal_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     try:
         pbone.gamerig.name = "palm"
     except AttributeError:
@@ -1191,7 +1192,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     try:
         pbone.gamerig.name = "thumb"
     except AttributeError:
@@ -1202,7 +1203,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     try:
         pbone.gamerig.name = "palm"
     except AttributeError:
@@ -1213,35 +1214,35 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['ring_metacarpal_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['pinky_metacarpal_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, True, True)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['thumb_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['pinky_01_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1252,7 +1253,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1263,7 +1264,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1274,7 +1275,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1285,14 +1286,14 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['index_01_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1303,7 +1304,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1314,7 +1315,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1325,7 +1326,7 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     try:
         pbone.gamerig.name = "finger"
     except AttributeError:
@@ -1336,126 +1337,126 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['pinky_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['ring_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['middle_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['index_02_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['thumb_03_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['index_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['middle_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['ring_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['pinky_02_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['pinky_03_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['ring_03_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['middle_03_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['index_03_l']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.L"].assign(pbone)
+    arm.collections['Fingers.L'].assign(pbone)
     pbone = obj.pose.bones[bones['index_03_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['middle_03_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['ring_03_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
     pbone = obj.pose.bones[bones['pinky_03_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections["Fingers.R"].assign(pbone)
+    arm.collections['Fingers.R'].assign(pbone)
 
     bpy.ops.object.mode_set(mode='EDIT')
     for bone in arm.edit_bones:

@@ -56,13 +56,13 @@ def create(obj):
             arm.collections.remove(i)
     arm.collections.new("Face")
     arm.collections[-1].gamerig.row = 1
-    arm.collections[-1].gamerig.group = 5
+    arm.collections[-1].gamerig.group = 3
     arm.collections.new("Face (Primary)")
     arm.collections[-1].gamerig.row = 2
-    arm.collections[-1].gamerig.group = 2
+    arm.collections[-1].gamerig.group = 4
     arm.collections.new("Face (Secondary)")
     arm.collections[-1].gamerig.row = 2
-    arm.collections[-1].gamerig.group = 3
+    arm.collections[-1].gamerig.group = 6
     arm.collections.new("Torso")
     arm.collections[-1].gamerig.row = 3
     arm.collections[-1].gamerig.group = 3
@@ -649,10 +649,6 @@ def create(obj):
         pbone.gamerig.stretchable_tweak = False
     except AttributeError:
         pass
-    try:
-        pbone.gamerig.tweak_layers = [False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-    except AttributeError:
-        pass
     pbone = obj.pose.bones[bones['waist']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)
@@ -817,10 +813,6 @@ def create(obj):
     arm.collections['Arm.R (IK)'].assign(pbone)
     try:
         pbone.gamerig.name = "limbs.arm"
-    except AttributeError:
-        pass
-    try:
-        pbone.gamerig.tweak_collection = "Arm.R (Tweak)"
     except AttributeError:
         pass
     try:
