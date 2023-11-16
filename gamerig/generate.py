@@ -170,6 +170,11 @@ def generate_rig(context, metarig):
         obj.data.edit_bones.remove(bone)
     bpy.ops.object.mode_set(mode='OBJECT')
 
+    # Remove all bone collections.
+    for col in obj.data.collections:
+        obj.data.collections.remove(col)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
     # Create temporary duplicates for merging
     temp_rig_1 = metarig.copy()
     temp_rig_1.data = metarig.data.copy()
