@@ -2,7 +2,7 @@
 
 > Read this in other languages: [English](README.md), [日本語](README.ja.md).
 
-## Rigging Add-on for Blender 2.80
+## Rigging Add-on for Blender
 
 Rigging framework for game / realtime content development. Hard fork from [Rigify](https://archive.blender.org/wiki/index.php/Extensions:2.6/Py/Scripts/Rigging/Rigify/) (official add-on).
 
