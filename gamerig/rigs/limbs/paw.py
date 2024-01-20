@@ -207,7 +207,7 @@ class Paw_FK2IK(bpy.types.Operator):
     """
     bl_idname = "gamerig.paw_fk2ik_{rig_id}"
     bl_label = "Snap FK paw to IK"
-    bl_description = "Snap FK paw controllers to IK ones (no keying)"
+    bl_description = "Snap FK paw controllers to IK ones"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
@@ -272,7 +272,7 @@ class Paw_IK2FK(bpy.types.Operator):
     """
     bl_idname = "gamerig.paw_ik2fk_{rig_id}"
     bl_label = "Snap IK paw to FK"
-    bl_description = "Snap IK paw controllers to FK ones (no keying)"
+    bl_description = "Snap IK paw controllers to FK ones"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")

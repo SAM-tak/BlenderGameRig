@@ -24,7 +24,7 @@ UI_TEMPLATE = '''
 #
 import bpy
 from mathutils import Matrix, Vector
-from math import acos, pi, radians
+from math import acos, pi, radians, floor
 
 #########################################
 ## "Visual Transform" helper functions ##

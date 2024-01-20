@@ -211,7 +211,7 @@ def create(obj):
     bone = arm.edit_bones.new('foot_r')
     bone.head[:] = -0.1394, 0.0014, 0.0831
     bone.tail[:] = -0.1648, -0.1469, 0.0271
-    bone.roll = -0.6964
+    bone.roll = 0.8744
     bone.use_connect = True
     bone.use_deform = True
     bone.parent = arm.edit_bones[bones['calf_r']]
@@ -251,7 +251,7 @@ def create(obj):
     bone = arm.edit_bones.new('foot_l')
     bone.head[:] = 0.1394, 0.0014, 0.0831
     bone.tail[:] = 0.1648, -0.1469, 0.0271
-    bone.roll = 0.6964
+    bone.roll = -0.8744
     bone.use_connect = True
     bone.use_deform = True
     bone.parent = arm.edit_bones[bones['calf_l']]
@@ -1078,8 +1078,8 @@ def create(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collections['Torso'].assign(pbone)
     arm.collections['Face'].assign(pbone)
+    arm.collections['Torso'].assign(pbone)
     pbone = obj.pose.bones[bones['lowerarm_r']]
     pbone.lock_location = (False, False, False)
     pbone.lock_rotation = (False, False, False)

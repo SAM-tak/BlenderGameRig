@@ -61,6 +61,10 @@ if is_selected( controls ):
     props.mfoot_ik = ik_target
     props.toe_ik   = ''
     props.pole_ik  = ik_ctrls[1]
+    props = layout.operator(Leg_AlignIKFoot.bl_idname, text='Align IK Foot ({self.org_bones[0]})', icon='SNAP_ON')
+    props.foot_ik  = controls[8]
+    props.heel_ik  = controls[7]
+    props.toe_ik   = ''
 """ if len(self.org_bones) < 4 else f"""
 # IK Toe Follow
 if is_selected( ik_ctrls ) and controls[1] and not (controls[8] and pose_bones[controls[8]]['IK Pole Mode'] == 0):
@@ -88,6 +92,10 @@ if is_selected( controls ):
     props.mfoot_ik = ik_target
     props.toe_ik   = controls[6]
     props.pole_ik  = ik_ctrls[1]
+    props = layout.operator(Leg_AlignIKFoot.bl_idname, text='Align IK Foot ({self.org_bones[0]})', icon='SNAP_ON')
+    props.foot_ik  = controls[8]
+    props.heel_ik  = controls[7]
+    props.toe_ik   = controls[6]
 """, True)
 
 
@@ -172,6 +180,9 @@ if is_selected( controls ):
 
         # align ctrl's height to roll3_mch
         eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ roll3_mch ].center.z
+
+        # align roll1_mch at this timing...(workaround)
+        eb[ roll1_mch ].align_roll(eb[ self.footprint_bone ].z_axis)
 
         # Rock MCH bones
         rock1_mch = get_bone_name( self.footprint_bone, 'mch', 'rock' )
@@ -545,7 +556,7 @@ class Leg_FK2IK(bpy.types.Operator):
     """
     bl_idname = "gamerig.leg_fk2ik_{rig_id}"
     bl_label = "Snap FK leg to IK"
-    bl_description = "Snap FK leg controllers to IK ones (no keying)"
+    bl_description = "Snap FK leg controllers to IK ones"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
@@ -614,7 +625,7 @@ class Leg_IK2FK(bpy.types.Operator):
     """
     bl_idname = "gamerig.leg_ik2fk_{rig_id}"
     bl_label = "Snap IK leg to FK"
-    bl_description = "Snap IK leg controllers to FK ones (no keying)"
+    bl_description = "Snap IK leg controllers to FK ones"
     bl_options = {{'UNDO', 'INTERNAL'}}
 
     thigh_fk : bpy.props.StringProperty(name="Thigh FK Name")
@@ -656,6 +667,7 @@ class Leg_IK2FK(bpy.types.Operator):
                 toei = obj.pose.bones[self.toe_ik]
             
             # Clear footroll
+            set_pose_translation(footroll, Matrix())
             set_pose_rotation(footroll, Matrix())
 
             # Foot position
@@ -692,9 +704,76 @@ class Leg_IK2FK(bpy.types.Operator):
         return {{'FINISHED'}}
 
 
+class Leg_AlignIKFoot(bpy.types.Operator):
+    """ Align IK foot to horizontal plane.
+    """
+    bl_idname = "gamerig.leg_align_ik_foot_{rig_id}"
+    bl_label = "Align IK foot"
+    bl_description = "Align IK foot to horizontal plane"
+    bl_options = {{'UNDO', 'INTERNAL'}}
+
+    foot_ik  : bpy.props.StringProperty(name="Foot IK Name")
+    heel_ik  : bpy.props.StringProperty(name="Heel IK Name")
+    toe_ik   : bpy.props.StringProperty(name="Toe IK Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
+        try:
+            """ Matches the ik bones in a leg rig to the fk bones.
+            """
+            obj = context.active_object
+
+            foot    = obj.pose.bones[self.foot_ik]
+            heel    = obj.pose.bones[self.heel_ik]
+            if self.toe_ik in obj.pose.bones:
+                toe = obj.pose.bones[self.toe_ik]
+            
+            # Store original transform
+            org_heel_mat = heel.matrix.copy()
+            if self.toe_ik in obj.pose.bones:
+                org_toe_mat = toe.matrix.copy()
+
+            # Clear footroll
+            set_pose_translation(heel, Matrix())
+            set_pose_rotation(heel, Matrix())
+
+            # Align foot
+            loc, rot, scl = foot.matrix.decompose()
+            euler = rot.to_euler('XYZ')
+            euler.x = euler.y = 0.0
+            rot = euler.to_quaternion()
+            footmat = get_pose_matrix_in_other_space(Matrix.LocRotScale(loc, rot, scl), foot)
+            set_pose_rotation(foot, footmat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, foot)
+
+            # match heel
+            heelmat = get_pose_matrix_in_other_space(org_heel_mat, heel)
+            set_pose_translation(heel, heelmat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, heel)
+
+            if self.toe_ik in obj.pose.bones:
+                # Toe rotation
+                toemat = get_pose_matrix_in_other_space(org_toe_mat, toe)
+                set_pose_rotation(toe, toemat)
+                insert_keyframe_by_mode(context, toe)
+
+        finally:
+            context.preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
 classes.append(Leg_FK2IK)
 classes.append(Leg_IK2FK)
-    
+classes.append(Leg_AlignIKFoot)
+
 
 '''.format(rig_id=rig_id)
 

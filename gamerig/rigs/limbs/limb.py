@@ -1,7 +1,6 @@
 import bpy, itertools
 from rna_prop_ui import rna_idprop_ui_create
-from math import radians
-from mathutils import Vector, Quaternion
+from mathutils import Vector
 from ...utils import copy_bone, ctrlname, mchname, insert_before_first_period, find_root_bone, move_bone_collection_to, MetarigError
 from ..widgets import create_limb_widget, create_ikarrow_widget, create_ikdir_widget, create_directed_circle_widget
 

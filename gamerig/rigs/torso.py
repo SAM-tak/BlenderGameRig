@@ -575,13 +575,201 @@ tweaks = {bones['hips']['tweak'] + bones['chest']['tweak'] + bones['neck']['twea
 for tweak in tweaks:
     if is_selected( tweak ):
         layout.prop( pose_bones[ tweak ], '["Tweak Stretch"]', text='Tweak Stretch (' + tweak + ')', slider = True )
-""" if self.stretchable_tweak else "")
+""" if self.stretchable_tweak else "") + f"""
+# Torso Align Button
+if is_selected( controls ):
+    props = layout.operator(Torso_Align2Floor.bl_idname, text='Align To Floor ({self.org_bones[0]})', icon='SNAP_ON')
+    props.head  = controls[0]
+    props.neck  = controls[1]
+    props.chest = controls[2]
+    props.hips  = controls[3]
+    props.pivot = controls[4]
+    props = layout.operator(Torso_AlignYaw.bl_idname, text='Align Yaw ({self.org_bones[0]})', icon='SNAP_ON')
+    props.head  = controls[0]
+    props.neck  = controls[1]
+    props.chest = controls[2]
+    props.hips  = controls[3]
+    props.pivot = controls[4]
+"""
 
 
     def postprocess(self, context):
         self.constrain_bones(   self.bones )
         self.create_drivers(    self.bones )
         self.locks_and_widgets( self.bones )
+
+
+def operator_script(rig_id):
+    return '''
+
+class Torso_Align2Floor(bpy.types.Operator):
+    """ Align torso rig to horizontal plane.
+    """
+    bl_idname = "gamerig.torso_align_to_floor_{rig_id}"
+    bl_label = "Align Pivot To Floor"
+    bl_description = "Align pivot to horizontal plane"
+    bl_options = {{'UNDO', 'INTERNAL'}}
+
+    pivot : bpy.props.StringProperty(name="Pivot Name")
+    hips  : bpy.props.StringProperty(name="Hips Name")
+    chest : bpy.props.StringProperty(name="Chest Name")
+    neck  : bpy.props.StringProperty(name="Neck Name")
+    head  : bpy.props.StringProperty(name="Head Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
+        try:
+            obj = context.active_object
+
+            pivot = obj.pose.bones[self.pivot]
+            hips  = obj.pose.bones[self.hips]
+            chest = obj.pose.bones[self.chest]
+            neck  = obj.pose.bones[self.neck]
+            head  = obj.pose.bones[self.head]
+
+            # Store original transform
+            org_hips_mat = hips.matrix.copy()
+            org_chest_mat = chest.matrix.copy()
+            org_neck_mat = neck.matrix.copy()
+            org_head_mat = head.matrix.copy()
+
+            # Align pivot
+            loc, rot, scl = pivot.matrix.decompose()
+            euler = rot.to_euler('XYZ')
+            euler.x = euler.y = 0.0
+            rot = euler.to_quaternion()
+            pivot_mat = get_pose_matrix_in_other_space(Matrix.LocRotScale(loc, rot, scl), pivot)
+            set_pose_rotation(pivot, pivot_mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, pivot)
+
+            # Match hips position
+            mat = get_pose_matrix_in_other_space(org_hips_mat, hips)
+            set_pose_rotation(hips, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, hips)
+
+            # Match chest position
+            mat = get_pose_matrix_in_other_space(org_chest_mat, chest)
+            set_pose_rotation(chest, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, chest)
+
+            # Match neck position
+            mat = get_pose_matrix_in_other_space(org_neck_mat, neck)
+            set_pose_rotation(neck, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, neck)
+
+            # Match head position
+            mat = get_pose_matrix_in_other_space(org_head_mat, head)
+            set_pose_rotation(head, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, head)
+
+        finally:
+            context.preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+class Torso_AlignYaw(bpy.types.Operator):
+    """ Align torso rig to horizontal plane.
+    """
+    bl_idname = "gamerig.torso_align_yaw_{rig_id}"
+    bl_label = "Align Yaw"
+    bl_description = "Align pivot to nearest vertial plane"
+    bl_options = {{'UNDO', 'INTERNAL'}}
+
+    pivot : bpy.props.StringProperty(name="Pivot Name")
+    hips  : bpy.props.StringProperty(name="Hips Name")
+    chest : bpy.props.StringProperty(name="Chest Name")
+    neck  : bpy.props.StringProperty(name="Neck Name")
+    head  : bpy.props.StringProperty(name="Head Name")
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'POSE'
+
+    def execute(self, context):
+        use_global_undo = context.preferences.edit.use_global_undo
+        context.preferences.edit.use_global_undo = False
+        try:
+            obj = context.active_object
+
+            pivot = obj.pose.bones[self.pivot]
+            hips  = obj.pose.bones[self.hips]
+            chest = obj.pose.bones[self.chest]
+            neck  = obj.pose.bones[self.neck]
+            head  = obj.pose.bones[self.head]
+
+            # Store original transform
+            org_hips_mat = hips.matrix.copy()
+            org_chest_mat = chest.matrix.copy()
+            org_neck_mat = neck.matrix.copy()
+            org_head_mat = head.matrix.copy()
+
+            # Align pivot
+            loc, rot, scl = pivot.matrix.decompose()
+            euler = rot.to_euler('XYZ')
+            if euler.z >= 0.0:
+                euler.z = floor((euler.z + radians(45)) / radians(90)) * radians(90)
+            else:
+                euler.z = -(floor((-euler.z + radians(45)) / radians(90)) * radians(90))
+
+            rot = euler.to_quaternion()
+            pivot_mat = get_pose_matrix_in_other_space(Matrix.LocRotScale(loc, rot, scl), pivot)
+            set_pose_rotation(pivot, pivot_mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, pivot)
+
+            # Match hips position
+            mat = get_pose_matrix_in_other_space(org_hips_mat, hips)
+            set_pose_rotation(hips, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, hips)
+
+            # Match chest position
+            mat = get_pose_matrix_in_other_space(org_chest_mat, chest)
+            set_pose_rotation(chest, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, chest)
+
+            # Match neck position
+            mat = get_pose_matrix_in_other_space(org_neck_mat, neck)
+            set_pose_rotation(neck, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, neck)
+
+            # Match head position
+            mat = get_pose_matrix_in_other_space(org_head_mat, head)
+            set_pose_rotation(head, mat)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode='POSE')
+            insert_keyframe_by_mode(context, head)
+
+        finally:
+            context.preferences.edit.use_global_undo = use_global_undo
+        return {{'FINISHED'}}
+
+
+classes.append(Torso_Align2Floor)
+classes.append(Torso_AlignYaw)
+
+'''.format(rig_id=rig_id)
 
 
 def add_parameters( params ):
