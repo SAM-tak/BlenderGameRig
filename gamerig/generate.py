@@ -208,6 +208,11 @@ def generate_rig(context, metarig):
         try:
             if prop != "_RNA_UI" and prop != "gamerig" and prop != "gamerig_id":
                 obj.data[prop] = metarig.data[prop]
+                try:
+                    org_ui = metarig.data.id_properties_ui(prop)
+                    obj.data.id_properties_ui(prop).update_from(org_ui)
+                except TypeError:
+                    pass
         except KeyError:
             pass
 
@@ -236,6 +241,11 @@ def generate_rig(context, metarig):
         for prop in bone.keys():
             try:
                 bone_gen[prop] = bone[prop]
+                try:
+                    org_ui = bone.id_properties_ui(prop)
+                    bone_gen.id_properties_ui(prop).update_from(org_ui)
+                except TypeError:
+                    pass
             except KeyError:
                 pass
 
@@ -472,7 +482,7 @@ def generate_rig(context, metarig):
     )
     script.use_module = True
 
-    print("GameRig: try  to register ui script.")
+    print("GameRig: try to register ui script.")
     # Register UI script
     try:
         script.as_module().register()

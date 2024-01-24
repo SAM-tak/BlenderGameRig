@@ -450,7 +450,7 @@ def bone_props_ui_string(obj, bone_name, org_bone_name):
     return None
 
 
-def org_bone_props_ui_string(obj, bone_name, org_bone_name):
+def org_bone_props_ui_string(obj, org_bone_name):
     org_bone = obj.pose.bones[org_bone_name]
     rna_properties = {prop.identifier for prop in org_bone.bl_rna.properties if prop.is_runtime}
     ret = ""

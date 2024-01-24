@@ -33,7 +33,7 @@ class Rig:
         self.org_bone = bone
         self.params   = metabone.gamerig
 
-    def generate(self, context):
+    def generate(self, _context):
         """ Generate the rig.
             Do NOT modify any of the original bones, except for adding constraints.
             The main armature should be selected and active before this is called.
@@ -43,7 +43,7 @@ class Rig:
         self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
 
         if self.params.immidiate_custom_property_ui:
-            props_ui_str = org_bone_props_ui_string(self.obj, self.bone, self.org_bone)
+            props_ui_str = org_bone_props_ui_string(self.obj, self.org_bone)
         else:
             props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
 
