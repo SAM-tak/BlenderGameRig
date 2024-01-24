@@ -20,7 +20,7 @@
 
 import bpy
 
-from ..utils import copy_bone, ctrlname, create_widget, bone_prop_link_driver, bone_props_ui_string
+from ..utils import copy_bone, ctrlname, create_widget, bone_prop_link_driver, bone_props_ui_string, org_bone_props_ui_string
 
 
 class Rig:
@@ -42,7 +42,10 @@ class Rig:
         # Make a control bone (copy of original).
         self.bone = copy_bone(self.obj, self.org_bone, ctrlname(self.org_bone))
 
-        props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
+        if self.params.immidiate_custom_property_ui:
+            props_ui_str = org_bone_props_ui_string(self.obj, self.bone, self.org_bone)
+        else:
+            props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
 
         if props_ui_str:
             return f"""
@@ -68,8 +71,9 @@ if is_selected( '{self.bone}' ):
         con.target = self.obj
         con.subtarget = self.bone
 
-        # add driver linked to original custom properties
-        bone_prop_link_driver(self.obj, self.bone, self.org_bone)
+        if not self.params.immidiate_custom_property_ui:
+            # add driver linked to original custom properties
+            bone_prop_link_driver(self.obj, self.bone, self.org_bone)
 
         # Create control widget
         self.create_root_widget()
@@ -105,6 +109,11 @@ def add_parameters( params ):
         name    = "Widget Plane",
         default = 'xy'
     )
+    params.immidiate_custom_property_ui = bpy.props.BoolProperty(
+        name        = "Immidiate Custom Property UI",
+        default     = True,
+        description = "Display Custom Property UI for original bone instead link by driver."
+    )
 
 
 def parameters_ui(layout, params):
@@ -112,6 +121,8 @@ def parameters_ui(layout, params):
     """
     r = layout.row()
     r.prop(params, "widget_plane")
+    r = layout.row()
+    r.prop(params, "immidiate_custom_property_ui")
 
 
 def create_sample(obj):

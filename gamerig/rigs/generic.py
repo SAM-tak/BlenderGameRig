@@ -20,7 +20,7 @@
 
 import bpy
 from rna_prop_ui import rna_idprop_ui_create
-from ..utils import copy_bone, ctrlname, mchname, bone_prop_link_driver, bone_props_ui_string
+from ..utils import copy_bone, ctrlname, mchname, bone_prop_link_driver, bone_props_ui_string, org_bone_props_ui_string
 from .widgets import create_bone_widget, create_circle_widget, create_box_widget, create_sphere_widget
 
 class Rig:
@@ -35,6 +35,7 @@ class Rig:
         self.obj      = obj
         self.org_bone = bone
         self.metabone = metabone
+        self.params   = metabone.gamerig
 
     def generate(self, context):
         """ Generate the rig.
@@ -49,7 +50,10 @@ class Rig:
             self.obj.data.edit_bones[self.bone].use_connect = False
             self.obj.data.edit_bones[self.bone].parent = self.obj.data.edit_bones[self.parent_bone]
 
-        props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
+        if self.params.immidiate_custom_property_ui:
+            props_ui_str = org_bone_props_ui_string(self.obj, self.bone, self.org_bone)
+        else:
+            props_ui_str = bone_props_ui_string(self.obj, self.bone, self.org_bone)
 
         if self.has_physics() or props_ui_str:
             return f"""
@@ -122,15 +126,16 @@ if is_selected('{self.bone}'):
             con.target = self.obj
             con.subtarget = self.bone
 
-        # add driver linked to original custom properties
-        bone_prop_link_driver(self.obj, self.bone, self.org_bone)
+        if not self.params.immidiate_custom_property_ui:
+            # add driver linked to original custom properties
+            bone_prop_link_driver(self.obj, self.bone, self.org_bone)
 
         # Create control widget
-        if self.metabone.gamerig.control_widget_type == 'Circle':
+        if self.params.control_widget_type == 'Circle':
             create_circle_widget(self.obj, self.bone, radius = 0.5)
-        elif self.metabone.gamerig.control_widget_type == 'Box':
+        elif self.params.control_widget_type == 'Box':
             create_box_widget(self.obj, self.bone)
-        elif self.metabone.gamerig.control_widget_type == 'Sphere':
+        elif self.params.control_widget_type == 'Sphere':
             create_sphere_widget(self.obj, self.bone)
         else:
             create_bone_widget(self.obj, self.bone)
@@ -196,7 +201,7 @@ if is_selected('{self.bone}'):
 
 
     def behaves_as_offset( self ):
-        return len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type != 'COPY_TRANSFORMS' and self.metabone.gamerig.constraint_offset_controller
+        return len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type != 'COPY_TRANSFORMS' and self.params.constraint_offset_controller
 
 
 def operator_script(rig_id):
@@ -256,6 +261,11 @@ def add_parameters(params):
         description = "Behave offset controller when metabone has been contrainted",
         default     = False
     )
+    params.immidiate_custom_property_ui = bpy.props.BoolProperty(
+        name        = "Immidiate Custom Property UI",
+        default     = True,
+        description = "Display Custom Property UI for original bone instead link by driver."
+    )
 
 
 def parameters_ui(layout, params):
@@ -265,6 +275,8 @@ def parameters_ui(layout, params):
     r.prop(params, "control_widget_type")
     r = layout.row()
     r.prop(params, "constraint_offset_controller")
+    r = layout.row()
+    r.prop(params, "immidiate_custom_property_ui")
 
 
 def create_sample(obj):

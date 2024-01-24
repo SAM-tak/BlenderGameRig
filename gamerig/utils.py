@@ -450,6 +450,22 @@ def bone_props_ui_string(obj, bone_name, org_bone_name):
     return None
 
 
+def org_bone_props_ui_string(obj, bone_name, org_bone_name):
+    org_bone = obj.pose.bones[org_bone_name]
+    rna_properties = {prop.identifier for prop in org_bone.bl_rna.properties if prop.is_runtime}
+    ret = ""
+    for key in org_bone.keys():
+        if key == '_RNA_UI' or key in rna_properties:
+            continue
+        if isinstance(org_bone[key], float):
+            ret += f"    layout.prop( pose_bones['{org_bone_name}'], '[\"{key}\"]', text='{key} ({org_bone_name})', slider = True )\n"
+
+    if len(ret) > 0:
+        return ret
+    
+    return None
+
+
 def rig_module_name(rig_type):
     """ return a rig module name.
     """
