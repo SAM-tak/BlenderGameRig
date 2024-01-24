@@ -409,29 +409,28 @@ def bone_prop_link_driver(obj, bone_name, org_bone_name):
     bone = obj.pose.bones[bone_name]
     org_bone = obj.pose.bones[org_bone_name]
     rna_properties = {prop.identifier for prop in org_bone.bl_rna.properties if prop.is_runtime}
-    for key1 in org_bone.keys():
-        if key1 == '_RNA_UI' or key1 in rna_properties:
+    for org_prop_name in org_bone.keys():
+        if org_prop_name == '_RNA_UI' or org_prop_name in rna_properties:
             continue
-        if isinstance(org_bone[key1], float):
-            prop1 = org_bone.id_properties_ui(key1)
-            if prop1 is not None:
-                key2 = f'{key1}({org_bone_name})'
-                rna_idprop_ui_create(bone, key2, default=0.0, overridable=True)
-                prop2 = bone.id_properties_ui(key2)
-                if hasattr(prop1, 'keys'):
-                    for k in prop1.keys():
-                        prop2[k] = prop1[k]
+        if isinstance(org_bone[org_prop_name], float):
+            prop_name = f'{org_prop_name}({org_bone_name})'
+            bone[prop_name] = org_bone[org_prop_name]
 
-                bone[key2] = org_bone[key1]
+            drv = org_bone.driver_add(f'["{org_prop_name}"]').driver
+            drv.type = 'AVERAGE'
 
-                drv = org_bone.driver_add(f'["{key1}"]').driver
-                drv.type = 'AVERAGE'
+            var = drv.variables.new()
+            var.name = prop_name
+            var.type = 'SINGLE_PROP'
+            var.targets[0].id = obj
+            var.targets[0].data_path = f'{bone.path_from_id()}["{prop_name}"]'
 
-                var = drv.variables.new()
-                var.name = key2
-                var.type = 'SINGLE_PROP'
-                var.targets[0].id = obj
-                var.targets[0].data_path = f'{bone.path_from_id()}["{key2}"]'
+            try:
+                org_prop_ui = org_bone.id_properties_ui(org_prop_name)
+                prop_ui = bone.id_properties_ui(prop_name)
+                prop_ui.update_from(org_prop_ui)
+            except TypeError:
+                pass
 
 
 def bone_props_ui_string(obj, bone_name, org_bone_name):
