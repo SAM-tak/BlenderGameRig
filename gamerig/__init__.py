@@ -68,7 +68,7 @@ class Preferences(AddonPreferences):
         name='Enable Dev Tools',
         description='Dev Tools appears in Tools tab on edit mode.',
         default=False
-    )
+    ) # type: ignore
 
     def draw(self, context):
         self.layout.row().prop(self, 'shows_dev_tools')
@@ -81,22 +81,22 @@ class ColorSet(PropertyGroup):
         default=(1.0, 1.0, 1.0),
         min=0.0, max=1.0,
         description="color picker"
-    )
+    ) # type: ignore
     normal : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
         default=(1.0, 1.0, 1.0),
         min=0.0, max=1.0,
         description="color picker"
-    )
+    ) # type: ignore
     select : FloatVectorProperty(
         name="object_color",
         subtype='COLOR',
         default=(1.0, 1.0, 1.0),
         min=0.0, max=1.0,
         description="color picker"
-    )
-    standard_colors_lock : BoolProperty(default=True)
+    ) # type: ignore
+    standard_colors_lock : BoolProperty(default=True) # type: ignore
 
 
 class SelectionColors(PropertyGroup):
@@ -106,7 +106,7 @@ class SelectionColors(PropertyGroup):
         default=(0.314, 0.784, 1.0),
         min=0.0, max=1.0,
         description="color picker"
-    )
+    ) # type: ignore
 
     active : FloatVectorProperty(
         name="object_color",
@@ -114,7 +114,7 @@ class SelectionColors(PropertyGroup):
         default=(0.549, 1.0, 1.0),
         min=0.0, max=1.0,
         description="color picker"
-    )
+    ) # type: ignore
 
 
 class BoneCollectionProperties(PropertyGroup):
@@ -131,11 +131,11 @@ class BoneCollectionProperties(PropertyGroup):
         else:
             self['group_prop'] = value
 
-    row : IntProperty(name="Button Row", default=0, min=0, description='UI row for this collection. 0 means hidden.')
+    row : IntProperty(name="Button Row", default=0, min=0, description='UI row for this collection. 0 means hidden.') # type: ignore
     group : IntProperty(
         name="Bone Group", default=0, min=0, max=32,
         get=get_group, set=set_group, description='Assign Bone Group to this collection'
-    )
+    ) # type: ignore
 
     @classmethod
     def register(cls):
@@ -150,16 +150,16 @@ class ArmatureProperties(PropertyGroup):
     rig_ui_template : StringProperty(
         name="GameRig Rig UI Template",
         description="Rig UI Template for this armature"
-    )
+    ) # type: ignore
     rig_name : StringProperty(
         name="GameRig Rig Name",
         description="Defines the name of the Rig."
-    )
+    ) # type: ignore
 
-    colors : CollectionProperty(type=ColorSet)
-    selection_colors : PointerProperty(type=SelectionColors)
-    colors_index : IntProperty(default=-1)
-    colors_lock : BoolProperty(default=True)
+    colors : CollectionProperty(type=ColorSet) # type: ignore
+    selection_colors : PointerProperty(type=SelectionColors) # type: ignore
+    colors_index : IntProperty(default=-1) # type: ignore
+    colors_lock : BoolProperty(default=True) # type: ignore
     theme_to_add : EnumProperty(
         items=(
             ('THEME01', 'THEME01', ''),
@@ -184,7 +184,7 @@ class ArmatureProperties(PropertyGroup):
             ('THEME20', 'THEME20', '')
         ),
         name='Theme'
-    )
+    ) # type: ignore
 
     @classmethod
     def register(cls):
@@ -313,17 +313,17 @@ class GlobalProperties(PropertyGroup):
         default="All",
         name="GameRig Active Category",
         description="The selected rig category"
-    )
+    ) # type: ignore
 
-    types : CollectionProperty(type=PropertyGroup)
-    active_type : IntProperty(name="GameRig Active Rig", description="The selected rig type")
+    types : CollectionProperty(type=PropertyGroup) # type: ignore
+    active_type : IntProperty(name="GameRig Active Rig", description="The selected rig type") # type: ignore
 
-    show_bone_collection_pane : BoolProperty(default=False)
-    show_bone_groups_pane : BoolProperty(default=False)
+    show_bone_collection_pane : BoolProperty(default=False) # type: ignore
+    show_bone_groups_pane : BoolProperty(default=False) # type: ignore
 
-    rename_batch_find : StringProperty(name="Find", description="target string for replace")
-    rename_batch_replace : StringProperty(name="Replace", description="replace string")
-    rename_batch_re : BoolProperty(name="Regular expression", description="Use regular expression")
+    rename_batch_find : StringProperty(name="Find", description="target string for replace") # type: ignore
+    rename_batch_replace : StringProperty(name="Replace", description="replace string") # type: ignore
+    rename_batch_re : BoolProperty(name="Regular expression", description="Use regular expression") # type: ignore
 
     # Properties.
     q2e_order_list : EnumProperty(
@@ -338,8 +338,8 @@ class GlobalProperties(PropertyGroup):
         ),
         name='Convert to',
         description="The target rotation mode", default='QUATERNION'
-    )
-    q2e_convert_only_selected : BoolProperty(name="Convert Only Selected", description="Convert selected bones only", default=True)
+    ) # type: ignore
+    q2e_convert_only_selected : BoolProperty(name="Convert Only Selected", description="Convert selected bones only", default=True) # type: ignore
 
     # a value between [0,100] will show the slider  
     progress_indicator : FloatProperty(
@@ -351,7 +351,7 @@ class GlobalProperties(PropertyGroup):
         soft_max=100,
         min=-1,
         max=101,
-    )
+    ) # type: ignore
 
     @classmethod
     def register(cls):

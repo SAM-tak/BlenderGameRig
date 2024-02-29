@@ -297,7 +297,7 @@ class AddBoneGroupThemeOperator(bpy.types.Operator):
             ('THEME20', 'THEME20', '')
         ),
         name='Theme'
-    )
+    ) # type: ignore
 
     @classmethod
     def poll(cls, context):
@@ -329,7 +329,7 @@ class RemoveBoneGroupOperator(bpy.types.Operator):
     bl_description = "Remove a selected bone group color set"
     bl_options = {'UNDO'}
 
-    idx: IntProperty()
+    idx: IntProperty() # type: ignore
 
     @classmethod
     def poll(cls, context):
@@ -652,7 +652,7 @@ class AddSampleOperator(bpy.types.Operator):
         name="Type",
         description="Name of the rig type to generate a sample of",
         maxlen=128,
-    )
+    ) # type: ignore
 
     def execute(self, context):
         if context.mode == 'EDIT_ARMATURE' and self.metarig_type != "":
