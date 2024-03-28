@@ -171,7 +171,7 @@ def generate_rig(context, metarig):
     bpy.ops.object.mode_set(mode='OBJECT')
 
     # Remove all bone collections.
-    for col in obj.data.collections:
+    for col in list(obj.data.collections):
         obj.data.collections.remove(col)
     bpy.ops.object.mode_set(mode='OBJECT')
 
