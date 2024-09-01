@@ -156,30 +156,22 @@ if is_selected( controls ):
 
         flip_bone( self.obj, roll1_mch )
 
-        # roll2 MCH bone
+        # Create 2nd roll mch, and two rock mch bones
         roll2_mch = get_bone_name( self.footprint_bone, 'mch', 'roll' )
-        roll2_mch = copy_bone( self.obj, roll1_mch, roll2_mch )
+        roll2_mch = copy_bone( self.obj, org_bones[2], roll2_mch )
 
-        # clear parent
         eb[ roll2_mch ].use_connect = False
         eb[ roll2_mch ].parent      = None
+        # align roll2_mch's height to horizontal
+        eb[ roll2_mch ].tail.z = eb[ roll2_mch ].head.z
+        eb[ roll2_mch ].align_roll(eb[ self.footprint_bone ].z_axis)
 
-        # Create 2nd roll mch, and two rock mch bones
-        roll3_mch = get_bone_name( self.footprint_bone, 'mch', 'roll' )
-        roll3_mch = copy_bone( self.obj, org_bones[2], roll3_mch )
+        put_bone(self.obj, roll2_mch, ( eb[ self.footprint_bone ].head + eb[ self.footprint_bone ].tail ) / 2)
 
-        eb[ roll3_mch ].use_connect = False
-        eb[ roll3_mch ].parent      = None
-        # align roll3_mch's height to horizontal
-        eb[ roll3_mch ].tail.z = eb[ roll3_mch ].head.z
-        eb[ roll3_mch ].align_roll(eb[ self.footprint_bone ].z_axis)
+        eb[ roll2_mch ].length /= 4
 
-        put_bone(self.obj, roll3_mch, ( eb[ self.footprint_bone ].head + eb[ self.footprint_bone ].tail ) / 2)
-
-        eb[ roll3_mch ].length /= 4
-
-        # align ctrl's height to roll3_mch
-        eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ roll3_mch ].center.z
+        # align ctrl's height to roll2_mch
+        eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ roll2_mch ].center.z
 
         # align roll1_mch at this timing...(workaround)
         eb[ roll1_mch ].align_roll(eb[ self.footprint_bone ].z_axis)
@@ -205,14 +197,12 @@ if is_selected( controls ):
 
         # Parent rock and roll MCH bones
         eb[ roll1_mch ].parent = eb[ roll2_mch ]
-        eb[ roll2_mch ].parent = eb[ roll3_mch ]
-        eb[ roll3_mch ].parent = eb[ rock1_mch ]
+        eb[ roll2_mch ].parent = eb[ rock1_mch ]
         eb[ rock1_mch ].parent = eb[ rock2_mch ]
         eb[ rock2_mch ].parent = eb[ ctrl ]
 
         bones['ik']['roll1_mch'] = roll1_mch
         bones['ik']['roll2_mch'] = roll2_mch
-        bones['ik']['roll3_mch'] = roll3_mch
         bones['ik']['rock1_mch'] = rock1_mch
         bones['ik']['rock2_mch'] = rock2_mch
         bones['ik']['heel_mch'] = heel_mch
@@ -224,7 +214,7 @@ if is_selected( controls ):
             toeik = copy_bone( self.obj, org_bones[3], toeik )
 
             eb[ toeik ].use_connect = False
-            eb[ toeik ].parent      = eb[ roll3_mch ]
+            eb[ toeik ].parent      = eb[ roll2_mch ]
 
             bones['ik']['toe'] = toeik
 
@@ -267,7 +257,6 @@ if is_selected( controls ):
 
         roll1_mch = bones['ik']['roll1_mch']
         roll2_mch = bones['ik']['roll2_mch']
-        roll3_mch = bones['ik']['roll3_mch']
         rock1_mch = bones['ik']['rock1_mch']
         rock2_mch = bones['ik']['rock2_mch']
         heel_mch = bones['ik']['heel_mch']
@@ -288,13 +277,10 @@ if is_selected( controls ):
             'constraint'  : 'LIMIT_ROTATION',
             'use_limit_x' : True,
             'max_x'       : math.radians(360),
-            'owner_space' : 'LOCAL'
+            'owner_space' : 'LOCAL',
+            'use_legacy_behavior' : True
         })
         self.make_constraint(roll2_mch, {
-            'constraint'  : 'DAMPED_TRACK',
-            'subtarget'   : heel_mch
-        })
-        self.make_constraint(roll3_mch, {
             'constraint'   : 'COPY_ROTATION',
             'subtarget'    : heel,
             'use_y'        : False,
@@ -303,11 +289,12 @@ if is_selected( controls ):
             'owner_space'  : 'LOCAL',
             'target_space' : 'LOCAL'
         })
-        self.make_constraint(roll3_mch, {
+        self.make_constraint(roll2_mch, {
             'constraint'  : 'LIMIT_ROTATION',
             'use_limit_x' : True,
             'max_x'       : math.radians(360),
-            'owner_space' : 'LOCAL'
+            'owner_space' : 'LOCAL',
+            'use_legacy_behavior' : True
         })
         self.make_constraint(heel_mch, {
             'constraint'  : 'COPY_LOCATION',
@@ -391,7 +378,8 @@ if is_selected( controls ):
                 'use_limit_y' : True,
                 'min_y'       : min_y,
                 'max_y'       : max_y,
-                'owner_space' : 'LOCAL'
+                'owner_space' : 'LOCAL',
+                'use_legacy_behavior' : True
             })
 
         # Set up constraints
@@ -423,6 +411,8 @@ if is_selected( controls ):
 
         # Create leg widget
         create_foot_widget(self.obj, ctrl)
+
+        pb[ heel ].lock_location = True, True, True
 
         # Add ballsocket widget to heel
         create_ballsocket_widget(self.obj, heel)
