@@ -19,8 +19,9 @@
 # <pep8 compliant>
 
 import bpy
+import re
 from rna_prop_ui import rna_idprop_ui_create
-from ..utils import copy_bone, ctrlname, mchname, bone_prop_link_driver, bone_props_ui_string, org_bone_props_ui_string
+from ..utils import copy_bone, copy_attributes, ctrlname, mchname, bone_prop_link_driver, bone_props_ui_string, org_bone_props_ui_string
 from .widgets import create_bone_widget, create_circle_widget, create_box_widget, create_sphere_widget
 
 class Rig:
@@ -181,27 +182,34 @@ if is_selected('{self.bone}'):
 
 
     def transfer_constraint( self, bone ):
-        stashed = self.stash_constraint()
-
         pb = self.obj.pose.bones
 
-        target_pb = pb[bone]
-        for i in stashed:
-            const    = target_pb.constraints.new( i['type'] )
-            for k, v in i.items():
-                if k != "type":
-                    try:
-                        setattr(const, k, v)
-                    except AttributeError:
-                        pass
+        src_bone = pb[self.org_bone]
+        dst_bone = pb[bone]
+
+        # Copy Constraints
+        for con1 in src_bone.constraints:
+            con2 = dst_bone.constraints.new(type=con1.type)
+            copy_attributes(con1, con2)
+
+        # Clear Source Constraints
+        for con1 in src_bone.constraints:
+            src_bone.constraints.remove(con1)
+
+        # Change Drivers target
+        if self.obj.animation_data:
+            for drv in self.obj.animation_data.drivers:
+                print(drv.data_path)
+                if drv.data_path.startswith(f'pose.bones["{src_bone.name}"]'):
+                    drv.data_path = drv.data_path.replace(f'pose.bones["{src_bone.name}"]', f'pose.bones["{dst_bone.name}"]')
 
 
     def has_physics( self ):
-        return len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type == 'COPY_TRANSFORMS'
+        return not self.params.no_physics_controller and len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type == 'COPY_TRANSFORMS'
 
 
     def behaves_as_offset( self ):
-        return len(self.metabone.constraints) > 0 and self.metabone.constraints[0].type != 'COPY_TRANSFORMS' and self.params.constraint_offset_controller
+        return len(self.metabone.constraints) > 0 and (self.params.no_physics_controller or self.metabone.constraints[0].type != 'COPY_TRANSFORMS') and self.params.constraint_offset_controller
 
 
 def operator_script(rig_id):
@@ -261,6 +269,11 @@ def add_parameters(params):
         description = "Behave offset controller when metabone has been contrainted",
         default     = False
     )
+    params.no_physics_controller = bpy.props.BoolProperty(
+        name        = "Non Physics Controller",
+        description = "No Physcis/Animation switch feature even if has copy transform constraint",
+        default     = False
+    )
     params.immidiate_custom_property_ui = bpy.props.BoolProperty(
         name        = "Immidiate Custom Property UI",
         default     = True,
@@ -275,6 +288,8 @@ def parameters_ui(layout, params):
     r.prop(params, "control_widget_type")
     r = layout.row()
     r.prop(params, "constraint_offset_controller")
+    r = layout.row()
+    r.prop(params, "no_physics_controller")
     r = layout.row()
     r.prop(params, "immidiate_custom_property_ui")
 

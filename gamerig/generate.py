@@ -408,7 +408,7 @@ def generate_rig(context, metarig):
                     if target.data_path.startswith("GAMERIG-"):
                         temp, bone, prop = tuple([x.strip('"]') for x in target.data_path.split('["')])
                         if bone in obj.data.bones and prop in obj.pose.bones[bone].keys():
-                            target.data_path = target.data_path[7:]
+                            target.data_path = target.data_path[8:]
                         else:
                             target.data_path = 'pose.bones["%s"]["%s"]' % (basename(bone), prop) #?
 
