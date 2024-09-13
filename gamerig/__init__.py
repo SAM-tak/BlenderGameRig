@@ -20,7 +20,7 @@
 
 bl_info = {
     "name": "GameRig",
-    "version": (1, 7, 1),
+    "version": (1, 7, 2),
     "author": "Osamu Takasugi, (Rigify : Nathan Vegdahl, Lucio Rossi, Ivan Cappiello)",
     "blender": (4, 0, 0),
     "description": "Character Rigging framework for Game / Realtime content",
