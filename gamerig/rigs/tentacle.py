@@ -244,8 +244,7 @@ class Rig:
                 var.targets[0].id = self.obj
                 var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["IK/FK"]'
 
-                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-
+                drv_modifier = self.obj.animation_data.drivers[-1].modifiers.new('GENERATOR')
                 drv_modifier.mode            = 'POLYNOMIAL'
                 drv_modifier.poly_order      = 1
                 drv_modifier.coefficients[0] = 1.0
@@ -266,8 +265,7 @@ class Rig:
                 var.targets[0].id = self.obj
                 var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["Maintain Volume"]'
 
-                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-
+                drv_modifier = self.obj.animation_data.drivers[-1].modifiers.new('GENERATOR')
                 drv_modifier.mode            = 'POLYNOMIAL'
                 drv_modifier.poly_order      = 1
                 drv_modifier.coefficients[0] = 0.0
@@ -292,8 +290,7 @@ class Rig:
                 var.targets[0].id = self.obj
                 var.targets[0].data_path = pb[fk_ctrls[0]].path_from_id() + '["Rig/Phy"]'
 
-                drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-
+                drv_modifier = self.obj.animation_data.drivers[-1].modifiers.new('GENERATOR')
                 drv_modifier.mode            = 'POLYNOMIAL'
                 drv_modifier.poly_order      = 1
                 drv_modifier.coefficients[0] = 0.0

@@ -327,8 +327,7 @@ if is_selected( controls ):
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb[ik_dir_ctrl].path_from_id() + '["IK Toe Follow"]'
 
-            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers.new('GENERATOR')
             drv_modifier.mode            = 'POLYNOMIAL'
             drv_modifier.poly_order      = 1
             drv_modifier.coefficients[0] = 0.0
@@ -450,8 +449,7 @@ if is_selected( controls ):
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb_master.path_from_id() + '["IK/FK"]'
 
-            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers.new('GENERATOR')
             drv_modifier.mode            = 'POLYNOMIAL'
             drv_modifier.poly_order      = 1
             drv_modifier.coefficients[0] = 1.0
@@ -524,7 +522,7 @@ if is_selected( controls ):
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb_master.path_from_id() + '["IK/FK"]'
 
-            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers.new('GENERATOR')
             drv_modifier.mode            = 'POLYNOMIAL'
             drv_modifier.poly_order      = 1
             drv_modifier.coefficients[0] = 1.0

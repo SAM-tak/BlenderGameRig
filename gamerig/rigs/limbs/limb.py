@@ -745,8 +745,7 @@ class Limb:
             var.targets[0].id = self.obj
             var.targets[0].data_path = pb_master.path_from_id() + '["IK Stretch"]'
 
-            drv_modifier = self.obj.animation_data.drivers[-1].modifiers[0]
-
+            drv_modifier = self.obj.animation_data.drivers[-1].modifiers.new('GENERATOR')
             drv_modifier.mode            = 'POLYNOMIAL'
             drv_modifier.poly_order      = 1
             drv_modifier.coefficients[0] = 1.0
