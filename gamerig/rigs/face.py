@@ -779,7 +779,7 @@ class Rig:
                 eb[ rbn(bone) ].parent = eb[ rbn(face_name) ]
 
 
-    def make_constraits( self, constraint_type, bone, subtarget, influence = 1 ):
+    def make_constraits( self, constraint_type, bone, subtarget, influence = 1, invert_x = False ):
         rbn = self.rbn
         pb = self.obj.pose.bones
         
@@ -883,6 +883,7 @@ class Rig:
             const.use_offset   = True
             const.target_space = 'LOCAL'
             const.owner_space  = 'LOCAL'
+            const.invert_x     = invert_x
 
         elif constraint_type == 'tweak_copy_rot_scl':
 
@@ -1044,6 +1045,12 @@ class Rig:
             midctrlname('lip.B.L')    : [ [ ctrlname('lips.L'), ctrlname('lip.B')          ], [ 0.25, 0.5 ] ],
             midctrlname('lip.B.R')    : [ [ ctrlname('lips.R'), ctrlname('lip.B')          ], [ 0.25, 0.5 ] ],
         }
+        tweak_copyloc_xinvert = {
+            midctrlname('lid.T.L'),
+            midctrlname('lid.T.R'),
+            midctrlname('lid.B.L'),
+            midctrlname('lid.B.R'),
+        }
         # top to tail
         for name in ('nose.L', 'nose.R'):
             if name in self.tail_mid_map and self.tail_mid_map[name][2] > 1:
@@ -1066,7 +1073,7 @@ class Rig:
             if k:
                 for target, influence in zip( v[0], v[1] ):
                     if target:
-                        self.make_constraits( 'tweak_copyloc', k, target, influence )
+                        self.make_constraits( 'tweak_copyloc', k, target, influence, k in tweak_copyloc_xinvert )
 
         # copy rotation & scale constraints for tweak bones of both sides
         tweak_copy_rot_scl = {
