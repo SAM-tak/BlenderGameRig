@@ -192,16 +192,15 @@ if is_selected('{self.bone}'):
             con2 = dst_bone.constraints.new(type=con1.type)
             copy_attributes(con1, con2)
 
-        # Clear Source Constraints
-        for con1 in src_bone.constraints:
-            src_bone.constraints.remove(con1)
-
         # Change Drivers target
         if self.obj.animation_data:
             for drv in self.obj.animation_data.drivers:
-                print(drv.data_path)
                 if drv.data_path.startswith(f'pose.bones["{src_bone.name}"]'):
                     drv.data_path = drv.data_path.replace(f'pose.bones["{src_bone.name}"]', f'pose.bones["{dst_bone.name}"]')
+
+        # Clear Source Constraints
+        for con1 in src_bone.constraints:
+            src_bone.constraints.remove(con1)
 
 
     def has_physics( self ):
