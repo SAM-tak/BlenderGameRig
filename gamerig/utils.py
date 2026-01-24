@@ -529,18 +529,16 @@ def children_names(obj, bone_name, depth):
     return names
 
 
-def find_root_bone(obj, bone_name):
+def find_root_bone(metabone):
     """ Find root rig original bone from all parent.
         This works while initializing (inner rig's __init__ function) only.
     """
-    bone = obj.data.edit_bones[bone_name]
-    if bone:
-        bone = bone.parent
-        while(bone):
-            pb = obj.pose.bones[bone.name]
-            if hasattr(pb, 'gamerig') and pb.gamerig.name == 'root':
-                return bone.name
-            bone = bone.parent
+    if metabone:
+        metabone = metabone.parent
+        while(metabone):
+            if hasattr(metabone, 'gamerig') and metabone.gamerig.name == 'root':
+                return metabone.name
+            metabone = metabone.parent
     return None
 
 

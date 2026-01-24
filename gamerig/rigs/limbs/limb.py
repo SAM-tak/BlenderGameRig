@@ -16,7 +16,7 @@ class Limb:
         self.root_vector_ik = self.params.support_ik_mode == 'root' or self.params.support_ik_mode == 'both'
         self.pole_vector_ik = self.params.support_ik_mode == 'pole' or self.params.support_ik_mode == 'both'
 
-        self.root_bone = find_root_bone(obj, bone_name)
+        self.root_bone = find_root_bone(metabone)
         self.virtual_root_bone = self.root_bone
         if not self.virtual_root_bone:
             virtual_root_bone_name = get_bone_name('virtual', 'mch', 'root')
@@ -44,7 +44,6 @@ class Limb:
 
 
     def postprocess_parent(self):
-
         mch = self.bones['parent']
 
         # Constraints
