@@ -625,7 +625,7 @@ def get_bone_rig(metarig, obj, bone_name, rigtypes, halt_on_missing=False):
     else:
         # Get the rig
         try:
-            rigt = next((rigt.__name__ == rig_module_name(rig_type) for rigt in rigtypes), None)
+            rigt = next((rigt for rigt in rigtypes if rigt.__name__ == rig_module_name(rig_type)), None)
             if not rigt:
                 rigt = get_rig_type(rig_type)
             rig = rigt.Rig(obj, bone_name, metarig.pose.bones[bone_name])
@@ -637,6 +637,16 @@ def get_bone_rig(metarig, obj, bone_name, rigtypes, halt_on_missing=False):
                 print(message)
                 print('print_exc():')
                 traceback.print_exc(file=sys.stdout)
+        except MetarigError:
+            raise
+        except Exception as e:
+            message = "GAMERIG ERROR: Bone '%s': failed to initialize rig '%s' (%s) - %s" % (
+                bone_name,
+                rig_type,
+                type(e).__name__,
+                e,
+            )
+            raise MetarigError(message)
         else:
             rigtypes.add(rigt)
             return rig

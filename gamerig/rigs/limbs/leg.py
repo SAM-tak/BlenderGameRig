@@ -25,11 +25,29 @@ from .limb import *
 
 class Rig(Limb):
 
+    @staticmethod
+    def on_parameter_update(context, bone, params, prop_name):
+        Limb.on_parameter_update(context, bone, params, prop_name)
+
+        if prop_name == 'footprint_bone':
+            params.footprint_bone = Limb.normalize_side_token_to_root(bone.name, params.footprint_bone)
+        elif prop_name == 'conntact_bone':
+            params.conntact_bone = Limb.normalize_side_token_to_root(bone.name, params.conntact_bone)
+
     def __init__(self, obj, bone_name, metabone):
         super().__init__(obj, bone_name, metabone)
-        self.footprint_bone = self.params.footprint_bone
-        self.conntact_bone = self.params.conntact_bone if self.params.has_conntact_bone else None
         self.org_bones = ([bone_name] + connected_children_names(obj, bone_name))[:4]
+        self.params.footprint_bone = self.normalize_side_token_to_root(bone_name, self.params.footprint_bone)
+        self.footprint_bone = self.resolve_side_bone_name(self.params.footprint_bone)
+        if not self.footprint_bone or self.footprint_bone not in self.obj.data.bones:
+            raise MetarigError(
+                "GAMERIG ERROR: Bone '%s': footprint_bone '%s' is invalid. Please set an existing bone name." % (
+                    bone_name,
+                    self.params.footprint_bone,
+                )
+            )
+        self.params.conntact_bone = self.normalize_side_token_to_root(bone_name, self.params.conntact_bone)
+        self.conntact_bone = self.resolve_side_bone_name(self.params.conntact_bone) if self.params.has_conntact_bone else None
 
 
     def generate(self, context):
@@ -772,7 +790,7 @@ def add_parameters( params ):
     """
     params.footprint_bone = bpy.props.StringProperty(
         name="Footprint Bone Name",
-        description="Specify footprint bone name",
+            description="Specify footprint bone name. If this value has a side token that differs from the root limb side, it is auto-corrected on edit; at rig generation, side-less names are resolved by appending the root side token when possible",
         default="JIG-heel.L"
     )
     params.has_conntact_bone = bpy.props.BoolProperty(
@@ -782,7 +800,7 @@ def add_parameters( params ):
     )
     params.conntact_bone = bpy.props.StringProperty(
         name="Foot Contanct Bone Name",
-        description="Specify Foot Contanct Bone name",
+            description="Specify Foot Contanct Bone name. If this value has a side token that differs from the root limb side, it is auto-corrected on edit; at rig generation, side-less names are resolved by appending the root side token when possible",
         default="ground.L"
     )
     Limb.add_parameters(params)

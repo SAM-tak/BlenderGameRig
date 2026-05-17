@@ -28,6 +28,109 @@ class Limb:
                 virtual_root_bone.length = 0.5
 
 
+    @staticmethod
+    def extract_side_tokens(name):
+        if not name:
+            return None, None
+
+        flipped = bpy.utils.flip_name(name)
+        if flipped == name:
+            return None, None
+
+        # Extract current/opposite side tokens from name differences.
+        # Example: thigh.L <-> thigh.R, foo.r.001 <-> foo.l.001
+        left = 0
+        max_left = min(len(name), len(flipped))
+        while left < max_left and name[left] == flipped[left]:
+            left += 1
+
+        right = 0
+        max_right = min(len(name) - left, len(flipped) - left)
+        while right < max_right and name[-(right + 1)] == flipped[-(right + 1)]:
+            right += 1
+
+        curr = name[left:len(name) - right if right else len(name)]
+        oppo = flipped[left:len(flipped) - right if right else len(flipped)]
+
+        if not curr or not oppo:
+            return None, None
+
+        return curr, oppo
+
+
+    @staticmethod
+    def normalize_side_token_to_root(root_name, value):
+        if not root_name or not value:
+            return value
+
+        root_side, _ = Limb.extract_side_tokens(root_name)
+        value_side, _ = Limb.extract_side_tokens(value)
+
+        # Only normalize when both names have valid side tokens and they mismatch.
+        if not root_side or not value_side or root_side == value_side:
+            return value
+
+        head, tail = value.rsplit(value_side, 1)
+        return head + root_side + tail
+
+
+    @staticmethod
+    def normalize_collection_side_token_to_root(root_name, value):
+        """Like normalize_side_token_to_root, but strips space-suffixes (e.g. ' (IK)')
+        before extracting side tokens, so bone collection names are handled correctly."""
+        if not root_name or not value:
+            return value
+
+        root_side, _ = Limb.extract_side_tokens(root_name.partition(' ')[0])
+        value_side, _ = Limb.extract_side_tokens(value.partition(' ')[0])
+
+        if not root_side or not value_side or root_side == value_side:
+            return value
+
+        head, tail = value.rsplit(value_side, 1)
+        return head + root_side + tail
+
+
+    def resolve_side_bone_name(self, bone_name):
+        if not bone_name or bone_name in self.obj.data.bones:
+            return bone_name
+
+        org_bones = getattr(self, 'org_bones', None)
+        if not org_bones:
+            return bone_name
+
+        root = org_bones[0]
+
+        # First, normalize mismatched side token to root side (if both have side token).
+        normalized = self.normalize_side_token_to_root(root, bone_name)
+        if normalized in self.obj.data.bones:
+            return normalized
+
+        # Then, support side-less input by appending root side token when available.
+        root_side, _ = self.extract_side_tokens(root)
+        value_side, _ = self.extract_side_tokens(normalized)
+        if root_side and not value_side:
+            candidate = normalized + root_side
+            if candidate in self.obj.data.bones:
+                return candidate
+
+        # Last fallback: use Blender's own flip result.
+        flipped_name = bpy.utils.flip_name(normalized)
+        if flipped_name != normalized and flipped_name in self.obj.data.bones:
+            return flipped_name
+
+        return normalized
+
+
+    @staticmethod
+    def on_parameter_update(context, bone, params, prop_name):
+        if prop_name == 'fk_bone_collection':
+            if not bone or not bone.bone or len(bone.bone.collections) == 0:
+                return
+
+            params.fk_bone_collection = Limb.normalize_collection_side_token_to_root(bone.bone.collections[0].name, params.fk_bone_collection)
+
+
     def create_parent( self ):
         org_bones = self.org_bones
 
@@ -415,6 +518,7 @@ class Limb:
             create_limb_widget(self.obj, ctrls[2])
             create_directed_circle_widget(self.obj, ctrls[3], radius=-0.4, head_tail=0.5) # negative radius is reasonable. to flip xz
         
+        self.params.fk_bone_collection = self.normalize_collection_side_token_to_root(self.org_bones[0], self.params.fk_bone_collection)
         for c in ctrls:
             move_bone_collection_to(self.obj, c, self.params.fk_bone_collection)
 
@@ -869,7 +973,7 @@ if is_selected( ik_ctrls ):
         # Setting up extra bone collection for the FK
         params.fk_bone_collection = bpy.props.StringProperty(
             name        = "FK Bone Collection",
-            description = "Bone collection for the FK controls to be on",
+            description = "Bone collection for the FK controls to be on. If this value has a side token that differs from the root bone's collection side token, it is auto-corrected on edit",
             default     = ""
         )
 

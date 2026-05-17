@@ -608,6 +608,18 @@ class GenerateOperator(bpy.types.Operator):
             error = generate.generate_rig(context, context.object)
             if error:
                 self.report({'ERROR'}, error)
+                try:
+                    bpy.ops.ed.undo()
+                except RuntimeError:
+                    pass
+                return {'CANCELLED'}
+        except Exception as e:
+            self.report({'ERROR'}, f"GAMERIG ERROR: {e}")
+            try:
+                bpy.ops.ed.undo()
+            except RuntimeError:
+                pass
+            return {'CANCELLED'}
         finally:
             context.preferences.edit.use_global_undo = use_global_undo
         

@@ -220,11 +220,14 @@ def update_callback(prop_name):
                 bone = context.active_pose_bone
 
                 if bone and bone.gamerig == params:
-                    rig_info = rig_lists.rigs.get(utils.get_rig_type(bone), None)
-                    if rig_info:
-                        rig_cb = getattr(rig_info["module"].Rig, 'on_parameter_update', None)
-                        if rig_cb:
-                            rig_cb(context, bone, params, prop_name)
+                    rig_type = (bone.gamerig.name or '').replace(' ', '')
+                    if rig_type:
+                        rig_module = utils.get_rig_type(rig_type)
+                        rig_cls = getattr(rig_module, 'Rig', None)
+                        if rig_cls:
+                            rig_cb = getattr(rig_cls, 'on_parameter_update', None)
+                            if rig_cb:
+                                rig_cb(context, bone, params, prop_name)
             finally:
                 in_update = False
 

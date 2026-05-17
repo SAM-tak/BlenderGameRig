@@ -25,10 +25,25 @@ from .limb import *
 
 class Rig(Limb):
 
+    @staticmethod
+    def on_parameter_update(context, bone, params, prop_name):
+        Limb.on_parameter_update(context, bone, params, prop_name)
+
+        if prop_name == 'pawstamp_bone':
+            params.pawstamp_bone = Limb.normalize_side_token_to_root(bone.name, params.pawstamp_bone)
+
     def __init__(self, obj, bone_name, metabone):
         super().__init__(obj, bone_name, metabone)
-        self.footprint_bone = self.params.footprint_bone
         self.org_bones = ([bone_name] + connected_children_names(obj, bone_name))[:4]
+        self.params.pawstamp_bone = self.normalize_side_token_to_root(bone_name, self.params.pawstamp_bone)
+        self.pawstamp_bone = self.resolve_side_bone_name(self.params.pawstamp_bone)
+        if not self.pawstamp_bone or self.pawstamp_bone not in self.obj.data.bones:
+            raise MetarigError(
+                "GAMERIG ERROR: Bone '%s': pawstamp_bone '%s' is invalid. Please set an existing bone name." % (
+                    bone_name,
+                    self.params.pawstamp_bone,
+                )
+            )
 
 
     def generate(self, context):
@@ -99,7 +114,7 @@ if is_selected( controls ):
         eb[ ctrl ].length = l
 
         # align ctrl's height to roll2_mch
-        eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ self.footprint_bone ].center.z
+        eb[ ctrl ].head.z = eb[ ctrl ].tail.z = eb[ self.pawstamp_bone ].center.z
 
         # add IK Follow feature
         mch_ik_socket = self.make_ik_follow_bone( eb, ctrl )
@@ -359,10 +374,10 @@ def add_parameters( params ):
     """ Add the parameters of this rig type to the
         RigParameters PropertyGroup
     """
-    params.footprint_bone = bpy.props.StringProperty(
+    params.pawstamp_bone = bpy.props.StringProperty(
         name="Footprint Bone Name",
-        description="Specify footprint bone name",
-        default="JIG-heel.L"
+            description="Specify footprint bone name. If this value has a side token that differs from the root limb side, it is auto-corrected on edit; at rig generation, side-less names are resolved by appending the root side token when possible",
+        default="JIG-forepawstamp.L"
     )
     Limb.add_parameters(params)
 
@@ -370,7 +385,7 @@ def add_parameters( params ):
 def parameters_ui(layout, params):
     """ Create the ui for the rig parameters."""
     r = layout.row()
-    r.prop(params, "footprint_bone")
+    r.prop(params, "pawstamp_bone")
     Limb.parameters_ui(layout, params)
 
 
@@ -434,7 +449,7 @@ def create_sample(obj):
     except AttributeError:
         pass
     try:
-        pbone.gamerig.footprint_bone = "JIG-forepawstamp.L"
+        pbone.gamerig.pawstamp_bone = "JIG-forepawstamp.L"
     except AttributeError:
         pass
     pbone = obj.pose.bones[bones['forelimb.02.L']]
