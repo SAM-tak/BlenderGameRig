@@ -885,10 +885,10 @@ def create_sample(obj):
     bone.parent = arm.edit_bones[bones['neck']]
     bones['head'] = bone.name
 
-    if not "Torso" in arm.collection.keys():
-        arm.collection.new("Torso")
-    if not "Torso (Tweak)" in obj.data.collection.keys():
-        arm.collection.new("Torso (Tweak)")
+    if not "Torso" in arm.collections.keys():
+        arm.collections.new("Torso")
+    if not "Torso (Tweak)" in arm.collections.keys():
+        arm.collections.new("Torso (Tweak)")
 
     bpy.ops.object.mode_set(mode='OBJECT')
     pbone = obj.pose.bones[bones['hips']]
@@ -898,7 +898,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    obj.data.collection["Face"].assing(pbone)
+    arm.collections["Face"].assign(pbone)
     try:
         pbone.gamerig.pivot_pos = 2
     except AttributeError:
@@ -926,7 +926,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collection["Face"].assing(pbone)
+    arm.collections["Face"].assign(pbone)
     pbone = obj.pose.bones[bones['chest']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -934,7 +934,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collection["Face"].assing(pbone)
+    arm.collections["Face"].assign(pbone)
     pbone = obj.pose.bones[bones['upper_chest']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -942,7 +942,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collection["Face"].assing(pbone)
+    arm.collections["Face"].assign(pbone)
     pbone = obj.pose.bones[bones['neck']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -950,7 +950,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collection["Face"].assing(pbone)
+    arm.collections["Face"].assign(pbone)
     pbone = obj.pose.bones[bones['head']]
     pbone.gamerig.name = ''
     pbone.lock_location = (False, False, False)
@@ -958,7 +958,7 @@ def create_sample(obj):
     pbone.lock_rotation_w = False
     pbone.lock_scale = (False, False, False)
     pbone.rotation_mode = 'QUATERNION'
-    arm.collection["Face"].assing(pbone)
+    arm.collections["Face"].assign(pbone)
 
     bpy.ops.object.mode_set(mode='EDIT')
     for bone in arm.edit_bones:

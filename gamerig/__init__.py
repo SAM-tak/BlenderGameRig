@@ -39,8 +39,9 @@ if "bpy" in locals():
     importlib.reload(generate)
     importlib.reload(ui)
     importlib.reload(metarig_menu)
+    importlib.reload(sample_menu)
 else:
-    from . import utils, rig_lists, generate, ui, metarig_menu
+    from . import utils, rig_lists, generate, ui, metarig_menu, sample_menu
 
 import bpy
 from bpy.types import (
@@ -363,6 +364,7 @@ class GlobalProperties(PropertyGroup):
         # Sub-modules.
         ui.register()
         metarig_menu.register()
+        sample_menu.register()
 
         # Add rig parameters
         for rig in rig_lists.rig_list:
@@ -375,6 +377,7 @@ class GlobalProperties(PropertyGroup):
         clear_parameters()
 
         # Sub-modules.
+        sample_menu.unregister()
         metarig_menu.unregister()
         ui.unregister()
 

@@ -120,31 +120,6 @@ class ArmaturePanel(bpy.types.Panel):
                 layout.row().box().label(text="Create new armature '%s'" % rig_name, icon='INFO')
                 layout.row().operator(GenerateOperator.bl_idname, text="Generate New Rig", icon='POSE_HLT')
 
-        elif obj.mode == 'EDIT':
-            # Build types list
-            category_name = str(gparam.category).replace(" ", "")
-
-            for i in range(0, len(gparam.types)):
-                gparam.types.remove(0)
-
-            for r in rig_lists.rig_list:
-
-                if category_name == "All":
-                    a = gparam.types.add()
-                    a.name = r
-                elif r.startswith(category_name + '.'):
-                    a = gparam.types.add()
-                    a.name = r
-                elif (category_name == "None") and ("." not in r):
-                    a = gparam.types.add()
-                    a.name = r
-
-            # Rig type list
-            layout.row().template_list("UI_UL_list", "gamerig_type", gparam, "types", gparam, 'active_type')
-
-            props = layout.operator(AddSampleOperator.bl_idname, text="Add sample")
-            props.metarig_type = gparam.types[gparam.active_type].name
-
 
 class AddBoneGroupsOperator(bpy.types.Operator):
     bl_idname = "gamerig.add_bone_groups"
@@ -647,39 +622,6 @@ class ToggleArmatureReferenceOperator(bpy.types.Operator):
                                 j.object = metarig
                             elif j.object == metarig:
                                 j.object = genrig
-
-        return {'FINISHED'}
-
-
-class AddSampleOperator(bpy.types.Operator):
-    """Create a sample metarig to be modified before generating """ \
-    """the final rig"""
-
-    bl_idname  = "gamerig.add_metarig_sample"
-    bl_label = "Add sample"
-    bl_description = "Add a sample metarig for a rig type"
-    bl_options = {'UNDO'}
-
-    metarig_type: StringProperty(
-        name="Type",
-        description="Name of the rig type to generate a sample of",
-        maxlen=128,
-    ) # type: ignore
-
-    def execute(self, context):
-        if context.mode == 'EDIT_ARMATURE' and self.metarig_type != "":
-            use_global_undo = context.preferences.edit.use_global_undo
-            context.preferences.edit.use_global_undo = False
-            try:
-                rig = get_rig_type(self.metarig_type)
-                create_sample = rig.create_sample
-            except (ImportError, AttributeError):
-                raise Exception("rig type '" + self.metarig_type + "' has no sample.")
-            else:
-                create_sample(context.active_object)
-            finally:
-                context.preferences.edit.use_global_undo = use_global_undo
-                bpy.ops.object.mode_set(mode='EDIT')
 
         return {'FINISHED'}
 
@@ -1189,7 +1131,6 @@ register, unregister = bpy.utils.register_classes_factory((
     RevealUnlinkedWidgetOperator,
     # GenerateProgressOperator,
     GenerateOperator,
-    AddSampleOperator,
     ToggleArmatureReferenceOperator,
     EncodeMetarigOperator,
     EncodeMetarigSampleOperator,
