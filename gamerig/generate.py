@@ -58,6 +58,20 @@ def set_library_overridable(owner, prop):
         pass
 
 
+def get_rig_org_bones(rig):
+    """ Returns names of the original bones controlled by the rig.
+    """
+    # face rig: org_bones holds abstract names, actual bone names are the values of abs_name_map
+    abs_name_map = getattr(rig, 'abs_name_map', None)
+    if abs_name_map:
+        return list(abs_name_map.values())
+    org_bones = getattr(rig, 'org_bones', None)
+    if org_bones:
+        return list(org_bones)
+    org_bone = getattr(rig, 'org_bone', None)
+    return [org_bone] if org_bone else []
+
+
 def generate_rig(context, metarig):
     """ Generates a rig from a metarig.
     """
@@ -297,6 +311,9 @@ def generate_rig(context, metarig):
         else:
             error = errorstr
     
+    # Original bones controlled by any rig. The others keep their metarig bone collections.
+    rigged_bones = set()
+
     try:
         # Collect/initialize all the rigs.
         rigs = {}
@@ -307,6 +324,8 @@ def generate_rig(context, metarig):
                 rig = get_bone_rig(metarig, obj, bone, rigtypes)
                 if rig:
                     rigs[bone] = rig
+                    rigged_bones.add(bone)
+                    rigged_bones.update(get_rig_org_bones(rig))
             except MetarigError as e:
                 append_error(bone, None, e)
         t.tick("Initialize rigs: ")
@@ -439,9 +458,10 @@ def generate_rig(context, metarig):
     for col in obj.data.collections:
         col.is_visible = True
 
-    # Unassign all the bones with names starting with "MCH-" or original bones from any collection.
+    # Unassign all the bones with names starting with "MCH-" or rigged original bones from any collection.
+    # Original bones not controlled by any rig keep their metarig bone collections (and are also assigned to ORG below).
     for bone in bones:
-        if is_mch(obj.data.bones[bone].name) or bone in original_bones:
+        if is_mch(obj.data.bones[bone].name) or (bone in original_bones and bone in rigged_bones):
             for col in obj.data.collections:
                 col.unassign(obj.data.bones[bone])
 
