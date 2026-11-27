@@ -301,6 +301,17 @@ def move_bone_collection_to(obj, bone_name, collection_name):
         obj.data.collections[collection_name].assign(bone)
 
 
+def fk_bone_collection_property():
+    """ Shared definition of the 'fk_bone_collection' rig parameter.
+        Rig parameters live on a single PropertyGroup, so every rig must define it identically.
+    """
+    return bpy.props.StringProperty(
+        name        = "FK Bone Collection",
+        description = "Bone collection for the FK controls to be on. For limb rigs, a side token that differs from the root bone's collection side token is auto-corrected on edit",
+        default     = ""
+    )
+
+
 #=============================================
 # Widget creation
 #=============================================

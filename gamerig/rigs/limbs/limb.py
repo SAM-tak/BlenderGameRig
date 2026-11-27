@@ -1,7 +1,7 @@
 import bpy, itertools
 from rna_prop_ui import rna_idprop_ui_create
 from mathutils import Vector
-from ...utils import copy_bone, ctrlname, mchname, insert_before_first_period, find_root_bone, move_bone_collection_to, MetarigError
+from ...utils import copy_bone, ctrlname, mchname, insert_before_first_period, find_root_bone, move_bone_collection_to, fk_bone_collection_property, MetarigError
 from ..widgets import create_limb_widget, create_ikarrow_widget, create_ikdir_widget, create_directed_circle_widget
 
 
@@ -971,11 +971,7 @@ if is_selected( ik_ctrls ):
         )
 
         # Setting up extra bone collection for the FK
-        params.fk_bone_collection = bpy.props.StringProperty(
-            name        = "FK Bone Collection",
-            description = "Bone collection for the FK controls to be on. If this value has a side token that differs from the root bone's collection side token, it is auto-corrected on edit",
-            default     = ""
-        )
+        params.fk_bone_collection = fk_bone_collection_property()
 
 
     @staticmethod

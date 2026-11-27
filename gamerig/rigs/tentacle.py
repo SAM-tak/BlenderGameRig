@@ -3,7 +3,7 @@ from rna_prop_ui import rna_idprop_ui_create
 from ..utils import (
     copy_bone, flip_bone, ctrlname, mchname, children_names,
     insert_before_first_period, move_bone_collection_to,
-    MetarigError
+    fk_bone_collection_property, MetarigError
 )
 from .widgets import create_sphere_widget, create_cube_widget
 
@@ -600,11 +600,7 @@ def add_parameters(params):
     )
 
     # Setting up extra layers for the FK
-    params.fk_bone_collection = bpy.props.StringProperty(
-        name        = "FK Bone Collection",
-        default     = "",
-        description = "Bone collection for the FK controls to be on"
-    )
+    params.fk_bone_collection = fk_bone_collection_property()
 
 
 def parameters_ui(layout, params):
