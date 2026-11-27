@@ -58,6 +58,96 @@ def set_library_overridable(owner, prop):
         pass
 
 
+def snapshot_rna_values(struct, skip=()):
+    """ Returns writable non-pointer property values of a RNA struct as plain Python values.
+        Unlike keeping the struct itself, the result stays valid after the struct is freed.
+    """
+    values = {}
+    for prop in struct.bl_rna.properties:
+        key = prop.identifier
+        if key in skip or key == 'rna_type' or prop.is_readonly or prop.type in {'POINTER', 'COLLECTION'}:
+            continue
+        value = getattr(struct, key)
+        if prop.type != 'STRING' and getattr(prop, 'is_array', False):
+            value = tuple(value)
+        values[key] = value
+    return values
+
+
+def restore_rna_values(struct, values):
+    for key, value in values.items():
+        try:
+            setattr(struct, key, value)
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+
+def find_action_slot(action, identifier):
+    if action and identifier:
+        return next((s for s in action.slots if s.identifier == identifier), None)
+    return None
+
+
+ANIMDATA_SKIP_PROPS = {'action', 'action_slot', 'action_slot_handle', 'last_slot_identifier', 'use_tweak_mode'}
+NLA_STRIP_SKIP_PROPS = {'action', 'action_slot', 'action_slot_handle', 'last_slot_identifier'}
+
+
+def save_animation_data(obj):
+    """ Saves action, slot and NLA tracks of the object as plain values (see snapshot_rna_values). """
+    ad = obj.animation_data
+    if ad is None:
+        return None
+    tracks = []
+    for track in ad.nla_tracks:
+        strips = []
+        for strip in track.strips:
+            if strip.type != 'CLIP' or strip.action is None:
+                print("GameRig: Warning. NLA strip '%s' (%s) is not restored." % (strip.name, strip.type))
+                continue
+            strips.append({
+                'action' : strip.action,
+                'slot'   : strip.action_slot.identifier if strip.action_slot else '',
+                'values' : snapshot_rna_values(strip, NLA_STRIP_SKIP_PROPS),
+            })
+        tracks.append({'values' : snapshot_rna_values(track), 'strips' : strips})
+    return {
+        'action' : ad.action,
+        'slot'   : ad.action_slot.identifier if ad.action_slot else '',
+        'values' : snapshot_rna_values(ad, ANIMDATA_SKIP_PROPS),
+        'tracks' : tracks,
+    }
+
+
+def restore_animation_data(obj, saved):
+    if saved is None:
+        return
+    ad = obj.animation_data or obj.animation_data_create()
+    restore_rna_values(ad, saved['values'])
+
+    for track_info in saved['tracks']:
+        try:
+            track = ad.nla_tracks.new()
+            for strip_info in track_info['strips']:
+                values = strip_info['values']
+                strip = track.strips.new(values.get('name', ''), int(values.get('frame_start', 0)), strip_info['action'])
+                slot = find_action_slot(strip_info['action'], strip_info['slot'])
+                if slot:
+                    strip.action_slot = slot
+                restore_rna_values(strip, values)
+                # re-apply the frame range, as other properties (scale, repeat, ...) may have moved it
+                restore_rna_values(strip, {k : values[k] for k in ('frame_start', 'frame_end') if k in values})
+            restore_rna_values(track, track_info['values'])
+        except Exception:
+            print("GameRig: Warning. failed to restore NLA track '%s'." % track_info['values'].get('name', ''))
+            traceback.print_exc()
+
+    if saved['action']:
+        ad.action = saved['action']
+        slot = find_action_slot(saved['action'], saved['slot'])
+        if slot:
+            ad.action_slot = slot
+
+
 def get_rig_org_bones(rig):
     """ Returns names of the original bones controlled by the rig.
     """
@@ -116,9 +206,7 @@ def generate_rig(context, metarig):
     # regenerate in the same object.  If not, create a new
     # object to generate the rig in.
     
-    previous_action = None
-    previous_nla_tracks = None
-    previous_nla_strips = {}
+    previous_animation_data = None
     toggledArmatureModifiers = []
     if obj:
         print("Overwrite existing rig.")
@@ -132,11 +220,8 @@ def generate_rig(context, metarig):
                         j.object = metarig
             # Get rid of anim data in case the rig already existed
             print("Clear rig animation data.")
-            if obj.animation_data:
-                previous_action = obj.animation_data.action
-                previous_nla_tracks = tuple(obj.animation_data.nla_tracks)
-                for i in previous_nla_tracks:
-                    previous_nla_strips[i] = tuple(i.strips)
+            # NOTE: animation_data_clear() frees the NLA tracks/strips, so save them as plain values beforehand.
+            previous_animation_data = save_animation_data(obj)
             obj.animation_data_clear()
             obj.data.animation_data_clear()
         except KeyError:
@@ -610,18 +695,7 @@ def generate_rig(context, metarig):
     view_layer.active_layer_collection = layer_collection
 
     # Restore action and NLA tracks
-    if previous_action:
-        obj.animation_data.action = previous_action
-    if previous_nla_tracks:
-        try:
-            for s in previous_nla_tracks:
-                d = obj.animation_data.nla_tracks.new()
-                copy_attributes(s, d)
-                for ss in previous_nla_strips[s]:
-                    dd = d.strips.new(ss.name, ss.frame_start, ss.action)
-                    copy_attributes(ss, dd)
-        except Exception as e:
-            print("GameRig: Warning. failed to restore NLA tracks.")
+    restore_animation_data(obj, previous_animation_data)
 
     t.tick("The rest: ")
     return error
