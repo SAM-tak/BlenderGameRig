@@ -47,6 +47,17 @@ class Timer:
         self.timez = t
 
 
+def set_library_overridable(owner, prop):
+    """ Mark a custom property copied from the metarig as library overridable,
+        so it can be animated when the generated rig is linked via Library Override.
+        (Properties created by rig types already use rna_idprop_ui_create(..., overridable=True).)
+    """
+    try:
+        owner.property_overridable_library_set('["%s"]' % bpy.utils.escape_identifier(prop), True)
+    except (TypeError, ValueError):
+        pass
+
+
 def generate_rig(context, metarig):
     """ Generates a rig from a metarig.
     """
@@ -208,6 +219,7 @@ def generate_rig(context, metarig):
         try:
             if prop != "_RNA_UI" and prop != "gamerig" and prop != "gamerig_id":
                 obj.data[prop] = metarig.data[prop]
+                set_library_overridable(obj.data, prop)
                 try:
                     org_ui = metarig.data.id_properties_ui(prop)
                     obj.data.id_properties_ui(prop).update_from(org_ui)
@@ -241,6 +253,7 @@ def generate_rig(context, metarig):
         for prop in bone.keys():
             try:
                 bone_gen[prop] = bone[prop]
+                set_library_overridable(bone_gen, prop)
                 try:
                     org_ui = bone.id_properties_ui(prop)
                     bone_gen.id_properties_ui(prop).update_from(org_ui)
