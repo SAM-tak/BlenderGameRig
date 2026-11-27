@@ -20,9 +20,9 @@
 
 bl_info = {
     "name": "GameRig",
-    "version": (1, 7, 3),
+    "version": (1, 8, 0),
     "author": "Osamu Takasugi, (Rigify : Nathan Vegdahl, Lucio Rossi, Ivan Cappiello)",
-    "blender": (5, 0, 0),
+    "blender": (5, 3, 0),
     "description": "Character Rigging framework for Game / Realtime content",
     "location": "Armature properties, Bone properties, View3d tools panel, Armature Add menu",
     "support": "COMMUNITY",
@@ -196,7 +196,21 @@ class ArmatureProperties(PropertyGroup):
         del bpy.types.Armature.gamerig
 
 
+def rig_type_search(self, context, edit_text):
+    category = context.window_manager.gamerig.category.replace(" ", "")
+    return [
+        r for r in rig_lists.rig_list
+        if r not in rig_lists.implementation_rigs and (
+            category == "All"
+            or r.startswith(category + '.')
+            or (category == "None" and '.' not in r)
+        )
+    ]
+
+
 class PoseBoneProperties(PropertyGroup):
+    # Overrides the built-in PropertyGroup.name (same storage) to add rig type search candidates.
+    name : StringProperty(name="Rig Type", search=rig_type_search) # type: ignore
 
     @classmethod
     def register(cls):
@@ -318,9 +332,6 @@ class GlobalProperties(PropertyGroup):
         name="GameRig Active Category",
         description="The selected rig category"
     ) # type: ignore
-
-    types : CollectionProperty(type=PropertyGroup) # type: ignore
-    active_type : IntProperty(name="GameRig Active Rig", description="The selected rig type") # type: ignore
 
     show_bone_collection_pane : BoolProperty(default=False) # type: ignore
     show_bone_groups_pane : BoolProperty(default=False) # type: ignore

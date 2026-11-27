@@ -391,36 +391,17 @@ class BonePanel(bpy.types.Panel):
     def draw(self, context):
         gparam = context.window_manager.gamerig
         bone = context.active_pose_bone
-        category_name = str(gparam.category).replace(" ", "")
         rig_name = str(context.active_pose_bone.gamerig.name).replace(" ", "")
 
         layout = self.layout
 
-        # Build types list
-        for i in range(0, len(gparam.types)):
-            gparam.types.remove(0)
-
-        for r in rig_lists.rig_list:
-            if r in rig_lists.implementation_rigs:
-                continue
-            # collection = r.split('.')[0]  # UNUSED
-            if category_name == "All":
-                a = gparam.types.add()
-                a.name = r
-            elif r.startswith(category_name + '.'):
-                a = gparam.types.add()
-                a.name = r
-            elif category_name == "None" and len(r.split('.')) == 1:
-                a = gparam.types.add()
-                a.name = r
-        
         # Rig category field
         row = layout.row()
         row.prop(gparam, 'category', text="Category")
 
         # Rig type field
         row = layout.row()
-        row.prop_search(bone.gamerig, "name", gparam, "types", text="Rig type:")
+        row.prop(bone.gamerig, "name", text="Rig type:")
 
         # Rig type parameters / Rig type non-exist alert
         if rig_name != "":
